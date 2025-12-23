@@ -1,0 +1,52 @@
+name: Sync to App Repos
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/**'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync ISS
+        if: contains(github.event.head_commit.modified, 'apps/iss') || github.event_name == 'workflow_dispatch'
+        run: |
+          git push https://${{ secrets.GH_TOKEN }}@github.com/ciroautuori/iss_ws.git \
+            $(git subtree split --prefix=apps/iss):main --force || true
+        continue-on-error: true
+
+      - name: Sync StudioCentos
+        if: contains(github.event.head_commit.modified, 'apps/studiocentos') || github.event_name == 'workflow_dispatch'
+        run: |
+          git push https://${{ secrets.GH_TOKEN }}@github.com/ciroautuori/studiocentos_ws.git \
+            $(git subtree split --prefix=apps/studiocentos):main --force || true
+        continue-on-error: true
+
+      - name: Sync Markettina
+        if: contains(github.event.head_commit.modified, 'apps/markettina') || github.event_name == 'workflow_dispatch'
+        run: |
+          git push https://${{ secrets.GH_TOKEN }}@github.com/ciroautuori/markettina.git \
+            $(git subtree split --prefix=apps/markettina):main --force || true
+        continue-on-error: true
+
+      - name: Sync IronRep
+        if: contains(github.event.head_commit.modified, 'apps/ironRep') || github.event_name == 'workflow_dispatch'
+        run: |
+          git push https://${{ secrets.GH_TOKEN }}@github.com/ciroautuori/ironrep.git \
+            $(git subtree split --prefix=apps/ironRep):main --force || true
+        continue-on-error: true
