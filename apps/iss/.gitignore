@@ -1,5 +1,9 @@
 # 🏛️ ISS - Innovazione Sociale Salernitana APS-ETS
 # Git Ignore File for Private Repository
+!.agent/
+!.agent/rules/
+!.agent/memories/
+!.agent/workflows/
 
 # ========================
 # 🐍 PYTHON / BACKEND

@@ -5,7 +5,7 @@ from sqlalchemy import select, or_
 from datetime import datetime, timedelta
 
 from app.database import get_db
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.auth import LoginRequest, AuthResponse, RefreshTokenRequest, TokenResponse, UserInfo
 from app.core.security import (
     verify_password, 
