@@ -168,3 +168,37 @@ status:
 	@echo ""
 	@echo -e "$(CYAN)📦 Pacchetti da aggiornare:$(NC)"
 	@checkupdates 2>/dev/null | wc -l || echo "   0"
+
+# ============================================================================
+# 🚀 GIT SUBTREE - Push to App Repos
+# ============================================================================
+
+push-all: push-develop push-iss push-studiocentos push-markettina push-ironrep
+	@echo -e "$(GREEN)✅ Tutti i push completati!$(NC)"
+
+push-develop:
+	@echo -e "$(CYAN)📤 Push develop...$(NC)"
+	@git add . && git commit -m "Auto-sync: $$(date +%Y-%m-%d)" 2>/dev/null || true
+	@git push origin main
+	@echo -e "$(GREEN)✅ develop → origin$(NC)"
+
+push-iss:
+	@echo -e "$(CYAN)📤 Push ISS...$(NC)"
+	@git subtree push --prefix=apps/iss iss-repo main
+	@echo -e "$(GREEN)✅ apps/iss → iss_ws.git$(NC)"
+
+push-studiocentos:
+	@echo -e "$(CYAN)📤 Push StudioCentos...$(NC)"
+	@git subtree push --prefix=apps/studiocentos studiocentos-repo main
+	@echo -e "$(GREEN)✅ apps/studiocentos → studiocentos_ws.git$(NC)"
+
+push-markettina:
+	@echo -e "$(CYAN)📤 Push Markettina...$(NC)"
+	@git subtree push --prefix=apps/markettina markettina-repo main
+	@echo -e "$(GREEN)✅ apps/markettina → markettina.git$(NC)"
+
+push-ironrep:
+	@echo -e "$(CYAN)📤 Push IronRep...$(NC)"
+	@git subtree push --prefix=apps/ironRep ironrep-repo main
+	@echo -e "$(GREEN)✅ apps/ironRep → ironrep.git$(NC)"
+
