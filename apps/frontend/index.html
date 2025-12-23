@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/iss-logo.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO Meta Tags -->
+    <title>ISS - Innovazione Sociale Salernitana | Hub Bandi APS Campania</title>
+    <meta name="description" content="Piattaforma per la ricerca automatizzata di bandi di finanziamento per APS campane. Corsi di alfabetizzazione digitale, eventi e progetti di inclusione sociale a Salerno." />
+    <meta name="keywords" content="bandi finanziamento, APS Campania, alfabetizzazione digitale, inclusione sociale, Salerno, hackathon, formazione" />
+    <meta name="author" content="Innovazione Sociale Salernitana APS-ETS" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="ISS - Hub Bandi per APS Campane" />
+    <meta property="og:description" content="Sistema automatizzato per trovare bandi di finanziamento + formazione digitale inclusiva" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://innovazionesocialesalernitana.it" />
+    <meta property="og:image" content="https://innovazionesocialesalernitana.it/iss-logo.svg" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ISS - Innovazione Sociale Salernitana" />
+    <meta name="twitter:description" content="Hub bandi APS + formazione digitale inclusiva" />
+    <meta name="twitter:image" content="https://innovazionesocialesalernitana.it/iss-logo.svg" />
+
+    <!-- Preconnect to fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+    <!-- Theme colors -->
+    <meta name="theme-color" content="#3b82f6" />
+    <meta name="msapplication-TileColor" content="#3b82f6" />
+
+    <!-- Manifest for PWA -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Prevent FOUC -->
+    <style>
+      html { visibility: hidden; opacity: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Enable visibility after load -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        document.documentElement.style.visibility = 'visible';
+        document.documentElement.style.opacity = '1';
+      });
+    </script>
+  </body>
+</html>
