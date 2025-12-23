@@ -1,0 +1,28 @@
+{
+  "name": "iss",
+  "version": "1.0.0",
+  "description": "> **🎯 Trasformare Salerno nel hub regionale per l'accesso democratico ai bandi di finanziamento per il terzo settore**",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ciroautuori/iss-ref.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ciroautuori/iss-ref/issues"
+  },
+  "homepage": "https://github.com/ciroautuori/iss-ref#readme",
+  "dependencies": {
+    "axios": "^1.12.2"
+  }
+}
