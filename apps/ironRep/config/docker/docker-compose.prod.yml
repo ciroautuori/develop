@@ -26,6 +26,11 @@ services:
       - CHROMA_PORT=8000
       # Redis (container name)
       - REDIS_URL=redis://:${REDIS_PASSWORD:-central_redis_password_2025}@central-redis:6379/4
+      # Ollama LLM (PRIMARY)
+      - USE_OLLAMA=true
+      - OLLAMA_HOST=central-ollama
+      - OLLAMA_PORT=11434
+      - OLLAMA_MODEL=llama3.2:latest
     # depends_on:
     #   postgres:
     #     condition: service_healthy
