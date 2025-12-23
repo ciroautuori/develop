@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animation 4 - Parallax Scroll</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a0a; color: #fff; font-family: 'Inter', sans-serif; }
+        
+        /* ANIMAZIONE 4: PARALLAX SCROLL (elementi a velocità diverse) */
+        .parallax-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            padding: 80px 40px;
+        }
+        
+        .parallax-bg {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.1), transparent 70%);
+            transform: translateY(var(--scroll-y, 0));
+        }
+        
+        .parallax-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            text-align: center;
+            transform: translateY(calc(var(--scroll-y, 0) * 0.5));
+        }
+        
+        .parallax-title {
+            font-size: 4rem;
+            font-weight: 300;
+            margin-bottom: 30px;
+            transform: translateY(calc(var(--scroll-y, 0) * 0.3));
+        }
+        
+        .parallax-text {
+            font-size: 1.3rem;
+            color: #999;
+            line-height: 1.8;
+            transform: translateY(calc(var(--scroll-y, 0) * 0.7));
+        }
+        
+        .floating-element {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.3), transparent);
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .floating-element:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .floating-element:nth-child(2) {
+            top: 60%;
+            right: 15%;
+            animation-delay: 2s;
+        }
+        
+        .floating-element:nth-child(3) {
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-30px); }
+        }
+        
+        .demo-box {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            margin: 40px auto;
+            text-align: center;
+        }
+        
+        h1 { color: #D4AF37; margin-bottom: 20px; }
+        p { color: #999; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="demo-box">
+        <h1>✨ Animation 4: Parallax Scroll</h1>
+        <p>Elementi che si muovono a velocità diverse durante lo scroll</p>
+        <p style="font-size: 14px; color: #666;">👇 Scrolla giù per vedere l'effetto</p>
+    </div>
+    
+    <div class="parallax-section">
+        <div class="parallax-bg"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        
+        <div class="parallax-content">
+            <div class="parallax-title">
+                <span style="color: #D4AF37;">Trasformo idee</span><br>
+                in prodotti digitali
+            </div>
+            <div class="parallax-text">
+                Da Salerno, sviluppo applicazioni enterprise con React 19 e FastAPI.
+                In 45 giorni, dalla tua idea a un prodotto production-ready.
+            </div>
+        </div>
+    </div>
+    
+    <div class="parallax-section">
+        <div class="parallax-bg"></div>
+        
+        <div class="parallax-content">
+            <div class="parallax-title">
+                <span style="color: #D4AF37;">10+ anni</span><br>
+                di esperienza
+            </div>
+            <div class="parallax-text">
+                Ho sviluppato decine di progetti, dai piccoli siti web
+                alle piattaforme enterprise con migliaia di utenti.
+            </div>
+        </div>
+    </div>
+    
+    <div class="demo-box">
+        <p style="font-size: 14px; color: #666;">
+            <strong>Uso:</strong> Hero sections, Story sections<br>
+            <strong>Effetto:</strong> Background, title, text si muovono a velocità diverse<br>
+            <strong>Velocità:</strong> BG 100%, Content 50%, Title 30%, Text 70%<br>
+            <strong>Performance:</strong> GPU-accelerated, smooth 60fps<br>
+            <strong>Bonus:</strong> Elementi fluttuanti in background
+        </p>
+    </div>
+    
+    <script>
+        let scrollY = 0;
+        
+        window.addEventListener('scroll', () => {
+            scrollY = window.scrollY;
+            
+            document.querySelectorAll('.parallax-section').forEach((section, index) => {
+                const rect = section.getBoundingClientRect();
+                const sectionTop = rect.top + scrollY;
+                const sectionHeight = rect.height;
+                const scrollProgress = (scrollY - sectionTop + window.innerHeight) / (sectionHeight + window.innerHeight);
+                
+                if (scrollProgress >= 0 && scrollProgress <= 1) {
+                    const offset = (scrollProgress - 0.5) * 200;
+                    section.style.setProperty('--scroll-y', `${offset}px`);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

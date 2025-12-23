@@ -1,0 +1,524 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+ * MARKETTINA DESIGN SYSTEM v2.0 - Enterprise Production Ready
+ *
+ * Brand Identity:
+ * - Primary: Gold (#D4AF37) - Lusso, Professionalità, Eccellenza
+ * - Neutral: Grigi puri (no blue tint)
+ * - Font: Inter (system fallback)
+ *
+ * Design Principles:
+ * - Consistenza tra Landing e Admin
+ * - Dark mode default (Landing), Light mode per Admin
+ * - Accessibilità WCAG 2.1 AA
+ * - Mobile-first responsive
+ * ============================================================================ */
+
+@layer base {
+  :root {
+    /* ========================================================================
+     * BRAND COLORS - ORO MARKETTINA
+     * ======================================================================== */
+    --gold: #D4AF37;
+    --gold-light: #F4E5B8;
+    --gold-dark: #AA8C2C;
+    --gold-50: #FBF8EC;
+    --gold-100: #F4EBCE;
+    --gold-200: #EBD9A0;
+    --gold-300: #E2C772;
+    --gold-400: #D4AF37;
+    --gold-500: #C49A2C;
+    --gold-600: #A47D24;
+    --gold-700: #7D5F1B;
+    --gold-800: #574213;
+    --gold-900: #31250B;
+
+    /* ========================================================================
+     * LIGHT THEME - Admin Dashboard Default
+     * Clean, professional, minimal - COME LA LANDING
+     * ======================================================================== */
+    --background: 0 0% 100%;            /* #FFFFFF - Sfondo bianco puro */
+    --foreground: 0 0% 9%;              /* #171717 - Testo principale */
+
+    --card: 0 0% 100%;                  /* #FFFFFF - Card background */
+    --card-foreground: 0 0% 9%;         /* #171717 */
+
+    --popover: 0 0% 100%;               /* #FFFFFF */
+    --popover-foreground: 0 0% 9%;      /* #171717 */
+
+    --primary: 43 74% 52%;              /* #D4AF37 - Gold */
+    --primary-foreground: 0 0% 0%;      /* Nero su gold */
+
+    --secondary: 0 0% 97%;              /* #F7F7F7 - Più chiaro */
+    --secondary-foreground: 0 0% 9%;    /* #171717 */
+
+    --muted: 0 0% 96%;                  /* #F5F5F5 */
+    --muted-foreground: 0 0% 45%;       /* #737373 */
+
+    --accent: 43 100% 97%;              /* Gold molto chiaro, quasi bianco */
+    --accent-foreground: 43 74% 35%;    /* Gold scuro */
+
+    --destructive: 0 84% 60%;           /* Rosso */
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 76% 36%;             /* Verde */
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;              /* Arancione */
+    --warning-foreground: 0 0% 0%;
+
+    --info: 43 74% 52%;                 /* Gold come info */
+    --info-foreground: 0 0% 0%;
+
+    --border: 0 0% 92%;                 /* #EBEBEB - Bordi più leggeri */
+    --input: 0 0% 100%;                 /* #FFFFFF - Input bianchi */
+    --ring: 43 74% 52%;                 /* Gold focus ring */
+
+    --radius: 0.625rem;                 /* 10px - Più moderno */
+
+    /* Sidebar Light - Bianca come landing */
+    --sidebar-bg: 0 0% 100%;
+    --sidebar-border: 0 0% 94%;
+    --sidebar-item-hover: 0 0% 97%;
+    --sidebar-item-active: 43 100% 97%;
+  }
+
+  .dark {
+    /* ========================================================================
+     * DARK THEME - Landing Page & Optional Admin
+     * Elegante, premium, moderno
+     * ======================================================================== */
+    --background: 0 0% 4%;              /* #0A0A0A */
+    --foreground: 0 0% 98%;             /* #FAFAFA */
+
+    --card: 0 0% 6%;                    /* #0F0F0F */
+    --card-foreground: 0 0% 98%;        /* #FAFAFA */
+
+    --popover: 0 0% 6%;                 /* #0F0F0F */
+    --popover-foreground: 0 0% 98%;     /* #FAFAFA */
+
+    --primary: 43 74% 52%;              /* #D4AF37 - Gold */
+    --primary-foreground: 0 0% 0%;      /* Nero su gold */
+
+    --secondary: 0 0% 10%;              /* #1A1A1A */
+    --secondary-foreground: 0 0% 98%;   /* #FAFAFA */
+
+    --muted: 0 0% 12%;                  /* #1F1F1F */
+    --muted-foreground: 0 0% 55%;       /* #8C8C8C */
+
+    --accent: 0 0% 12%;                 /* #1F1F1F */
+    --accent-foreground: 43 74% 52%;    /* Gold */
+
+    --destructive: 0 62% 50%;           /* Rosso scuro */
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;             /* Verde */
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;              /* Arancione */
+    --warning-foreground: 0 0% 0%;
+
+    --info: 43 74% 52%;                 /* Gold */
+    --info-foreground: 0 0% 0%;
+
+    --border: 0 0% 14%;                 /* #242424 */
+    --input: 0 0% 14%;                  /* #242424 */
+    --ring: 43 74% 52%;                 /* Gold focus ring */
+
+    /* Sidebar Dark */
+    --sidebar-bg: 0 0% 6%;
+    --sidebar-border: 0 0% 12%;
+    --sidebar-item-hover: 0 0% 10%;
+    --sidebar-item-active: 0 0% 12%;
+  }
+
+  /* Light class for explicit light mode - BIANCO PURO come Landing */
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 43 74% 52%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 97%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 43 100% 97%;
+    --accent-foreground: 43 74% 35%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 0%;
+    --info: 43 74% 52%;
+    --info-foreground: 0 0% 0%;
+    --border: 0 0% 92%;
+    --input: 0 0% 100%;
+    --ring: 43 74% 52%;
+    --sidebar-bg: 0 0% 100%;
+    --sidebar-border: 0 0% 92%;
+    --sidebar-item-hover: 0 0% 96%;
+    --sidebar-item-active: 43 74% 95%;
+  }
+
+  /* ========================================================================
+   * TYPOGRAPHY SCALE - Mobile-First
+   * ======================================================================== */
+  html {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    line-height: 1.6;
+    letter-spacing: -0.011em;
+  }
+
+  /* Headings - Mobile-first using Tailwind classes only */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+    line-height: 1.2;
+  }
+
+  /* ========================================================================
+   * SAFE AREA INSETS - iOS Notch & Android Support
+   * ======================================================================== */
+  :root {
+    --sat: env(safe-area-inset-top);
+    --sab: env(safe-area-inset-bottom);
+    --sal: env(safe-area-inset-left);
+    --sar: env(safe-area-inset-right);
+  }
+
+  * {
+    @apply border-border;
+  }
+}
+
+/* ============================================================================
+ * UTILITY CLASSES - Brand Specific
+ * ============================================================================ */
+
+.text-gold { color: var(--gold); }
+.bg-gold { background-color: var(--gold); }
+.border-gold { border-color: var(--gold); }
+.ring-gold { --tw-ring-color: var(--gold); }
+
+.text-gold-light { color: var(--gold-light); }
+.bg-gold-light { background-color: var(--gold-light); }
+
+.text-gold-dark { color: var(--gold-dark); }
+.bg-gold-dark { background-color: var(--gold-dark); }
+
+.bg-gradient-gold {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+}
+
+/* ============================================================================
+ * COMPONENT STYLES
+ * ============================================================================ */
+
+.card-elevated {
+  @apply bg-card rounded-lg border border-border;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+.dark .card-elevated {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+}
+
+.btn-gold {
+  @apply bg-primary text-primary-foreground font-medium px-6 py-3 rounded-lg;
+  @apply hover:opacity-90 transition-all duration-200;
+  @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+}
+
+.btn-gold-outline {
+  @apply border-2 border-primary text-primary font-medium px-6 py-3 rounded-lg;
+  @apply hover:bg-primary hover:text-primary-foreground transition-all duration-200;
+}
+
+.input-styled {
+  @apply w-full px-4 py-3 rounded-lg border border-input bg-background text-foreground;
+  @apply placeholder:text-muted-foreground;
+  @apply focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent;
+}
+
+/* Native select dark mode support */
+.dark select,
+.dark select option {
+  background-color: #0a0a0a;
+  color: #fafafa;
+}
+
+.dark select option:hover,
+.dark select option:checked {
+  background-color: #1a1a1a;
+}
+
+/* ============================================================================
+ * ADMIN SPECIFIC STYLES
+ * ============================================================================ */
+
+.admin-sidebar {
+  background: hsl(var(--sidebar-bg));
+  border-right: 1px solid hsl(var(--sidebar-border));
+}
+
+.admin-sidebar-item {
+  @apply flex items-center gap-3 px-4 py-3 rounded-lg;
+  @apply text-foreground transition-all duration-200;
+}
+
+.admin-sidebar-item:hover {
+  background: hsl(var(--sidebar-item-hover));
+}
+
+.admin-sidebar-item.active {
+  background: hsl(var(--sidebar-item-active));
+  @apply text-primary border-l-2 border-primary;
+}
+
+.admin-card {
+  @apply bg-card rounded-xl border border-border p-6;
+  @apply transition-all duration-200;
+}
+
+.admin-card:hover {
+  @apply border-primary/30;
+}
+
+.stat-card {
+  @apply admin-card flex flex-col gap-2;
+}
+
+.stat-card .stat-value {
+  @apply text-3xl font-bold text-foreground;
+}
+
+.stat-card .stat-label {
+  @apply text-sm text-muted-foreground;
+}
+
+.stat-card .stat-icon {
+  @apply w-10 h-10 rounded-lg flex items-center justify-center;
+  @apply bg-primary/10 text-primary;
+}
+
+/* ============================================================================
+ * LANDING PAGE SPECIFIC STYLES
+ * ============================================================================ */
+
+.landing-hero {
+  @apply min-h-screen flex items-center justify-center bg-background;
+}
+
+.landing-section {
+  @apply py-20 md:py-32 px-6;
+}
+
+.landing-section-title {
+  @apply text-4xl md:text-5xl font-light mb-6 text-foreground;
+}
+
+.landing-section-title .gold {
+  color: var(--gold);
+}
+
+/* Bento Grid */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: minmax(180px, auto);
+  gap: 1.5rem;
+}
+
+.bento-item-1 { grid-column: span 7; grid-row: span 2; }
+.bento-item-2 { grid-column: span 5; }
+.bento-item-3 { grid-column: span 5; }
+.bento-item-4 { grid-column: span 6; }
+.bento-item-5 { grid-column: span 6; }
+
+@media (max-width: 1024px) {
+  .bento-grid { grid-template-columns: repeat(6, 1fr); }
+  .bento-item-1 { grid-column: span 6; grid-row: span 1; }
+  .bento-item-2, .bento-item-3 { grid-column: span 3; }
+  .bento-item-4, .bento-item-5 { grid-column: span 3; }
+}
+
+@media (max-width: 640px) {
+  .bento-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .bento-item-1, .bento-item-2, .bento-item-3,
+  .bento-item-4, .bento-item-5 { grid-column: span 1; }
+}
+
+.service-card {
+  @apply relative overflow-hidden rounded-2xl p-8;
+  @apply bg-card border border-border;
+  @apply transition-all duration-300;
+}
+
+.service-card:hover {
+  @apply border-primary/50;
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -20px rgba(212, 175, 55, 0.3);
+}
+
+.hover-lift {
+  @apply transition-transform duration-300;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+}
+
+.hover-glow {
+  @apply transition-all duration-300;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.3);
+}
+
+/* ============================================================================
+ * LOGO ANIMATIONS
+ * ============================================================================ */
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes rotate-rays {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes brightness {
+  0%, 100% { filter: drop-shadow(0 0 4px var(--gold)); }
+  50% { filter: drop-shadow(0 0 16px var(--gold)) drop-shadow(0 0 24px var(--gold)); }
+}
+
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-rotate-rays { animation: rotate-rays 8s linear infinite; }
+.animate-brightness { animation: brightness 2s ease-in-out infinite; }
+
+/* ============================================================================
+ * SCROLL REVEAL ANIMATIONS
+ * ============================================================================ */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.reveal {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.reveal:nth-child(1) { animation-delay: 0.1s; }
+.reveal:nth-child(2) { animation-delay: 0.15s; }
+.reveal:nth-child(3) { animation-delay: 0.2s; }
+.reveal:nth-child(4) { animation-delay: 0.25s; }
+.reveal:nth-child(5) { animation-delay: 0.3s; }
+.reveal:nth-child(6) { animation-delay: 0.35s; }
+
+/* ============================================================================
+ * SCROLLBAR STYLING
+ * ============================================================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-muted rounded-full;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/30 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/50;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.3) hsl(var(--muted));
+}
+
+/* ============================================================================
+ * FOCUS STATES - Accessibility
+ * ============================================================================ */
+
+:focus-visible {
+  @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+}
+
+:focus:not(:focus-visible) {
+  @apply outline-none ring-0;
+}
+
+/* ============================================================================
+ * LOADING ANIMATIONS
+ * ============================================================================ */
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  50% { opacity: 0.5; }
+}
+
+.animate-spin { animation: spin 1s linear infinite; }
+.animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+/* ============================================================================
+ * PRINT STYLES
+ * ============================================================================ */
+
+@media print {
+  body {
+    @apply text-black bg-white;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* ============================================================================
+ * RESPONSIVE UTILITIES
+ * ============================================================================ */
+
+.container-sm { max-width: 640px; }
+.container-md { max-width: 768px; }
+.container-lg { max-width: 1024px; }
+.container-xl { max-width: 1280px; }
+.container-2xl { max-width: 1400px; }
+
+@supports (padding: max(0px)) {
+  .safe-area-inset {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}

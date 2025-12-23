@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!-- Force HTTPS for all requests (CSP) -->
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+
+    <!-- Google Consent Mode v2 - MUST BE BEFORE GTAG -->
+    <script>
+      // Define dataLayer and gtag function
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+
+      // Default consent to 'denied' as a placeholder (GDPR compliant)
+      // Will be updated by CookieBanner based on user choice
+      gtag('consent', 'default', {
+        'ad_storage': 'denied',
+        'ad_user_data': 'denied',
+        'ad_personalization': 'denied',
+        'analytics_storage': 'denied',
+        'wait_for_update': 500
+      });
+
+      // Set URL passthrough for cookieless tracking when consent denied
+      gtag('set', 'url_passthrough', true);
+
+      // Redact ads data when ad_storage is denied
+      gtag('set', 'ads_data_redaction', true);
+    </script>
+
+    <!-- Google Analytics GA4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-4C7WHJ0WXQ"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-4C7WHJ0WXQ', {
+        'anonymize_ip': true,
+        'allow_google_signals': false,
+        'allow_ad_personalization_signals': false
+      });
+    </script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+
+    <!-- Mobile PWA Support -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="StudioCentOS" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- SEO Meta Tags - FOCUS AI + GEOLOCALIZZAZIONE SALERNO -->
+    <meta name="description" content="StudioCentOS - Prima Agenzia AI a Salerno. Intelligenza Artificiale per Aziende: Chatbot AI, Automazione Marketing con AI, Generazione Contenuti AI, Dashboard Analytics Intelligenti. Trasformiamo il tuo business con GPT-5.2 Pro, Opus 4.5, Gemini 3 Pro, DeepSeek V3.1. Unica agenzia AI in Campania. Consulenza gratuita 🤖" />
+    <meta name="keywords" content="agenzia ai salerno, intelligenza artificiale salerno, ai salerno, chatbot ai salerno, chatbot intelligenza artificiale campania, automazione ai salerno, ai per aziende salerno, consulenza ai salerno, soluzioni ai campania, machine learning salerno, deep learning campania, gpt salerno, chatgpt per aziende salerno, claude ai salerno, gemini ai campania, generazione contenuti ai salerno, ai marketing salerno, marketing automation ai campania, ai content creation salerno, ai copywriting salerno, assistente virtuale ai salerno, ai customer service salerno, ai analytics salerno, business intelligence ai campania, dashboard ai salerno, predictive analytics salerno, ai lead generation salerno, ai email marketing campania, ai social media salerno, sviluppo ai salerno, ai developer salerno, ai integration salerno, ai solutions campania, ai agency salerno, ai consulting salerno, trasformazione digitale ai salerno, innovazione ai campania, futuro ai salerno, studiocentos ai, prima agenzia ai salerno, unica agenzia ai campania, leader ai sud italia, ai made in italy, sviluppo chatbot salerno, bot ai salerno, virtual assistant salerno, ai automation salerno, robotic process automation salerno, ai workflow salerno" />
+    <meta name="author" content="StudioCentOS - Prima Agenzia AI Salerno" />
+    <meta name="theme-color" content="#D4AF37" />
+    <meta name="geo.region" content="IT-SA" />
+    <meta name="geo.placename" content="Salerno" />
+    <meta name="geo.position" content="40.68244;14.76874" />
+    <meta name="ICBM" content="40.68244, 14.76874" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="it_IT" />
+    <meta property="og:url" content="https://studiocentos.it" />
+    <meta property="og:site_name" content="StudioCentOS - Agenzia AI" />
+    <meta property="og:title" content="StudioCentOS - Prima Agenzia AI a Salerno | Chatbot, Automazione, Analytics con Intelligenza Artificiale" />
+    <meta property="og:description" content="Unica Agenzia AI a Salerno: Chatbot Intelligenti, Automazione Marketing AI, Generazione Contenuti, Dashboard Analytics. GPT-5.2 Pro, Opus 4.5, Gemini 3 Pro, DeepSeek V3.1 per il tuo business. Consulenza gratuita 🤖" />
+    <meta property="og:image" content="https://studiocentos.it/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@studiocentos" />
+    <meta name="twitter:creator" content="@studiocentos" />
+    <meta name="twitter:url" content="https://studiocentos.it" />
+    <meta name="twitter:title" content="StudioCentOS - Prima Agenzia AI Salerno | Chatbot, Automazione, Analytics Intelligenti" />
+    <meta name="twitter:description" content="Agenzia AI a Salerno: Chatbot Intelligenti, Marketing Automation AI, Content Generation, Analytics. GPT-5.2 Pro, Opus 4.5, Gemini 3 Pro, DeepSeek V3.1. Unici in Campania 🤖" />
+    <meta name="twitter:image" content="https://studiocentos.it/og-image.png" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://studiocentos.it" />
+
+    <!-- Schema.org JSON-LD per Local Business Salerno -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "@id": "https://studiocentos.it",
+      "name": "StudioCentOS - Agenzia AI",
+      "alternateName": "StudioCentOS Prima Agenzia Intelligenza Artificiale Salerno",
+      "description": "Prima Agenzia AI a Salerno. Soluzioni di Intelligenza Artificiale per aziende: Chatbot AI, Automazione Marketing AI, Generazione Contenuti, Dashboard Analytics Intelligenti. GPT-5.2 Pro, Opus 4.5, Gemini 3 Pro, DeepSeek V3.1. Unici in Campania.",
+      "url": "https://studiocentos.it",
+      "telephone": "+39 338 476 5541",
+      "email": "info@studiocentos.it",
+      "logo": "https://studiocentos.it/logo.png",
+      "image": "https://studiocentos.it/og-image.png",
+      "priceRange": "€€€",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Salerno",
+        "addressLocality": "Salerno",
+        "addressRegion": "SA",
+        "postalCode": "84121",
+        "addressCountry": "IT"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 40.68244,
+        "longitude": 14.76874
+      },
+      "areaServed": [
+        {
+          "@type": "City",
+          "name": "Salerno"
+        },
+        {
+          "@type": "State",
+          "name": "Campania"
+        },
+        {
+          "@type": "Country",
+          "name": "Italia"
+        }
+      ],
+      "serviceType": [
+        "Agenzia Intelligenza Artificiale",
+        "Sviluppo Chatbot AI",
+        "Assistenti Virtuali GPT-5.2 Pro Opus 4.5 Gemini 3 Pro DeepSeek V3.1",
+        "Automazione Marketing con AI",
+        "Generazione Contenuti AI",
+        "AI Content Creation",
+        "Dashboard Analytics Intelligenti",
+        "Business Intelligence AI",
+        "Predictive Analytics",
+        "AI Lead Generation",
+        "Email Marketing AI",
+        "Social Media Automation AI",
+        "Integrazione AI Aziendale",
+        "Consulenza Intelligenza Artificiale",
+        "Trasformazione Digitale AI",
+        "Machine Learning Solutions"
+      ],
+      "sameAs": [
+        "https://github.com/ciroautuori",
+        "https://cv-lab.pro",
+        "https://markettina.com",
+        "https://ironrep.it",
+        "https://innovazionesocialesalernitana.it"
+      ],
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "5.0",
+        "reviewCount": "10"
+      }
+    }
+    </script>
+
+    <!-- Schema.org JSON-LD per Organization - AI AGENCY -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "StudioCentOS - Agenzia AI",
+      "url": "https://studiocentos.it",
+      "logo": "https://studiocentos.it/logo.png",
+      "description": "Prima Agenzia di Intelligenza Artificiale a Salerno. Soluzioni AI per aziende: Chatbot, Automazione, Analytics. GPT-5.2 Pro, Opus 4.5, Gemini 3 Pro, DeepSeek V3.1. Leader AI in Campania.",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Salerno",
+        "addressRegion": "SA",
+        "addressCountry": "IT"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+39 338 476 5541",
+        "contactType": "Customer Service",
+        "email": "info@studiocentos.it",
+        "areaServed": "IT",
+        "availableLanguage": ["Italian", "English"]
+      },
+      "makesOffer": [
+        {
+          "@type": "Offer",
+          "name": "CV-Lab.pro - Piattaforma AI per Professionisti",
+          "description": "Crea il tuo sito web vetrina con AI. Dashboard gestionale, CV in 7 formati, QR code biglietto, catalogo prodotti/servizi. Per freelancer, artigiani, professionisti.",
+          "url": "https://cv-lab.pro"
+        },
+        {
+          "@type": "Offer",
+          "name": "Markettina - Marketing AI Automatico",
+          "description": "Marketing AI che impara chi sei. Collega i Social, l'AI fa il resto. Analizza i tuoi contenuti, impara il tuo stile, genera e pubblica automaticamente su Instagram, Facebook, LinkedIn e TikTok.",
+          "url": "https://markettina.com"
+        },
+        {
+          "@type": "Offer",
+          "name": "IronRep - Piattaforma Riabilitazione AI",
+          "description": "Piattaforma AI per riabilitazione con Multi-Agent: Workout Coach, Nutritionist, Medical Advisor. Workout personalizzati, nutrizione AI, tracking progressi, pain management intelligente.",
+          "url": "https://ironrep.it"
+        },
+        {
+          "@type": "Offer",
+          "name": "Ricerca Bandi AI - GRATUITO per APS e Aziende",
+          "description": "Piattaforma GRATUITA per ricerca bandi e finanziamenti con AI. Per APS, associazioni e aziende di Salerno e Campania. Include Invitalia, bandi regionali e nazionali.",
+          "url": "https://innovazionesocialesalernitana.it/bandi",
+          "price": "0",
+          "priceCurrency": "EUR",
+          "areaServed": ["Salerno", "Campania"]
+        }
+      ]
+    }
+    </script>
+
+    <!-- Schema.org JSON-LD per Software/Progetti AI -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "Progetti AI realizzati da StudioCentOS",
+      "description": "Portfolio di soluzioni AI sviluppate dalla prima Agenzia AI di Salerno",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "item": {
+            "@type": "SoftwareApplication",
+            "name": "CV-Lab.pro",
+            "description": "Piattaforma AI completa per professionisti: sito web vetrina, dashboard gestionale, CV in 7 formati, QR code biglietto, catalogo prodotti/servizi. Ideale per freelancer, artigiani, consulenti.",
+            "url": "https://cv-lab.pro",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "item": {
+            "@type": "SoftwareApplication",
+            "name": "Markettina",
+            "description": "Marketing AI che impara chi sei. Collega Instagram, Facebook, LinkedIn, TikTok. L'AI analizza i tuoi contenuti, impara il tuo stile e pubblica automaticamente.",
+            "url": "https://markettina.com",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web"
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "item": {
+            "@type": "SoftwareApplication",
+            "name": "IronRep",
+            "description": "Piattaforma AI per riabilitazione con sistema Multi-Agent: Workout Coach, Nutritionist, Medical Advisor. Workout adattivi, nutrizione personalizzata, pain management intelligente.",
+            "url": "https://ironrep.it",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web"
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "item": {
+            "@type": "SoftwareApplication",
+            "name": "Ricerca Bandi AI Salerno",
+            "description": "Piattaforma GRATUITA per trovare bandi e finanziamenti con AI. Offerta dalla APS InnovazioneSocialeSalernitana per associazioni e aziende. Include Invitalia, bandi regionali Campania.",
+            "url": "https://innovazionesocialesalernitana.it/bandi",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+            "areaServed": ["Salerno", "Campania", "Sud Italia"]
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- Schema.org FAQPage - Domande Frequenti AI Salerno -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Cos'è un'Agenzia AI e cosa fa StudioCentOS?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "StudioCentOS è la prima Agenzia di Intelligenza Artificiale a Salerno. Sviluppiamo soluzioni AI personalizzate: chatbot intelligenti, automazione marketing, generazione contenuti automatica, dashboard analytics con AI. Usiamo i modelli più avanzati: GPT-5.2 Pro, Opus 4.5, Gemini 3 Pro, DeepSeek V3.1, Qwen 2.5. Trasformiamo il business delle aziende campane."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Quanto costa sviluppare un chatbot AI per la mia azienda?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "I costi variano in base alla complessità. Un chatbot base parte da €2.000, mentre soluzioni enterprise con integrazione CRM e multi-lingua possono arrivare a €15.000+. Offriamo consulenza gratuita per valutare la soluzione migliore per il tuo business a Salerno."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Quali servizi AI offrite a Salerno e in Campania?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Offriamo: 1) Sviluppo Chatbot AI (GPT-5.2 Pro, Opus 4.5, Gemini 3 Pro), 2) Automazione Marketing con AI, 3) Generazione Contenuti Automatica con DeepSeek V3.1 e Qwen 2.5, 4) Dashboard Analytics Intelligenti, 5) Integrazione AI in software esistenti, 6) Consulenza Trasformazione Digitale AI. Serviamo tutta la Campania."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Perché scegliere StudioCentOS rispetto ad altre agenzie?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Siamo l'unica agenzia specializzata esclusivamente in AI a Salerno. Non siamo una web agency tradizionale che 'fa anche AI'. L'intelligenza artificiale è il nostro core business. Abbiamo già sviluppato piattaforme AI come CV-Lab.pro, Markettina, IronRep."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- Schema.org Service - Servizi AI Offerti -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "serviceType": "Sviluppo Soluzioni AI",
+      "provider": {
+        "@type": "LocalBusiness",
+        "name": "StudioCentOS",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Salerno",
+          "addressRegion": "Campania",
+          "addressCountry": "IT"
+        }
+      },
+      "areaServed": ["Salerno", "Campania", "Italia"],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Servizi AI StudioCentOS",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Sviluppo Chatbot AI",
+              "description": "Chatbot intelligenti con GPT-5.2 Pro, Opus 4.5, Gemini 3 Pro, DeepSeek V3.1. Integrazione WhatsApp, sito web, CRM."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Automazione Marketing AI",
+              "description": "Generazione automatica post social, email marketing AI, lead scoring intelligente."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Dashboard Analytics AI",
+              "description": "Business intelligence con predictive analytics e insights automatici."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Generazione Contenuti AI",
+              "description": "Copywriting automatico, video AI, immagini generate. Content creation scalabile."
+            }
+          }
+        ]
+      }
+    }
+    </script>
+
+    <!-- Schema.org BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://studiocentos.it/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ToolAI",
+          "item": "https://studiocentos.it/toolai"
+        }
+      ]
+    }
+    </script>
+
+    <!-- hreflang Tags for Multilingual SEO -->
+    <link rel="alternate" hreflang="it" href="https://studiocentos.it/" />
+    <link rel="alternate" hreflang="en" href="https://studiocentos.it/en/" />
+    <link rel="alternate" hreflang="x-default" href="https://studiocentos.it/" />
+
+    <title>StudioCentOS - Prima Agenzia AI Salerno | Chatbot, Automazione Marketing, Analytics Intelligenza Artificiale | Campania</title>
+  </head>
+  <body>
+    <!-- DOM Safety Patch - MUST RUN BEFORE ANY SCRIPTS -->
+    <!-- Prevents framer-motion "can't access property 'add', t is undefined" error -->
+    <script>
+      (function() {
+        if (typeof window === 'undefined' || typeof Element === 'undefined') return;
+
+        // Safe mock classList
+        var createSafeClassList = function() {
+          return {
+            add: function() {},
+            remove: function() {},
+            toggle: function() { return false; },
+            contains: function() { return false; },
+            replace: function() { return false; },
+            length: 0,
+            value: '',
+            item: function() { return null; },
+            forEach: function() {},
+            supports: function() { return false; },
+            toString: function() { return ''; }
+          };
+        };
+
+        // Patch Element.prototype.classList
+        var originalDescriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'classList');
+        if (originalDescriptor && originalDescriptor.get) {
+          var originalGet = originalDescriptor.get;
+          Object.defineProperty(Element.prototype, 'classList', {
+            configurable: true,
+            enumerable: true,
+            get: function() {
+              try {
+                if (!this || !this.ownerDocument) return createSafeClassList();
+                var list = originalGet.call(this);
+                return list || createSafeClassList();
+              } catch (e) {
+                return createSafeClassList();
+              }
+            }
+          });
+        }
+
+        // Patch document.createElement
+        var originalCreateElement = document.createElement.bind(document);
+        document.createElement = function(tagName, options) {
+          var element = originalCreateElement(tagName, options);
+          if (!element.classList) {
+            Object.defineProperty(element, 'classList', {
+              value: createSafeClassList(),
+              writable: true,
+              configurable: true
+            });
+          }
+          return element;
+        };
+      })();
+    </script>
+
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

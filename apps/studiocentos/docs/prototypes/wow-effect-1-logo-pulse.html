@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WOW Effect 1 - Logo Pulse</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a0a; color: #fff; font-family: 'Inter', sans-serif; padding: 40px; }
+        
+        /* EFFETTO 1: LOGO LAMPADINA CHE PULSA E BRILLA */
+        .logo-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 40px auto;
+        }
+        
+        .logo-glow {
+            position: absolute;
+            inset: -20px;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.4) 0%, transparent 70%);
+            animation: pulse-glow 2s ease-in-out infinite;
+            border-radius: 50%;
+        }
+        
+        .logo-svg {
+            position: relative;
+            z-index: 1;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .logo-rays {
+            stroke: #D4AF37;
+            stroke-width: 2;
+            animation: rotate-rays 4s linear infinite;
+            transform-origin: 50% 50%;
+        }
+        
+        .logo-bulb {
+            fill: none;
+            stroke: #D4AF37;
+            stroke-width: 2;
+            animation: brightness 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes rotate-rays {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes brightness {
+            0%, 100% { filter: drop-shadow(0 0 5px #D4AF37); }
+            50% { filter: drop-shadow(0 0 20px #D4AF37) drop-shadow(0 0 30px #D4AF37); }
+        }
+        
+        .demo-box {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        h1 { text-align: center; color: #D4AF37; margin-bottom: 20px; }
+        p { text-align: center; color: #999; margin-bottom: 40px; }
+    </style>
+</head>
+<body>
+    <div class="demo-box">
+        <h1>✨ WOW Effect 1: Logo Pulse</h1>
+        <p>Logo lampadina che pulsa, brilla e fluttua</p>
+        
+        <div class="logo-container">
+            <div class="logo-glow"></div>
+            <svg viewBox="0 0 100 100" class="logo-svg" width="80" height="80">
+                <!-- Raggi rotanti -->
+                <g class="logo-rays">
+                    <line x1="50" y1="20" x2="50" y2="10" />
+                    <line x1="65" y1="25" x2="72" y2="18" />
+                    <line x1="70" y1="50" x2="80" y2="50" />
+                    <line x1="65" y1="75" x2="72" y2="82" />
+                    <line x1="50" y1="80" x2="50" y2="90" />
+                    <line x1="35" y1="75" x2="28" y2="82" />
+                    <line x1="30" y1="50" x2="20" y2="50" />
+                    <line x1="35" y1="25" x2="28" y2="18" />
+                </g>
+                
+                <!-- Lampadina centrale -->
+                <circle cx="50" cy="50" r="20" class="logo-bulb"/>
+                <path d="M 45 55 L 48 60 L 52 60 L 55 55" class="logo-bulb"/>
+            </svg>
+        </div>
+        
+        <div style="text-align: center; margin-top: 40px;">
+            <p style="font-size: 14px; color: #666;">
+                <strong>Effetto:</strong> Glow pulsante + Float + Raggi rotanti<br>
+                <strong>Uso:</strong> Header logo, Hero section, Loading
+            </p>
+        </div>
+    </div>
+</body>
+</html>

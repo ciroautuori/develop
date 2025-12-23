@@ -1,0 +1,1752 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#D4AF37', 'primaryTextColor': '#0A0A0A', 'primaryBorderColor': '#0A0A0A', 'lineColor': '#666666', 'secondaryColor': '#FAFAFA', 'tertiaryColor': '#f5f5f5'}}}%%
+
+erDiagram
+    %% ============================================================================
+    %% MARKETTINA v3.0 - PRODUCTION-READY ERD
+    %% Enterprise SaaS Architecture with Full Multi-Tenancy
+    %% ============================================================================
+
+    %% ============================================================================
+    %% CORE ENTITIES - Multi-Tenancy Foundation
+    %% ============================================================================
+
+    accounts {
+        uuid id PK
+        varchar name "NOT NULL"
+        varchar slug UK "NOT NULL"
+        varchar status "active|suspended|cancelled"
+        jsonb settings
+        varchar billing_email
+        varchar timezone "DEFAULT UTC"
+        varchar locale "DEFAULT en"
+        boolean is_active "DEFAULT true"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        timestamp deleted_at "NULLABLE"
+        int created_by FK
+        int updated_by FK
+        int version "DEFAULT 1"
+    }
+
+    users {
+        bigint id PK
+        uuid account_id FK "NOT NULL"
+        varchar email UK "NOT NULL"
+        varchar password_hash "NOT NULL"
+        varchar password_salt
+        varchar username UK "NOT NULL"
+        varchar slug UK "NOT NULL"
+        varchar role "owner|admin|member|viewer"
+        varchar status "active|invited|suspended"
+        boolean is_active "DEFAULT true"
+        boolean email_verified "DEFAULT false"
+        varchar email_verification_token
+        timestamp email_verified_at
+        varchar reset_password_token
+        timestamp reset_password_expires_at
+        timestamp last_login_at
+        varchar last_login_ip
+        timestamp trial_expires_at
+        jsonb preferences
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        timestamp deleted_at "NULLABLE"
+        int version "DEFAULT 1"
+    }
+
+    admin_users {
+        bigint id PK
+        varchar email UK "NOT NULL"
+        varchar password_hash "NOT NULL"
+        varchar full_name
+        varchar role "superadmin|support|readonly"
+        boolean is_2fa_enabled "DEFAULT false"
+        varchar totp_secret
+        boolean is_active "DEFAULT true"
+        timestamp last_login_at
+        varchar last_login_ip
+        jsonb permissions
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        int version "DEFAULT 1"
+    }
+
+    admin_action_logs {
+        uuid id PK
+        bigint admin_user_id FK "NOT NULL"
+        varchar action_type "NOT NULL"
+        varchar resource_type
+        uuid resource_id
+        uuid affected_account_id FK
+        jsonb changes_made
+        varchar ip_address
+        text user_agent
+        timestamp created_at "NOT NULL"
+    }
+
+    %% ============================================================================
+    %% SUBSCRIPTION & BILLING CONTEXT
+    %% ============================================================================
+
+    subscription_plans {
+        varchar id PK
+        varchar name "NOT NULL"
+        text description
+        varchar billing_interval "monthly|annual"
+        int price_cents "NOT NULL"
+        int trial_days "DEFAULT 14"
+        int included_users "NOT NULL"
+        int included_tokens "NOT NULL"
+        int max_social_accounts
+        int max_campaigns
+        jsonb features "NOT NULL"
+        jsonb limits
+        boolean is_active "DEFAULT true"
+        int sort_order
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    subscriptions {
+        uuid id PK
+        uuid account_id FK "NOT NULL, UK"
+        varchar plan_id FK "NOT NULL"
+        varchar status "trialing|active|past_due|cancelled|unpaid"
+        int quantity "DEFAULT 1"
+        date current_period_start "NOT NULL"
+        date current_period_end "NOT NULL"
+        date trial_start
+        date trial_end
+        varchar stripe_subscription_id UK
+        varchar stripe_customer_id
+        boolean cancel_at_period_end "DEFAULT false"
+        timestamp cancelled_at
+        varchar cancellation_reason
+        text cancellation_feedback
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        int version "DEFAULT 1"
+    }
+
+    payment_methods {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar stripe_payment_method_id UK "NOT NULL"
+        varchar type "card|sepa_debit|paypal"
+        varchar card_brand
+        varchar last4
+        int exp_month
+        int exp_year
+        varchar billing_name
+        jsonb billing_address
+        boolean is_default "DEFAULT false"
+        boolean is_active "DEFAULT true"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    invoices {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        uuid subscription_id FK
+        varchar invoice_number UK "NOT NULL"
+        varchar stripe_invoice_id UK
+        int subtotal_cents "NOT NULL"
+        int tax_cents "DEFAULT 0"
+        int discount_cents "DEFAULT 0"
+        int total_cents "NOT NULL"
+        varchar currency "DEFAULT USD"
+        varchar status "draft|open|paid|void|uncollectible"
+        date issue_date "NOT NULL"
+        date due_date
+        timestamp paid_at
+        varchar payment_method_type
+        text_array applied_promo_codes
+        text customer_notes
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    invoice_items {
+        uuid id PK
+        uuid invoice_id FK "NOT NULL"
+        varchar item_type "subscription|tokens|addon|credit"
+        text description "NOT NULL"
+        int quantity "NOT NULL"
+        int unit_price_cents "NOT NULL"
+        int total_cents "NOT NULL"
+        date period_start
+        date period_end
+        jsonb metadata
+        timestamp created_at "NOT NULL"
+    }
+
+    failed_payments {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        uuid invoice_id FK
+        varchar stripe_charge_id
+        varchar stripe_payment_intent_id
+        int amount_cents "NOT NULL"
+        varchar failure_code
+        text failure_message
+        int attempt_count "DEFAULT 1"
+        timestamp next_retry_at
+        varchar status "pending_retry|abandoned|resolved"
+        timestamp resolved_at
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    dunning_campaigns {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        uuid failed_payment_id FK "NOT NULL"
+        varchar status "active|paused|completed"
+        int emails_sent "DEFAULT 0"
+        timestamp last_email_sent_at
+        timestamp next_email_at
+        timestamp completed_at
+        timestamp created_at "NOT NULL"
+    }
+
+    %% ============================================================================
+    %% TOKEN WALLET & USAGE TRACKING
+    %% ============================================================================
+
+    token_wallets {
+        uuid id PK
+        bigint user_id FK "NOT NULL, UK"
+        uuid account_id FK "NOT NULL"
+        int balance "DEFAULT 0, CHECK >= 0"
+        int total_purchased "DEFAULT 0"
+        int total_used "DEFAULT 0"
+        int total_bonus "DEFAULT 0"
+        int total_refunded "DEFAULT 0"
+        decimal total_spent_usd "DEFAULT 0.00"
+        timestamp last_purchase_at
+        timestamp last_usage_at
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        int version "DEFAULT 1"
+    }
+
+    token_packages {
+        varchar id PK
+        varchar name "NOT NULL"
+        varchar slug UK "NOT NULL"
+        int tokens "NOT NULL"
+        int bonus_tokens "DEFAULT 0"
+        decimal price_usd "NOT NULL"
+        varchar badge "popular|best_value"
+        boolean is_active "DEFAULT true"
+        int sort_order
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    token_transactions {
+        uuid id PK
+        uuid wallet_id FK "NOT NULL"
+        bigint user_id FK "NOT NULL"
+        uuid account_id FK "NOT NULL"
+        varchar type "purchase|usage|bonus|refund|adjustment"
+        int amount "NOT NULL"
+        int balance_before "NOT NULL"
+        int balance_after "NOT NULL"
+        varchar package_id FK
+        decimal price_usd
+        varchar stripe_payment_intent_id
+        varchar usage_context "ai_generation|image|video|analytics"
+        varchar ai_provider "openai|anthropic|stability|replicate"
+        varchar ai_model
+        uuid related_resource_id
+        varchar related_resource_type
+        text description
+        timestamp created_at "NOT NULL"
+    }
+
+    service_pricing {
+        uuid id PK
+        varchar service_type "NOT NULL"
+        varchar service_subtype
+        varchar provider
+        varchar model
+        int token_cost "NOT NULL"
+        varchar unit "per_request|per_token|per_minute"
+        text description
+        boolean is_active "DEFAULT true"
+        date effective_from "NOT NULL"
+        date effective_to
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    %% ============================================================================
+    %% PROMO CODES & REFERRALS
+    %% ============================================================================
+
+    promo_codes {
+        uuid id PK
+        varchar code UK "NOT NULL"
+        varchar discount_type "percentage|fixed_amount|tokens"
+        int discount_value "NOT NULL"
+        varchar applies_to "subscription|tokens|both"
+        int max_uses
+        int current_uses "DEFAULT 0"
+        int max_uses_per_account "DEFAULT 1"
+        boolean is_active "DEFAULT true"
+        timestamp valid_from "NOT NULL"
+        timestamp valid_to
+        jsonb restrictions
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    promo_redemptions {
+        uuid id PK
+        uuid promo_code_id FK "NOT NULL"
+        uuid account_id FK "NOT NULL"
+        bigint user_id FK "NOT NULL"
+        int discount_amount_cents
+        int tokens_awarded
+        varchar applied_to_type "subscription|invoice|tokens"
+        uuid applied_to_id
+        timestamp redeemed_at "NOT NULL"
+    }
+
+    referral_codes {
+        uuid id PK
+        uuid account_id FK "NOT NULL, UK"
+        varchar code UK "NOT NULL"
+        int total_signups "DEFAULT 0"
+        int successful_conversions "DEFAULT 0"
+        int total_bonus_tokens_earned "DEFAULT 0"
+        boolean is_active "DEFAULT true"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    referral_conversions {
+        uuid id PK
+        uuid referral_code_id FK "NOT NULL"
+        uuid referrer_account_id FK "NOT NULL"
+        uuid referred_account_id FK "NOT NULL, UK"
+        timestamp signed_up_at "NOT NULL"
+        timestamp trial_started_at
+        timestamp converted_at
+        int referrer_bonus_tokens
+        int referee_bonus_tokens
+        varchar status "pending|completed|revoked"
+        timestamp created_at "NOT NULL"
+    }
+
+    %% ============================================================================
+    %% IDENTITY & PERMISSIONS CONTEXT
+    %% ============================================================================
+
+    social_accounts {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        bigint user_id FK "NOT NULL"
+        varchar platform "instagram|facebook|twitter|linkedin|tiktok"
+        varchar platform_user_id UK "NOT NULL"
+        varchar display_name
+        varchar handle
+        varchar profile_image_url
+        text access_token_encrypted "NOT NULL"
+        varchar encryption_key_id
+        text refresh_token_encrypted
+        timestamp token_expires_at
+        boolean is_active "DEFAULT true"
+        boolean is_primary "DEFAULT false"
+        int followers_count "DEFAULT 0"
+        int following_count "DEFAULT 0"
+        jsonb platform_metadata
+        timestamp last_sync_at
+        varchar sync_status "synced|syncing|error"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        timestamp deleted_at "NULLABLE"
+        int version "DEFAULT 1"
+    }
+
+    social_account_health {
+        uuid id PK
+        uuid social_account_id FK "NOT NULL, UK"
+        varchar status "healthy|warning|error|disconnected"
+        text status_message
+        timestamp last_check_at "NOT NULL"
+        timestamp last_success_at
+        int consecutive_failures "DEFAULT 0"
+        int total_failures "DEFAULT 0"
+        jsonb error_details
+        timestamp next_check_at
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    user_permissions {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        bigint user_id FK "NOT NULL"
+        varchar resource_type "NOT NULL"
+        uuid resource_id
+        varchar permission "read|write|delete|publish|approve"
+        timestamp granted_at "NOT NULL"
+        bigint granted_by FK
+        timestamp expires_at
+        timestamp revoked_at
+        bigint revoked_by FK
+    }
+
+    api_keys {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        bigint user_id FK "NOT NULL"
+        varchar name "NOT NULL"
+        varchar key_prefix "NOT NULL"
+        varchar key_hash UK "NOT NULL"
+        text_array scopes "NOT NULL"
+        varchar status "active|revoked|expired"
+        timestamp last_used_at
+        varchar last_used_ip
+        timestamp expires_at
+        timestamp created_at "NOT NULL"
+        timestamp revoked_at
+        bigint revoked_by FK
+    }
+
+    sessions {
+        uuid id PK
+        bigint user_id FK "NOT NULL"
+        varchar token_hash UK "NOT NULL"
+        varchar ip_address
+        text user_agent
+        timestamp expires_at "NOT NULL"
+        timestamp last_activity_at "NOT NULL"
+        timestamp created_at "NOT NULL"
+    }
+
+    %% ============================================================================
+    %% CONTENT MANAGEMENT CONTEXT
+    %% ============================================================================
+
+    posts {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        bigint user_id FK "NOT NULL"
+        uuid campaign_id FK
+        varchar title
+        text content "NOT NULL"
+        varchar content_type "text|image|video|carousel|story"
+        varchar status "draft|scheduled|published|failed|archived"
+        jsonb metadata
+        jsonb hashtags
+        text_array mention_handles
+        timestamp scheduled_at
+        timestamp published_at
+        timestamp failed_at
+        text failure_reason
+        boolean ai_generated "DEFAULT false"
+        uuid ai_job_id FK
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        timestamp deleted_at "NULLABLE"
+        bigint created_by FK
+        bigint updated_by FK
+        int version "DEFAULT 1"
+    }
+
+    post_media {
+        uuid id PK
+        uuid post_id FK "NOT NULL"
+        uuid media_asset_id FK "NOT NULL"
+        int sort_order "DEFAULT 0"
+        jsonb platform_specific_crops
+        timestamp created_at "NOT NULL"
+    }
+
+    post_platforms {
+        uuid id PK
+        uuid post_id FK "NOT NULL"
+        uuid social_account_id FK "NOT NULL"
+        varchar platform "NOT NULL"
+        varchar platform_post_id UK
+        varchar status "pending|published|failed"
+        text platform_url
+        jsonb platform_response
+        text error_message
+        timestamp published_at
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    content_templates {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar name "NOT NULL"
+        varchar content_type "post|email|ad|story"
+        text_array platforms
+        text template_content "NOT NULL"
+        jsonb variables
+        varchar tone_of_voice
+        text_array tags
+        int usage_count "DEFAULT 0"
+        boolean is_active "DEFAULT true"
+        boolean is_public "DEFAULT false"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        bigint created_by FK
+        int version "DEFAULT 1"
+    }
+
+    content_versions {
+        uuid id PK
+        varchar content_type "NOT NULL"
+        uuid content_id "NOT NULL"
+        int version_number "NOT NULL"
+        jsonb content_snapshot "NOT NULL"
+        text change_summary
+        timestamp created_at "NOT NULL"
+        bigint created_by FK
+    }
+
+    content_variants {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar parent_content_type "NOT NULL"
+        uuid parent_content_id "NOT NULL"
+        varchar variant_name "NOT NULL"
+        text variant_content "NOT NULL"
+        decimal traffic_percent "DEFAULT 0"
+        varchar status "active|paused|winner|loser"
+        int impressions "DEFAULT 0"
+        int clicks "DEFAULT 0"
+        int conversions "DEFAULT 0"
+        decimal conversion_rate
+        boolean is_winner "DEFAULT false"
+        timestamp winner_declared_at
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    media_assets {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar filename "NOT NULL"
+        varchar original_filename
+        varchar mime_type "NOT NULL"
+        bigint file_size_bytes "NOT NULL"
+        int width_px
+        int height_px
+        int duration_seconds
+        varchar storage_provider "s3|cloudflare|gcs"
+        text storage_path "NOT NULL"
+        text storage_key
+        text public_url
+        text cdn_url
+        varchar status "uploading|ready|processing|failed"
+        boolean is_ai_generated "DEFAULT false"
+        text ai_prompt
+        uuid ai_job_id FK
+        int usage_count "DEFAULT 0"
+        jsonb metadata
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        bigint created_by FK
+        timestamp deleted_at "NULLABLE"
+    }
+
+    media_tags {
+        uuid id PK
+        uuid media_asset_id FK "NOT NULL"
+        varchar tag "NOT NULL"
+        varchar tag_type "auto|manual|ai"
+        decimal confidence
+        timestamp created_at "NOT NULL"
+    }
+
+    %% ============================================================================
+    %% CAMPAIGN MANAGEMENT CONTEXT
+    %% ============================================================================
+
+    campaigns {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar name "NOT NULL"
+        varchar slug UK "NOT NULL"
+        text description
+        varchar objective "awareness|engagement|conversions|traffic"
+        varchar status "draft|active|paused|completed|archived"
+        date start_date
+        date end_date
+        int target_reach
+        int budget_tokens
+        int spent_tokens "DEFAULT 0"
+        jsonb target_audience
+        text_array platforms
+        jsonb kpis
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        bigint created_by FK
+        timestamp deleted_at "NULLABLE"
+        int version "DEFAULT 1"
+    }
+
+    campaign_performance {
+        uuid id PK
+        uuid campaign_id FK "NOT NULL"
+        date performance_date "NOT NULL"
+        int total_posts "DEFAULT 0"
+        int total_impressions "DEFAULT 0"
+        int total_reach "DEFAULT 0"
+        int total_engagement "DEFAULT 0"
+        int total_clicks "DEFAULT 0"
+        decimal engagement_rate
+        decimal ctr
+        int tokens_spent "DEFAULT 0"
+        timestamp created_at "NOT NULL"
+    }
+
+    leads {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar company_name
+        varchar email UK "NOT NULL"
+        varchar phone
+        varchar first_name
+        varchar last_name
+        varchar job_title
+        varchar city
+        varchar region
+        varchar country
+        varchar source "website|referral|social|ad|import"
+        varchar status "new|contacted|qualified|converted|lost"
+        varchar industry
+        int score "DEFAULT 0"
+        text_array tags
+        jsonb custom_fields
+        bigint assigned_to FK
+        timestamp last_contact_at
+        timestamp converted_at
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        bigint created_by FK
+    }
+
+    lead_activities {
+        uuid id PK
+        uuid lead_id FK "NOT NULL"
+        varchar activity_type "email|call|meeting|note|status_change"
+        text description
+        jsonb metadata
+        timestamp activity_date "NOT NULL"
+        bigint performed_by FK
+        timestamp created_at "NOT NULL"
+    }
+
+    email_campaigns {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar name "NOT NULL"
+        varchar subject "NOT NULL"
+        text html_content "NOT NULL"
+        text plain_text_content
+        varchar target_region
+        text_array target_tags
+        varchar status "draft|scheduled|sending|sent|failed"
+        int total_recipients "DEFAULT 0"
+        int total_sent "DEFAULT 0"
+        int total_delivered "DEFAULT 0"
+        int total_opened "DEFAULT 0"
+        int total_clicked "DEFAULT 0"
+        int total_bounced "DEFAULT 0"
+        int total_unsubscribed "DEFAULT 0"
+        timestamp scheduled_at
+        timestamp sent_at
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        bigint created_by FK
+    }
+
+    email_campaign_recipients {
+        uuid id PK
+        uuid campaign_id FK "NOT NULL"
+        uuid lead_id FK "NOT NULL"
+        varchar status "pending|sent|delivered|opened|clicked|bounced|failed"
+        timestamp sent_at
+        timestamp delivered_at
+        timestamp opened_at
+        timestamp clicked_at
+        int open_count "DEFAULT 0"
+        int click_count "DEFAULT 0"
+        timestamp created_at "NOT NULL"
+    }
+
+    %% ============================================================================
+    %% BRAND DNA & SETTINGS
+    %% ============================================================================
+
+    brand_dna {
+        uuid id PK
+        uuid account_id FK "NOT NULL, UK"
+        varchar company_name "NOT NULL"
+        text tagline
+        text mission
+        text vision
+        text brand_story
+        varchar tone_of_voice "professional|casual|friendly|authoritative"
+        jsonb writing_style
+        varchar primary_color
+        varchar secondary_color
+        text logo_url
+        text_array core_values
+        jsonb target_demographics
+        text_array keywords
+        text_array competitors
+        text ai_persona
+        int current_version "DEFAULT 1"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        bigint created_by FK
+        bigint updated_by FK
+    }
+
+    brand_dna_versions {
+        uuid id PK
+        uuid brand_dna_id FK "NOT NULL"
+        int version_number "NOT NULL"
+        jsonb snapshot "NOT NULL"
+        text change_summary
+        timestamp created_at "NOT NULL"
+        bigint created_by FK
+    }
+
+    brand_assets {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar asset_type "logo|favicon|banner|social_profile"
+        varchar variant "primary|secondary|dark|light"
+        uuid media_asset_id FK "NOT NULL"
+        jsonb usage_guidelines
+        boolean is_active "DEFAULT true"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    %% ============================================================================
+    %% ANALYTICS & METRICS CONTEXT
+    %% ============================================================================
+
+    social_metrics {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        uuid post_id FK "NOT NULL"
+        uuid social_account_id FK "NOT NULL"
+        varchar platform "NOT NULL"
+        date metric_date "NOT NULL"
+        int impressions "DEFAULT 0"
+        int reach "DEFAULT 0"
+        int engagement_count "DEFAULT 0"
+        int likes "DEFAULT 0"
+        int comments "DEFAULT 0"
+        int shares "DEFAULT 0"
+        int saves "DEFAULT 0"
+        int clicks "DEFAULT 0"
+        int video_views "DEFAULT 0"
+        int video_completion_rate
+        decimal engagement_rate
+        timestamp measured_at "NOT NULL"
+        timestamp created_at "NOT NULL"
+    }
+
+    sentiment_analysis {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        uuid post_id FK
+        uuid social_account_id FK "NOT NULL"
+        varchar platform "NOT NULL"
+        varchar platform_comment_id
+        text comment_text
+        varchar author_handle
+        decimal sentiment_score "CHECK >= -1 AND <= 1"
+        varchar sentiment_label "positive|neutral|negative"
+        decimal confidence
+        jsonb emotions
+        varchar language
+        timestamp analyzed_at "NOT NULL"
+        timestamp created_at "NOT NULL"
+    }
+
+    competitor_profiles {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar name "NOT NULL"
+        varchar website
+        jsonb social_handles
+        varchar industry
+        text_array categories
+        jsonb metadata
+        boolean is_active "DEFAULT true"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        bigint created_by FK
+    }
+
+    competitor_metrics {
+        uuid id PK
+        uuid competitor_id FK "NOT NULL"
+        varchar platform "NOT NULL"
+        date metric_date "NOT NULL"
+        int followers_count
+        int following_count
+        int post_count_last_30d
+        decimal avg_engagement_rate
+        decimal posting_frequency
+        int avg_likes
+        int avg_comments
+        int our_followers_count
+        decimal growth_rate
+        timestamp measured_at "NOT NULL"
+        timestamp created_at "NOT NULL"
+    }
+
+    performance_predictions {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar prediction_type "engagement|reach|conversion"
+        uuid content_id
+        varchar content_type
+        decimal predicted_value "NOT NULL"
+        decimal confidence_level "CHECK >= 0 AND <= 1"
+        jsonb factors
+        jsonb recommendations
+        varchar ai_model
+        varchar ai_provider
+        timestamp prediction_date "NOT NULL"
+        timestamp created_at "NOT NULL"
+    }
+
+    analytics_reports {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar report_type "daily|weekly|monthly|custom"
+        varchar report_name "NOT NULL"
+        date period_start "NOT NULL"
+        date period_end "NOT NULL"
+        jsonb metrics_summary
+        jsonb insights
+        varchar status "generating|ready|failed"
+        text file_url
+        timestamp created_at "NOT NULL"
+        bigint created_by FK
+    }
+
+    %% ============================================================================
+    %% SOCIAL INTERACTION CONTEXT
+    %% ============================================================================
+
+    cross_post_configs {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar name "NOT NULL"
+        uuid_array social_account_ids "NOT NULL"
+        boolean auto_adapt_dimensions "DEFAULT true"
+        boolean auto_adapt_hashtags "DEFAULT true"
+        boolean auto_adapt_length "DEFAULT true"
+        jsonb platform_rules
+        boolean is_default "DEFAULT false"
+        boolean is_active "DEFAULT true"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        bigint created_by FK
+    }
+
+    cross_posts {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        uuid original_post_id FK "NOT NULL"
+        uuid config_id FK "NOT NULL"
+        jsonb platform_posts
+        varchar status "pending|in_progress|completed|failed"
+        int total_platforms
+        int successful_posts "DEFAULT 0"
+        int failed_posts "DEFAULT 0"
+        timestamp started_at
+        timestamp completed_at
+        timestamp created_at "NOT NULL"
+    }
+
+    social_comments {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        uuid post_id FK "NOT NULL"
+        uuid social_account_id FK "NOT NULL"
+        varchar platform "NOT NULL"
+        varchar platform_comment_id UK "NOT NULL"
+        varchar parent_comment_id
+        varchar author_id
+        varchar author_handle
+        varchar author_name
+        text comment_text "NOT NULL"
+        varchar status "new|read|replied|hidden|flagged"
+        boolean requires_attention "DEFAULT false"
+        varchar sentiment_label
+        decimal sentiment_score
+        boolean is_spam "DEFAULT false"
+        int like_count "DEFAULT 0"
+        int reply_count "DEFAULT 0"
+        timestamp comment_date "NOT NULL"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    comment_replies {
+        uuid id PK
+        uuid comment_id FK "NOT NULL"
+        uuid social_account_id FK "NOT NULL"
+        text reply_text "NOT NULL"
+        varchar platform_reply_id
+        varchar status "draft|sent|failed"
+        boolean ai_generated "DEFAULT false"
+        timestamp sent_at
+        timestamp created_at "NOT NULL"
+        bigint created_by FK
+    }
+
+    social_mentions {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        uuid social_account_id FK
+        varchar platform "NOT NULL"
+        varchar platform_mention_id UK "NOT NULL"
+        varchar author_id
+        varchar author_handle "NOT NULL"
+        varchar author_name
+        text mention_text "NOT NULL"
+        varchar mention_type "tag|mention|hashtag|comment"
+        text mention_url
+        varchar sentiment_label
+        decimal sentiment_score
+        varchar status "new|acknowledged|responded|archived"
+        int engagement_count "DEFAULT 0"
+        timestamp mention_date "NOT NULL"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    %% ============================================================================
+    %% AI SERVICES CONTEXT
+    %% ============================================================================
+
+    ai_jobs {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        bigint user_id FK "NOT NULL"
+        varchar job_type "content_generation|image_generation|video_generation|analysis"
+        varchar status "queued|processing|completed|failed|cancelled"
+        int priority "DEFAULT 5, CHECK >= 1 AND <= 10"
+        jsonb input_data "NOT NULL"
+        jsonb result_data
+        text error_message
+        text error_code
+        int retry_count "DEFAULT 0"
+        int max_retries "DEFAULT 3"
+        int tokens_consumed "DEFAULT 0"
+        varchar ai_provider
+        varchar ai_model
+        int progress_percent "DEFAULT 0"
+        timestamp queued_at "NOT NULL"
+        timestamp started_at
+        timestamp completed_at
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    ai_job_logs {
+        uuid id PK
+        uuid job_id FK "NOT NULL"
+        varchar level "info|warning|error|debug"
+        text message "NOT NULL"
+        jsonb details
+        timestamp created_at "NOT NULL"
+    }
+
+    content_generations {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        uuid job_id FK "NOT NULL"
+        varchar content_type "post|email|ad|article"
+        text prompt "NOT NULL"
+        text generated_content "NOT NULL"
+        varchar ai_provider "NOT NULL"
+        varchar ai_model "NOT NULL"
+        int prompt_tokens
+        int completion_tokens
+        int total_tokens
+        decimal quality_score
+        jsonb metadata
+        boolean was_used "DEFAULT false"
+        uuid used_in_post_id FK
+        timestamp created_at "NOT NULL"
+    }
+
+    image_generations {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        uuid job_id FK "NOT NULL"
+        text prompt "NOT NULL"
+        text negative_prompt
+        varchar style "realistic|artistic|cartoon|3d|sketch"
+        int width "NOT NULL"
+        int height "NOT NULL"
+        int steps "DEFAULT 30"
+        decimal guidance_scale "DEFAULT 7.5"
+        text image_url
+        varchar storage_key
+        varchar ai_provider "NOT NULL"
+        varchar ai_model "NOT NULL"
+        int tokens_used
+        decimal quality_score
+        boolean was_used "DEFAULT false"
+        uuid used_in_media_id FK
+        timestamp created_at "NOT NULL"
+    }
+
+    video_generations {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        uuid job_id FK "NOT NULL"
+        text prompt "NOT NULL"
+        varchar style
+        int duration_seconds "NOT NULL"
+        varchar resolution "720p|1080p|4k"
+        int fps "DEFAULT 30"
+        text video_url
+        text thumbnail_url
+        varchar storage_key
+        varchar ai_provider "NOT NULL"
+        varchar ai_model
+        varchar status "queued|processing|completed|failed"
+        int progress_percent "DEFAULT 0"
+        int tokens_used
+        boolean was_used "DEFAULT false"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    ai_training_data {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar data_type "content|style|brand_voice"
+        text source_content "NOT NULL"
+        jsonb extracted_features
+        decimal quality_score
+        boolean is_approved "DEFAULT false"
+        timestamp created_at "NOT NULL"
+        bigint created_by FK
+    }
+
+    %% ============================================================================
+    %% WORKFLOW & AUTOMATION CONTEXT
+    %% ============================================================================
+
+    workflows {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar name "NOT NULL"
+        varchar slug UK "NOT NULL"
+        text description
+        varchar trigger_type "manual|scheduled|event|webhook"
+        jsonb trigger_config "NOT NULL"
+        jsonb actions "NOT NULL"
+        varchar status "active|paused|archived"
+        int execution_count "DEFAULT 0"
+        int success_count "DEFAULT 0"
+        int failure_count "DEFAULT 0"
+        timestamp last_executed_at
+        timestamp last_success_at
+        timestamp last_failure_at
+        boolean is_template "DEFAULT false"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        bigint created_by FK
+        int version "DEFAULT 1"
+    }
+
+    workflow_executions {
+        uuid id PK
+        uuid workflow_id FK "NOT NULL"
+        uuid account_id FK "NOT NULL"
+        varchar execution_id UK "NOT NULL"
+        varchar status "running|completed|failed|cancelled"
+        int current_action_index "DEFAULT 0"
+        int total_actions
+        jsonb trigger_context
+        jsonb execution_context
+        jsonb action_results
+        timestamp started_at "NOT NULL"
+        timestamp completed_at
+        text error_message
+        int retry_count "DEFAULT 0"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    workflow_logs {
+        uuid id PK
+        uuid execution_id FK "NOT NULL"
+        varchar action_id "NOT NULL"
+        varchar action_type "NOT NULL"
+        int action_index
+        varchar level "info|warning|error"
+        text message "NOT NULL"
+        jsonb details
+        int duration_ms
+        timestamp created_at "NOT NULL"
+    }
+
+    workflow_schedules {
+        uuid id PK
+        uuid workflow_id FK "NOT NULL, UK"
+        varchar cron_expression "NOT NULL"
+        varchar timezone "DEFAULT UTC"
+        boolean is_active "DEFAULT true"
+        timestamp last_run_at
+        timestamp next_run_at "NOT NULL"
+        int total_runs "DEFAULT 0"
+        int successful_runs "DEFAULT 0"
+        int failed_runs "DEFAULT 0"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    approval_workflows {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar name "NOT NULL"
+        text description
+        jsonb steps "NOT NULL"
+        text_array content_types "NOT NULL"
+        boolean require_all_approvers "DEFAULT false"
+        boolean is_default "DEFAULT false"
+        boolean is_active "DEFAULT true"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        bigint created_by FK
+    }
+
+    content_approvals {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar content_type "NOT NULL"
+        uuid content_id "NOT NULL"
+        uuid workflow_id FK "NOT NULL"
+        int current_step "DEFAULT 0"
+        int total_steps
+        varchar status "pending|approved|rejected|cancelled"
+        jsonb approvals
+        jsonb rejection_reasons
+        bigint current_approver_id FK
+        timestamp submitted_at "NOT NULL"
+        timestamp completed_at
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        bigint submitted_by FK
+    }
+
+    approval_actions {
+        uuid id PK
+        uuid approval_id FK "NOT NULL"
+        bigint user_id FK "NOT NULL"
+        int step_number "NOT NULL"
+        varchar action "approved|rejected|delegated"
+        text comment
+        bigint delegated_to_user_id FK
+        timestamp action_date "NOT NULL"
+    }
+
+    %% ============================================================================
+    %% KNOWLEDGE BASE CONTEXT
+    %% ============================================================================
+
+    document_categories {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar name "NOT NULL"
+        text description
+        uuid parent_id FK
+        varchar icon
+        varchar color
+        int sort_order "DEFAULT 0"
+        int document_count "DEFAULT 0"
+        boolean is_active "DEFAULT true"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        bigint created_by FK
+    }
+
+    knowledge_documents {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        uuid category_id FK
+        varchar title "NOT NULL"
+        varchar slug UK "NOT NULL"
+        varchar source_type "upload|url|integration|manual"
+        text source_url
+        text content_text
+        varchar file_type "pdf|docx|txt|md|html"
+        bigint file_size_bytes
+        varchar processing_status "pending|processing|completed|failed"
+        int chunks_count "DEFAULT 0"
+        varchar vector_store "pinecone|weaviate|qdrant"
+        varchar embedding_model
+        jsonb metadata
+        text_array tags
+        int view_count "DEFAULT 0"
+        timestamp last_viewed_at
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        bigint created_by FK
+        timestamp deleted_at "NULLABLE"
+    }
+
+    document_chunks {
+        uuid id PK
+        uuid document_id FK "NOT NULL"
+        int chunk_index "NOT NULL"
+        text chunk_text "NOT NULL"
+        int chunk_size "NOT NULL"
+        varchar embedding_id
+        varchar embedding_model
+        jsonb metadata
+        timestamp created_at "NOT NULL"
+    }
+
+    document_embeddings {
+        uuid id PK
+        uuid chunk_id FK "NOT NULL, UK"
+        varchar vector_store "NOT NULL"
+        text vector_id "NOT NULL"
+        varchar embedding_model "NOT NULL"
+        int dimension "NOT NULL"
+        timestamp created_at "NOT NULL"
+    }
+
+    search_history {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        bigint user_id FK "NOT NULL"
+        text query_text "NOT NULL"
+        varchar query_type "semantic|keyword|hybrid"
+        int results_count "DEFAULT 0"
+        uuid_array result_document_ids
+        boolean was_helpful
+        int response_time_ms
+        varchar search_context "dashboard|chat|api"
+        timestamp created_at "NOT NULL"
+    }
+
+    %% ============================================================================
+    %% NOTIFICATION & COMMUNICATION CONTEXT
+    %% ============================================================================
+
+    notification_preferences {
+        uuid id PK
+        bigint user_id FK "NOT NULL, UK"
+        uuid account_id FK "NOT NULL"
+        boolean email_enabled "DEFAULT true"
+        boolean push_enabled "DEFAULT true"
+        boolean sms_enabled "DEFAULT false"
+        jsonb channel_preferences
+        text_array muted_notification_types
+        varchar digest_frequency "realtime|daily|weekly|never"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    notifications {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        bigint user_id FK "NOT NULL"
+        varchar notification_type "NOT NULL"
+        varchar title "NOT NULL"
+        text message "NOT NULL"
+        varchar priority "low|normal|high|urgent"
+        jsonb action_data
+        varchar status "unread|read|archived"
+        timestamp read_at
+        timestamp archived_at
+        timestamp expires_at
+        timestamp created_at "NOT NULL"
+    }
+
+    notification_deliveries {
+        uuid id PK
+        uuid notification_id FK "NOT NULL"
+        varchar channel "email|push|sms|in_app"
+        varchar status "pending|sent|delivered|failed|bounced"
+        text recipient_address
+        varchar provider_message_id
+        text error_message
+        timestamp sent_at
+        timestamp delivered_at
+        timestamp created_at "NOT NULL"
+    }
+
+    %% ============================================================================
+    %% AUDIT & COMPLIANCE CONTEXT
+    %% ============================================================================
+
+    audit_logs {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        bigint user_id FK
+        varchar actor_type "user|system|api|admin"
+        varchar action "NOT NULL"
+        varchar resource_type "NOT NULL"
+        uuid resource_id
+        jsonb changes
+        jsonb metadata
+        varchar ip_address
+        text user_agent
+        varchar request_id
+        timestamp created_at "NOT NULL"
+    }
+
+    data_retention_policies {
+        varchar data_type PK
+        int retention_days "NOT NULL"
+        boolean auto_delete "DEFAULT false"
+        varchar archive_strategy "delete|archive|anonymize"
+        text description
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    user_consents {
+        uuid id PK
+        bigint user_id FK "NOT NULL"
+        uuid account_id FK "NOT NULL"
+        varchar consent_type "terms|privacy|marketing|cookies|data_processing"
+        varchar consent_version "NOT NULL"
+        boolean granted "NOT NULL"
+        varchar ip_address
+        text user_agent
+        text consent_text
+        timestamp granted_at "NOT NULL"
+        timestamp revoked_at
+        timestamp created_at "NOT NULL"
+    }
+
+    data_deletion_requests {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        bigint user_id FK
+        varchar request_type "account|data|specific_resource"
+        varchar status "pending|processing|completed|failed"
+        text reason
+        jsonb resources_to_delete
+        jsonb deleted_data_summary
+        timestamp requested_at "NOT NULL"
+        timestamp completed_at
+        bigint processed_by FK
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    compliance_exports {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        bigint user_id FK
+        varchar export_type "gdpr|account_data|audit_trail"
+        varchar status "pending|generating|ready|expired"
+        text file_url
+        bigint file_size_bytes
+        varchar encryption_key_id
+        timestamp expires_at
+        timestamp requested_at "NOT NULL"
+        timestamp completed_at
+        bigint requested_by FK
+        timestamp created_at "NOT NULL"
+    }
+
+    %% ============================================================================
+    %% INTEGRATION & WEBHOOK CONTEXT
+    %% ============================================================================
+
+    integrations {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar integration_type "zapier|make|n8n|custom"
+        varchar name "NOT NULL"
+        varchar status "active|paused|error"
+        jsonb config
+        text api_key_hash
+        timestamp last_sync_at
+        int total_syncs "DEFAULT 0"
+        int failed_syncs "DEFAULT 0"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        bigint created_by FK
+    }
+
+    webhooks {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar name "NOT NULL"
+        text url "NOT NULL"
+        varchar secret_hash
+        text_array events "NOT NULL"
+        varchar status "active|paused|failed"
+        jsonb headers
+        int retry_max_attempts "DEFAULT 3"
+        int retry_delay_seconds "DEFAULT 60"
+        int total_deliveries "DEFAULT 0"
+        int successful_deliveries "DEFAULT 0"
+        int failed_deliveries "DEFAULT 0"
+        timestamp last_delivery_at
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+        bigint created_by FK
+    }
+
+    webhook_deliveries {
+        uuid id PK
+        uuid webhook_id FK "NOT NULL"
+        varchar event_type "NOT NULL"
+        uuid event_id FK "NOT NULL"
+        jsonb payload "NOT NULL"
+        varchar status "pending|sent|failed|retrying"
+        int response_code
+        text response_body
+        text error_message
+        int attempts "DEFAULT 0"
+        timestamp next_retry_at
+        timestamp delivered_at
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    %% ============================================================================
+    %% SHARED KERNEL (Cross-Cutting Concerns)
+    %% ============================================================================
+
+    domain_events {
+        uuid id PK
+        varchar aggregate_type "NOT NULL"
+        uuid aggregate_id "NOT NULL"
+        varchar event_type "NOT NULL"
+        jsonb event_data "NOT NULL"
+        jsonb metadata
+        int aggregate_version "NOT NULL"
+        uuid account_id FK
+        bigint user_id FK
+        varchar correlation_id
+        varchar causation_id
+        boolean processed "DEFAULT false"
+        timestamp processed_at
+        timestamp occurred_at "NOT NULL"
+        timestamp created_at "NOT NULL"
+    }
+
+    event_subscriptions {
+        uuid id PK
+        varchar subscriber_name "NOT NULL"
+        text_array event_types "NOT NULL"
+        varchar handler_type "webhook|queue|function"
+        jsonb handler_config "NOT NULL"
+        boolean is_active "DEFAULT true"
+        timestamp created_at "NOT NULL"
+    }
+
+    feature_flags {
+        uuid id PK
+        varchar feature_name "NOT NULL"
+        uuid account_id FK
+        varchar rollout_strategy "all|percentage|accounts|users"
+        int rollout_percentage "DEFAULT 0"
+        uuid_array allowed_accounts
+        bigint_array allowed_users
+        boolean enabled "DEFAULT false"
+        jsonb config
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    api_rate_limits {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar endpoint "NOT NULL"
+        int limit_per_minute "NOT NULL"
+        int limit_per_hour "NOT NULL"
+        int limit_per_day "NOT NULL"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    rate_limit_usage {
+        date day PK
+        uuid account_id FK "PK"
+        varchar endpoint PK
+        int total_requests "DEFAULT 0"
+        int throttled_requests "DEFAULT 0"
+        int peak_requests_per_minute "DEFAULT 0"
+        timestamp created_at "NOT NULL"
+    }
+
+    idempotency_keys {
+        varchar key PK
+        uuid account_id FK "NOT NULL"
+        varchar endpoint "NOT NULL"
+        varchar request_method "NOT NULL"
+        varchar request_hash "NOT NULL"
+        jsonb response_data
+        int status_code
+        timestamp expires_at "NOT NULL"
+        timestamp created_at "NOT NULL"
+    }
+
+    async_jobs {
+        uuid id PK
+        uuid account_id FK "NOT NULL"
+        varchar job_type "NOT NULL"
+        varchar status "queued|processing|completed|failed|cancelled"
+        int priority "DEFAULT 5"
+        jsonb input_data "NOT NULL"
+        jsonb result_data
+        text error_message
+        int retry_count "DEFAULT 0"
+        int max_retries "DEFAULT 3"
+        timestamp scheduled_at
+        timestamp started_at
+        timestamp completed_at
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    job_locks {
+        varchar lock_key PK
+        uuid job_id FK "NOT NULL"
+        varchar worker_id "NOT NULL"
+        timestamp acquired_at "NOT NULL"
+        timestamp expires_at "NOT NULL"
+    }
+
+    system_settings {
+        varchar key PK
+        varchar value_type "string|number|boolean|json"
+        text value "NOT NULL"
+        text description
+        boolean is_secret "DEFAULT false"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    maintenance_windows {
+        uuid id PK
+        varchar title "NOT NULL"
+        text description
+        timestamp start_time "NOT NULL"
+        timestamp end_time "NOT NULL"
+        varchar status "scheduled|in_progress|completed|cancelled"
+        boolean notify_users "DEFAULT true"
+        timestamp created_at "NOT NULL"
+        timestamp updated_at "NOT NULL"
+    }
+
+    %% ============================================================================
+    %% RELATIONSHIPS - CORE & IDENTITY
+    %% ============================================================================
+
+    accounts ||--o{ users : "has"
+    accounts ||--o{ social_accounts : "has"
+    accounts ||--o{ user_permissions : "has"
+    users ||--o{ social_accounts : "owns"
+    users ||--o{ user_permissions : "has"
+    users ||--o{ sessions : "has"
+    users ||--o{ api_keys : "owns"
+    social_accounts ||--|| social_account_health : "has"
+    admin_users ||--o{ admin_action_logs : "performs"
+
+    %% ============================================================================
+    %% RELATIONSHIPS - BILLING & SUBSCRIPTIONS
+    %% ============================================================================
+
+    subscription_plans ||--o{ subscriptions : "used_by"
+    accounts ||--|| subscriptions : "has"
+    accounts ||--o{ payment_methods : "has"
+    accounts ||--o{ invoices : "has"
+    subscriptions ||--o{ invoices : "generates"
+    invoices ||--o{ invoice_items : "contains"
+    accounts ||--o{ failed_payments : "has"
+    failed_payments ||--o{ dunning_campaigns : "triggers"
+
+    %% ============================================================================
+    %% RELATIONSHIPS - TOKEN WALLET
+    %% ============================================================================
+
+    users ||--|| token_wallets : "has"
+    token_wallets ||--o{ token_transactions : "has"
+    token_packages ||--o{ token_transactions : "used_in"
+
+    %% ============================================================================
+    %% RELATIONSHIPS - PROMO & REFERRALS
+    %% ============================================================================
+
+    promo_codes ||--o{ promo_redemptions : "redeemed"
+    accounts ||--o{ promo_redemptions : "redeems"
+    users ||--o{ promo_redemptions : "redeems"
+    accounts ||--|| referral_codes : "has"
+    referral_codes ||--o{ referral_conversions : "tracks"
+
+    %% ============================================================================
+    %% RELATIONSHIPS - CONTENT MANAGEMENT
+    %% ============================================================================
+
+    accounts ||--o{ posts : "has"
+    users ||--o{ posts : "creates"
+    campaigns ||--o{ posts : "contains"
+    posts ||--o{ post_media : "has"
+    media_assets ||--o{ post_media : "used_in"
+    posts ||--o{ post_platforms : "published_to"
+    social_accounts ||--o{ post_platforms : "publishes"
+    accounts ||--o{ content_templates : "has"
+    accounts ||--o{ content_variants : "has"
+    accounts ||--o{ media_assets : "owns"
+    media_assets ||--o{ media_tags : "has"
+    ai_jobs ||--o{ media_assets : "generates"
+
+    %% ============================================================================
+    %% RELATIONSHIPS - CAMPAIGNS & LEADS
+    %% ============================================================================
+
+    accounts ||--o{ campaigns : "has"
+    campaigns ||--o{ campaign_performance : "tracks"
+    accounts ||--o{ leads : "has"
+    users ||--o{ leads : "manages"
+    leads ||--o{ lead_activities : "has"
+    accounts ||--o{ email_campaigns : "has"
+    email_campaigns ||--o{ email_campaign_recipients : "sent_to"
+    leads ||--o{ email_campaign_recipients : "receives"
+
+    %% ============================================================================
+    %% RELATIONSHIPS - BRAND DNA
+    %% ============================================================================
+
+    accounts ||--|| brand_dna : "has"
+    brand_dna ||--o{ brand_dna_versions : "has"
+    accounts ||--o{ brand_assets : "has"
+    media_assets ||--o{ brand_assets : "used_in"
+
+    %% ============================================================================
+    %% RELATIONSHIPS - ANALYTICS
+    %% ============================================================================
+
+    accounts ||--o{ social_metrics : "has"
+    posts ||--o{ social_metrics : "tracked"
+    social_accounts ||--o{ social_metrics : "generates"
+    accounts ||--o{ sentiment_analysis : "has"
+    posts ||--o{ sentiment_analysis : "analyzed"
+    accounts ||--o{ competitor_profiles : "tracks"
+    competitor_profiles ||--o{ competitor_metrics : "has"
+    accounts ||--o{ performance_predictions : "has"
+    accounts ||--o{ analytics_reports : "generates"
+
+    %% ============================================================================
+    %% RELATIONSHIPS - SOCIAL INTERACTIONS
+    %% ============================================================================
+
+    accounts ||--o{ cross_post_configs : "has"
+    accounts ||--o{ cross_posts : "has"
+    posts ||--o{ cross_posts : "source"
+    cross_post_configs ||--o{ cross_posts : "uses"
+    accounts ||--o{ social_comments : "receives"
+    posts ||--o{ social_comments : "has"
+    social_comments ||--o{ comment_replies : "has"
+    accounts ||--o{ social_mentions : "receives"
+
+    %% ============================================================================
+    %% RELATIONSHIPS - AI SERVICES
+    %% ============================================================================
+
+    accounts ||--o{ ai_jobs : "has"
+    users ||--o{ ai_jobs : "initiates"
+    ai_jobs ||--o{ ai_job_logs : "generates"
+    accounts ||--o{ content_generations : "has"
+    ai_jobs ||--o{ content_generations : "produces"
+    posts ||--o{ content_generations : "uses"
+    accounts ||--o{ image_generations : "has"
+    ai_jobs ||--o{ image_generations : "produces"
+    media_assets ||--o{ image_generations : "uses"
+    accounts ||--o{ video_generations : "has"
+    ai_jobs ||--o{ video_generations : "produces"
+    accounts ||--o{ ai_training_data : "has"
+
+    %% ============================================================================
+    %% RELATIONSHIPS - WORKFLOWS
+    %% ============================================================================
+
+    accounts ||--o{ workflows : "has"
+    workflows ||--o{ workflow_executions : "executes"
+    workflow_executions ||--o{ workflow_logs : "generates"
+    workflows ||--|| workflow_schedules : "has"
+    accounts ||--o{ approval_workflows : "has"
+    accounts ||--o{ content_approvals : "has"
+    approval_workflows ||--o{ content_approvals : "defines"
+    content_approvals ||--o{ approval_actions : "has"
+    users ||--o{ approval_actions : "performs"
+
+    %% ============================================================================
+    %% RELATIONSHIPS - KNOWLEDGE BASE
+    %% ============================================================================
+
+    accounts ||--o{ document_categories : "has"
+    document_categories ||--o{ document_categories : "parent"
+    accounts ||--o{ knowledge_documents : "has"
+    document_categories ||--o{ knowledge_documents : "contains"
+    knowledge_documents ||--o{ document_chunks : "split_into"
+    document_chunks ||--|| document_embeddings : "has"
+    accounts ||--o{ search_history : "tracks"
+    users ||--o{ search_history : "performs"
+
+    %% ============================================================================
+    %% RELATIONSHIPS - NOTIFICATIONS
+    %% ============================================================================
+
+    users ||--|| notification_preferences : "has"
+    accounts ||--o{ notifications : "generates"
+    users ||--o{ notifications : "receives"
+    notifications ||--o{ notification_deliveries : "delivered_via"
+
+    %% ============================================================================
+    %% RELATIONSHIPS - AUDIT & COMPLIANCE
+    %% ============================================================================
+
+    accounts ||--o{ audit_logs : "has"
+    users ||--o{ audit_logs : "performs"
+    users ||--o{ user_consents : "gives"
+    accounts ||--o{ data_deletion_requests : "has"
+    accounts ||--o{ compliance_exports : "generates"
+
+    %% ============================================================================
+    %% RELATIONSHIPS - INTEGRATIONS
+    %% ============================================================================
+
+    accounts ||--o{ integrations : "has"
+    accounts ||--o{ webhooks : "has"
+    webhooks ||--o{ webhook_deliveries : "sends"
+
+    %% ============================================================================
+    %% RELATIONSHIPS - SHARED KERNEL
+    %% ============================================================================
+
+    accounts ||--o{ domain_events : "generates"
+    domain_events ||--o{ event_subscriptions : "triggers"
+    accounts ||--o{ feature_flags : "has"
+    accounts ||--o{ api_rate_limits : "has"
+    accounts ||--o{ rate_limit_usage : "tracks"
+    accounts ||--o{ idempotency_keys : "uses"
+    accounts ||--o{ async_jobs : "has"
+    async_jobs ||--o{ job_locks : "locked_by"

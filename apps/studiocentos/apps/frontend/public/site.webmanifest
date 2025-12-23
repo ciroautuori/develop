@@ -1,0 +1,22 @@
+{
+  "name": "STUDIOCENTOS",
+  "short_name": "STUDIOCENTOS",
+  "description": "AI-Powered Development Made in Italy",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#DC0000",
+  "background_color": "#FFFFFF",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/"
+}

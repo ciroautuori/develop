@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudiocentOS - Variante 2: Modern & Animated</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #0a0a0a; color: #ffffff; }
+        .text-gold { color: #D4AF37; }
+        .border-gold { border-color: #D4AF37; }
+        .bg-gold { background: #D4AF37; }
+
+        /* Gradient animato */
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .gradient-animate {
+            background: linear-gradient(45deg, #D4AF37, #F4E5B8, #D4AF37, #AA8C2C);
+            background-size: 300% 300%;
+            animation: gradient 8s ease infinite;
+        }
+
+        /* Hover glow */
+        .hover-glow {
+            transition: all 0.3s ease;
+        }
+        .hover-glow:hover {
+            box-shadow: 0 0 40px rgba(212, 175, 55, 0.4);
+            transform: translateY(-8px);
+        }
+
+        /* Parallax scroll */
+        .parallax {
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        /* Bento grid */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+        }
+        .bento-item-1 { grid-column: span 8; grid-row: span 2; }
+        .bento-item-2 { grid-column: span 4; grid-row: span 1; }
+        .bento-item-3 { grid-column: span 4; grid-row: span 1; }
+        .bento-item-4 { grid-column: span 6; grid-row: span 1; }
+        .bento-item-5 { grid-column: span 6; grid-row: span 1; }
+
+        @media (max-width: 768px) {
+            .bento-grid { grid-template-columns: 1fr; }
+            .bento-item-1, .bento-item-2, .bento-item-3, .bento-item-4, .bento-item-5 {
+                grid-column: span 1 !important;
+                grid-row: span 1 !important;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased overflow-x-hidden">
+
+    <!-- Header con glassmorphism -->
+    <header class="fixed top-0 w-full z-50 bg-black/40 backdrop-blur-3xl border-b border-white/10">
+        <nav class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-gold to-[#AA8C2C] flex items-center justify-center">
+                    <span class="text-2xl">⚡</span>
+                </div>
+                <div class="text-xl font-bold">
+                    STUDIO<span class="text-gold">CENTOS</span>
+                </div>
+            </div>
+            <div class="hidden md:flex items-center gap-6">
+                <a href="#work" class="text-gray-400 hover:text-white transition">Work</a>
+                <a href="#services" class="text-gray-400 hover:text-white transition">Services</a>
+                <a href="#about" class="text-gray-400 hover:text-white transition">About</a>
+                <a href="#contact" class="px-6 py-2.5 bg-gold text-black rounded-full font-medium hover:bg-[#F4E5B8] transition">
+                    Let's Talk
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero con gradient animato -->
+    <section class="min-h-screen flex items-center justify-center px-6 relative overflow-hidden">
+        <!-- Background gradient animato -->
+        <div class="absolute inset-0 gradient-animate opacity-5"></div>
+
+        <div class="max-w-6xl text-center relative z-10">
+            <div class="inline-block mb-8 px-6 py-3 bg-white/5 backdrop-blur-xl rounded-full text-sm border border-white/10">
+                <span class="text-gold">●</span> Available for new projects
+            </div>
+            <h1 class="text-6xl md:text-8xl lg:text-9xl font-bold mb-8 leading-none">
+                Build<br/>
+                <span class="gradient-animate bg-clip-text text-transparent">Better</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto">
+                Enterprise-grade React & FastAPI applications.<br/>
+                From idea to production in 45 days.
+            </p>
+            <div class="flex gap-4 justify-center flex-wrap">
+                <a href="#work" class="group px-10 py-5 bg-gold text-black rounded-full font-medium hover:bg-[#F4E5B8] transition inline-flex items-center gap-2">
+                    View Projects
+                    <span class="group-hover:translate-x-1 transition">→</span>
+                </a>
+                <a href="#contact" class="px-10 py-5 bg-white/5 hover:bg-white/10 rounded-full transition font-medium border border-white/10">
+                    Get in Touch
+                </a>
+            </div>
+
+            <!-- Trusted by -->
+            <div class="mt-24">
+                <p class="text-sm text-gray-500 mb-6">TRUSTED BY</p>
+                <div class="flex gap-12 justify-center items-center opacity-40">
+                    <div class="text-2xl">🏢</div>
+                    <div class="text-2xl">🚀</div>
+                    <div class="text-2xl">💼</div>
+                    <div class="text-2xl">🎯</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Portfolio - Bento Grid -->
+    <section id="work" class="max-w-7xl mx-auto px-6 py-32">
+        <div class="mb-20">
+            <h2 class="text-5xl md:text-6xl font-bold mb-4">Selected Work</h2>
+            <p class="text-xl text-gray-400">Real projects. Real results.</p>
+        </div>
+
+        <div class="bento-grid">
+            <!-- Large project -->
+            <div class="bento-item-1 bg-gradient-to-br from-white/10 to-white/5 rounded-3xl p-8 border border-white/10 hover-glow group">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <div class="text-sm text-gold mb-2">Featured Project</div>
+                        <h3 class="text-4xl font-bold mb-3 group-hover:text-gold transition">CV-Lab Pro</h3>
+                        <p class="text-gray-400 text-lg">AI-powered portfolio builder for professionals</p>
+                    </div>
+                    <div class="text-6xl">💼</div>
+                </div>
+                <div class="flex gap-3 mb-6">
+                    <span class="px-4 py-2 bg-white/5 rounded-full text-xs">React 19</span>
+                    <span class="px-4 py-2 bg-white/5 rounded-full text-xs">FastAPI</span>
+                    <span class="px-4 py-2 bg-white/5 rounded-full text-xs">AI</span>
+                </div>
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <div class="text-3xl font-bold text-gold">850+</div>
+                        <div class="text-xs text-gray-500">Production Files</div>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold text-gold">11</div>
+                        <div class="text-xs text-gray-500">Business Domains</div>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold text-gold">45d</div>
+                        <div class="text-xs text-gray-500">Time to Market</div>
+                    </div>
+                </div>
+                <a href="https://cv-lab.pro" target="_blank" class="inline-flex items-center gap-2 text-gold hover:underline">
+                    Visit Site <span>→</span>
+                </a>
+            </div>
+
+            <!-- Small projects -->
+            <div class="bento-item-2 bg-gradient-to-br from-white/10 to-white/5 rounded-3xl p-6 border border-white/10 hover-glow">
+                <div class="text-4xl mb-4">🤖</div>
+                <h3 class="text-2xl font-bold mb-2">Phoenix AI</h3>
+                <p class="text-sm text-gray-400">78 enterprise AI tools</p>
+            </div>
+
+            <div class="bento-item-3 bg-gradient-to-br from-white/10 to-white/5 rounded-3xl p-6 border border-white/10 hover-glow">
+                <div class="text-4xl mb-4">⚡</div>
+                <h3 class="text-2xl font-bold mb-2">Framework</h3>
+                <p class="text-sm text-gray-400">€100K code value</p>
+            </div>
+
+            <div class="bento-item-4 bg-gradient-to-br from-white/10 to-white/5 rounded-3xl p-6 border border-white/10 hover-glow">
+                <div class="text-4xl mb-4">🧩</div>
+                <h3 class="text-2xl font-bold mb-2">fastBank</h3>
+                <p class="text-sm text-gray-400 mb-4">50+ UI components</p>
+                <span class="text-xs text-gold">-90% dev time</span>
+            </div>
+
+            <div class="bento-item-5 bg-gradient-to-br from-white/10 to-white/5 rounded-3xl p-6 border border-white/10 hover-glow">
+                <div class="text-4xl mb-4">📱</div>
+                <h3 class="text-2xl font-bold mb-2">Mobile Apps</h3>
+                <p class="text-sm text-gray-400">iOS + Android native</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services - Cards moderne -->
+    <section id="services" class="max-w-7xl mx-auto px-6 py-32">
+        <div class="mb-20 text-center">
+            <h2 class="text-5xl md:text-6xl font-bold mb-4">What I Do</h2>
+            <p class="text-xl text-gray-400">Full-stack development with AI superpowers</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="bg-gradient-to-br from-white/10 to-white/5 rounded-3xl p-8 border border-white/10 hover-glow">
+                <div class="w-16 h-16 rounded-2xl bg-gold/10 flex items-center justify-center mb-6">
+                    <span class="text-3xl">⚡</span>
+                </div>
+                <h3 class="text-2xl font-bold mb-3">Fast Development</h3>
+                <p class="text-gray-400 mb-6">MVP in 45 days. Production-ready code from day one.</p>
+                <ul class="space-y-2 text-sm text-gray-400">
+                    <li>✓ React 19 + FastAPI</li>
+                    <li>✓ PostgreSQL 16 + Redis</li>
+                    <li>✓ Docker + CI/CD</li>
+                </ul>
+            </div>
+
+            <div class="bg-gradient-to-br from-white/10 to-white/5 rounded-3xl p-8 border border-white/10 hover-glow">
+                <div class="w-16 h-16 rounded-2xl bg-gold/10 flex items-center justify-center mb-6">
+                    <span class="text-3xl">🤖</span>
+                </div>
+                <h3 class="text-2xl font-bold mb-3">AI Integration</h3>
+                <p class="text-gray-400 mb-6">ChatGPT, custom agents, RAG systems.</p>
+                <ul class="space-y-2 text-sm text-gray-400">
+                    <li>✓ 78 AI tools ready</li>
+                    <li>✓ Multi-provider support</li>
+                    <li>✓ Real-time monitoring</li>
+                </ul>
+            </div>
+
+            <div class="bg-gradient-to-br from-white/10 to-white/5 rounded-3xl p-8 border border-white/10 hover-glow">
+                <div class="w-16 h-16 rounded-2xl bg-gold/10 flex items-center justify-center mb-6">
+                    <span class="text-3xl">🎨</span>
+                </div>
+                <h3 class="text-2xl font-bold mb-3">UI/UX Design</h3>
+                <p class="text-gray-400 mb-6">Beautiful interfaces that users love.</p>
+                <ul class="space-y-2 text-sm text-gray-400">
+                    <li>✓ 50+ components</li>
+                    <li>✓ Responsive design</li>
+                    <li>✓ Accessibility first</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA con gradient -->
+    <section id="contact" class="max-w-5xl mx-auto px-6 py-32">
+        <div class="relative rounded-[3rem] overflow-hidden">
+            <div class="absolute inset-0 gradient-animate opacity-20"></div>
+            <div class="relative bg-black/60 backdrop-blur-2xl border border-gold/20 rounded-[3rem] p-16 text-center">
+                <h2 class="text-5xl md:text-7xl font-bold mb-6">
+                    Let's Build<br/>
+                    <span class="text-gold">Together</span>
+                </h2>
+                <p class="text-2xl text-gray-400 mb-12">Turn your idea into reality</p>
+                <div class="flex gap-6 justify-center flex-wrap">
+                    <a href="mailto:ciro@studiocentos.it" class="px-12 py-5 bg-gold text-black rounded-full hover:bg-[#F4E5B8] transition font-medium text-lg">
+                        ciro@studiocentos.it
+                    </a>
+                    <a href="#" class="px-12 py-5 bg-white/5 hover:bg-white/10 rounded-full transition font-medium text-lg border border-white/10">
+                        Schedule Call
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex justify-between items-center">
+                <div class="text-xl font-bold">
+                    STUDIO<span class="text-gold">CENTOS</span>
+                </div>
+                <div class="text-gray-500 text-sm">
+                    Made in Italy 🇮🇹 • © 2024
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

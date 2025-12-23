@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WOW Effect 2 - Text Reveal</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a0a; color: #fff; font-family: 'Inter', sans-serif; padding: 40px; }
+        
+        /* EFFETTO 2: TESTO CHE SI RIVELA CON GRADIENT ANIMATO */
+        .text-reveal-container {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .text-reveal {
+            font-size: 4rem;
+            font-weight: 300;
+            line-height: 1.2;
+            background: linear-gradient(
+                90deg,
+                #666 0%,
+                #666 30%,
+                #D4AF37 50%,
+                #F4E5B8 55%,
+                #D4AF37 60%,
+                #666 80%,
+                #666 100%
+            );
+            background-size: 200% 100%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 3s linear infinite;
+        }
+        
+        @keyframes shine {
+            0% { background-position: 200% center; }
+            100% { background-position: -200% center; }
+        }
+        
+        .text-fade-in {
+            opacity: 0;
+            animation: fadeInUp 1s ease-out forwards;
+        }
+        
+        .text-fade-in:nth-child(1) { animation-delay: 0.2s; }
+        .text-fade-in:nth-child(2) { animation-delay: 0.4s; }
+        .text-fade-in:nth-child(3) { animation-delay: 0.6s; }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .demo-box {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 { text-align: center; color: #D4AF37; margin-bottom: 20px; font-size: 2rem; }
+        p { text-align: center; color: #999; margin-bottom: 40px; }
+    </style>
+</head>
+<body>
+    <div class="demo-box">
+        <h1>✨ WOW Effect 2: Text Reveal</h1>
+        <p>Testo con gradient animato che brilla + fade in sequenziale</p>
+        
+        <div class="text-reveal-container">
+            <div class="text-fade-in">
+                <div class="text-reveal">Trasformiamo idee</div>
+            </div>
+            <div class="text-fade-in">
+                <div class="text-reveal">in prodotti digitali</div>
+            </div>
+            <div class="text-fade-in">
+                <div class="text-reveal">che le persone amano</div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 40px;">
+            <p style="font-size: 14px; color: #666;">
+                <strong>Effetto:</strong> Gradient shine + Fade in sequenziale<br>
+                <strong>Uso:</strong> Hero titles, Section headers, CTA
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,15 @@
+# E2E Test Suite Requirements
+# Install with: pip install -r requirements.txt
+
+# HTTP requests
+requests>=2.31.0
+
+# Browser automation (for real user simulation)
+playwright>=1.40.0
+
+# Test framework
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+
+# Rich terminal output
+rich>=13.0.0

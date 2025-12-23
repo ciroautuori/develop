@@ -1,0 +1,251 @@
+# ============================================================================
+# STUDIOCENTOS - PRODUZIONE Docker Compose
+# ============================================================================
+# TUTTI I SERVIZI IN DOCKER:
+# - Nginx (reverse proxy + SSL)
+# - Backend FastAPI
+# - AI Microservice
+# - Frontend React
+# - PostgreSQL
+# - Redis
+# ============================================================================
+
+name: studiocentos-production
+
+networks:
+  web_gateway:
+    external: true
+  studiocentos:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  nginx_logs:
+    driver: local
+  letsencrypt:
+    driver: local
+  certbot_www:
+    driver: local
+  ai_media:
+    driver: local
+  backend_uploads:
+    driver: local
+  chromadb_data:
+    driver: local
+
+services:
+  # ==========================================================================
+  # POSTGRESQL - REMOVED (Use Central Stack)
+  # ==========================================================================
+
+
+  # ==========================================================================
+  # REDIS - REMOVED (Use Central Stack)
+  # ==========================================================================
+
+
+  # ==========================================================================
+  # CHROMADB - REMOVED (Use Central Stack)
+  # ==========================================================================
+
+
+  # ==========================================================================
+  # BACKEND - FastAPI
+  # ==========================================================================
+  backend:
+    build:
+      context: ../..
+      dockerfile: config/docker/dockerfiles/backend.Dockerfile
+    image: studiocentos/backend:latest
+    container_name: studiocentos-backend
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+    #   redis:
+    #     condition: service_healthy
+
+    environment:
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-central_admin_password_2025}@central-postgres:5432/studiocentos
+      DB_USER: ${POSTGRES_USER:-admin}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-central_admin_password_2025}
+      DB_HOST: central-postgres
+      DB_PORT: 5432
+      DB_NAME: studiocentos
+
+      # Redis
+      REDIS_URL: redis://:${REDIS_PASSWORD:-central_redis_password_2025}@central-redis:6379/2
+
+      # App
+      ENVIRONMENT: production
+      DEBUG: "false"
+      LOG_LEVEL: info
+
+      # URLs
+      # URLs
+      FRONTEND_URL: https://studiocentos.it
+      FRONTEND_APP_URL: https://studiocentos.it
+      BACKEND_URL: https://studiocentos.it
+      BASE_URL: https://www.studiocentos.it
+
+      # Security
+      SECRET_KEY: ${SECRET_KEY:-a0e9abc8d066f9981e01aa2cf820eed1fdb8d6aa3a39be3f08dea0ce8f1543d6}
+      JWT_SECRET: ${JWT_SECRET:-608a0a473e7b2ca20631fc90f111cdd57b8f4691bfe4e3125e1a6f71a37c4792}
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRATION: 3600
+
+      # Security - PII Encryption (CRITICAL)
+      PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY}
+
+      # Email / SMTP (Sending)
+      SMTP_SERVER: ${SMTP_SERVER:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      FROM_EMAIL: ${FROM_EMAIL:-info@studiocentos.it}
+      FROM_NAME: ${FROM_NAME:-StudioCentOS}
+
+      # Email / IMAP (Reading - Register.it)
+      IMAP_HOST: ${IMAP_HOST:-imaps.register.it}
+      IMAP_PORT: ${IMAP_PORT:-993}
+      IMAP_USERNAME: ${IMAP_USERNAME:-info@studiocentos.it}
+      IMAP_PASSWORD: "${IMAP_PASSWORD:-F6D2YUJufq.VbX!}"
+
+      # AI Microservice Connection
+      AI_SERVICE_URL: http://ai_microservice:8001
+      AI_SERVICE_API_KEY: ${AI_SERVICE_API_KEY:-dev-api-key-change-in-production}
+
+      # Google Places API (Lead Finder REALE)
+      GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-AIzaSyD4uEnkeAwplf3MbPu9PyB-OP_B-KtaaXg}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-AIzaSyD4uEnkeAwplf3MbPu9PyB-OP_B-KtaaXg}
+
+      # HuggingFace (Image Generation)
+      HUGGINGFACE_TOKEN: ${HUGGINGFACE_TOKEN:-}
+      HF_TOKEN: ${HUGGINGFACE_TOKEN:-}
+
+      # Social Media Integration
+      # Variables loaded from env_file (.env.production)
+
+      # API Keys (opzionali)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+
+      # AI APIs
+      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-AIzaSyD4uEnkeAwplf3MbPu9PyB-OP_B-KtaaXg}
+    # ports:
+    #   - "8002:8000" # Exposed via Gateway
+    volumes:
+      - backend_uploads:/app/uploads
+    networks:
+      - studiocentos
+      - web_gateway
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # ==========================================================================
+  # AI MICROSERVICE
+  # ==========================================================================
+  ai_microservice:
+    build:
+      context: ../..
+      dockerfile: config/docker/dockerfiles/ai_microservice.Dockerfile
+    image: studiocentos/ai-service:latest
+    container_name: studiocentos-ai
+    restart: unless-stopped
+    env_file:
+      - .env.production
+      # depends_on:
+      # redis:
+      #   condition: service_healthy
+      # chromadb:
+      #   condition: service_started  # chromadb image has no healthcheck tools
+    environment:
+      # Redis
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-studiocentos2025}@redis:6379/1
+
+      - AI_SERVICE_ENV=production
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - LOG_LEVEL=info
+
+      # Note: AI API keys (GROQ, GOOGLE, OPENAI, etc.) are loaded from .env.production
+      - OLLAMA_HOST=http://central-ollama:11434
+      - CHROMA_HOST=central-chromadb
+      - CHROMA_PORT=8000
+      - REDIS_HOST=central-redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-central_redis_password_2025}
+      - POSTGRES_HOST=central-postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-central_admin_password_2025}
+      - POSTGRES_DB=studiocentos
+    # volumes:
+    #   - ai_media:/app/media
+    volumes:
+      - ai_media:/app/media
+    # ports:
+    #   - "8001:8001" # Exposed via Gateway
+    networks:
+      - studiocentos
+      - web_gateway
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8001/health" ]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # ==========================================================================
+  # FRONTEND - React (build produzione servito da Nginx interno)
+  # ==========================================================================
+  frontend:
+    build:
+      context: ../..
+      dockerfile: config/docker/dockerfiles/frontend.Dockerfile
+      args:
+        # Use HTTPS domain URLs (include /v1 for API versioning)
+        VITE_API_URL: /api/v1/admin
+        VITE_AI_URL: https://studiocentos.it/ai
+    image: studiocentos/frontend:latest
+    container_name: studiocentos-frontend
+    restart: unless-stopped
+    # ports:
+    #   - "3000:80" # Exposed via Gateway
+    networks:
+      - studiocentos
+      - web_gateway
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+  # ==========================================================================
+  # NGINX & CERTBOT - REMOVED (Use Central Gateway)
+  # ==========================================================================
+

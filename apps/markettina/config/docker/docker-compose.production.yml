@@ -1,0 +1,179 @@
+# ============================================================================
+# MARKETTINA v2.0 - PRODUZIONE Docker Compose
+# ============================================================================
+# TUTTI I SERVIZI IN DOCKER:
+# - Nginx (reverse proxy + SSL)
+# - Backend FastAPI
+# - AI Microservice
+# - Frontend React
+# - PostgreSQL
+# - Redis
+# ============================================================================
+
+name: markettina-production
+
+networks:
+  markettina:
+    driver: bridge
+
+  web_gateway:
+    external: true
+
+volumes:
+
+  nginx_logs:
+    driver: local
+  letsencrypt:
+    driver: local
+  certbot_www:
+    driver: local
+  ai_media:
+    driver: local
+  backend_uploads:
+    driver: local
+
+services:
+  # ==========================================================================
+  # POSTGRESQL - REMOVED (Use Central Stack)
+  # ==========================================================================
+
+
+  # ==========================================================================
+  # REDIS - REMOVED (Use Central Stack)
+  # ==========================================================================
+
+
+  # ==========================================================================
+  # BACKEND - FastAPI
+  # ==========================================================================
+  backend:
+    build:
+      context: ../..
+      dockerfile: config/docker/dockerfiles/backend.Dockerfile
+    image: markettina/backend:latest
+    container_name: markettina-backend
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+    #   redis:
+    #     condition: service_healthy
+
+    environment:
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-central_admin_password_2025}@central-postgres:5432/markettina
+
+      DB_USER: ${POSTGRES_USER:-admin}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-central_admin_password_2025}
+      DB_HOST: central-postgres
+      DB_PORT: 5432
+      DB_NAME: markettina
+
+      # Redis
+      REDIS_URL: redis://:${REDIS_PASSWORD:-central_redis_password_2025}@central-redis:6379/1
+
+      # App
+      ENVIRONMENT: production
+      DEBUG: "false"
+      LOG_LEVEL: info
+
+      # URLs
+      # URLs
+      FRONTEND_URL: https://markettina.com
+      FRONTEND_APP_URL: https://markettina.com
+      BACKEND_URL: https://markettina.com
+      BASE_URL: https://www.markettina.com
+
+      # Security
+      SECRET_KEY: ${SECRET_KEY:-a0e9abc8d066f9981e01aa2cf820eed1fdb8d6aa3a39be3f08dea0ce8f1543d6}
+      JWT_SECRET: ${JWT_SECRET:-608a0a473e7b2ca20631fc90f111cdd57b8f4691bfe4e3125e1a6f71a37c4792}
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRATION: 3600
+
+      # Security - PII Encryption (CRITICAL)
+      PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY}
+
+      # Email / SMTP
+      SMTP_SERVER: ${SMTP_SERVER:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      FROM_EMAIL: ${FROM_EMAIL:-info@markettina.com}
+      FROM_NAME: ${FROM_NAME:-MARKETTINA}
+
+      # AI Microservice Connection - REMOVED (Direct connection to Ollama/Chroma)
+      # AI_SERVICE_URL: http://localhost:8000
+      # AI_SERVICE_API_KEY: ${AI_SERVICE_API_KEY:-dev-api-key-change-in-production}
+
+
+      # Google Places API (Lead Finder REALE)
+      GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-AIzaSyD4uEnkeAwplf3MbPu9PyB-OP_B-KtaaXg}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-AIzaSyD4uEnkeAwplf3MbPu9PyB-OP_B-KtaaXg}
+
+      # HuggingFace (Image Generation)
+      HUGGINGFACE_TOKEN: ${HUGGINGFACE_TOKEN:-}
+      HF_TOKEN: ${HUGGINGFACE_TOKEN:-}
+
+      # Social Media Integration
+      # Variables loaded from env_file (.env.production)
+
+      # API Keys (opzionali)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+
+      # AI APIs
+      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-AIzaSyD4uEnkeAwplf3MbPu9PyB-OP_B-KtaaXg}
+    # ports:
+    #   - "8002:8000" # Exposed via Gateway
+    volumes:
+      - backend_uploads:/app/uploads
+    networks:
+      - markettina
+      - web_gateway
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # ==========================================================================
+  # FRONTEND - React (build produzione servito da Nginx interno)
+  # ==========================================================================
+  frontend:
+    build:
+      context: ../..
+      dockerfile: config/docker/dockerfiles/frontend.Dockerfile
+      args:
+        # Use HTTPS domain URLs (include /v1 for API versioning)
+        VITE_API_URL: /api/v1/admin
+        VITE_AI_URL: https://markettina.com/ai
+    image: markettina/frontend:latest
+    container_name: markettina-frontend
+    restart: unless-stopped
+    # ports:
+    #   - "3002:80" # Exposed via Gateway
+    networks:
+      - markettina
+      - web_gateway
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+  # ==========================================================================
+  # NGINX & CERTBOT - REMOVED (Use Central Gateway)
+  # ==========================================================================
+

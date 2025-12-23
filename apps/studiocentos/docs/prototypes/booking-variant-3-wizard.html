@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Variant 3 - Wizard Steps</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #0a0a0a; color: #ffffff; }
+        .text-gold { color: #D4AF37; }
+        .bg-gold { background: #D4AF37; }
+        .step-active { background: #D4AF37; color: #000; }
+        .step-completed { background: rgba(212, 175, 55, 0.2); border-color: #D4AF37; }
+    </style>
+</head>
+<body class="antialiased p-8">
+
+    <!-- VARIANTE 3: WIZARD STEPS - Processo guidato step-by-step -->
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-light mb-4">
+                Prenota una <span class="text-gold">Consulenza Gratuita</span>
+            </h2>
+            <p class="text-xl text-gray-400">
+                3 semplici step per prenotare la tua videocall
+            </p>
+        </div>
+
+        <div class="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur rounded-3xl p-8 border border-white/10">
+            
+            <!-- Progress Steps -->
+            <div class="flex justify-between items-center mb-12">
+                <div class="flex items-center gap-3">
+                    <div class="step-completed w-12 h-12 rounded-full flex items-center justify-center font-medium border-2">
+                        ✓
+                    </div>
+                    <div>
+                        <div class="text-sm text-gold">Step 1</div>
+                        <div class="font-medium">Tipo consulenza</div>
+                    </div>
+                </div>
+                
+                <div class="flex-1 h-0.5 bg-gold mx-4"></div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="step-active w-12 h-12 rounded-full flex items-center justify-center font-medium">
+                        2
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-400">Step 2</div>
+                        <div class="font-medium">Data e ora</div>
+                    </div>
+                </div>
+                
+                <div class="flex-1 h-0.5 bg-white/10 mx-4"></div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center font-medium border border-white/10">
+                        3
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-400">Step 3</div>
+                        <div class="text-gray-400">I tuoi dati</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2: Data e Ora -->
+            <div>
+                <h3 class="text-2xl font-light mb-6">Quando vuoi parlare con noi?</h3>
+                
+                <!-- Quick Select -->
+                <div class="grid grid-cols-3 gap-4 mb-8">
+                    <button class="px-6 py-4 bg-white/5 hover:bg-gold/20 border border-white/10 hover:border-gold rounded-xl transition text-center">
+                        <div class="text-sm text-gray-400 mb-1">Domani</div>
+                        <div class="font-medium">Mar 10 Dic</div>
+                    </button>
+                    <button class="px-6 py-4 bg-gold text-black border-2 border-gold rounded-xl transition text-center">
+                        <div class="text-sm mb-1">Dopodomani</div>
+                        <div class="font-medium">Mer 11 Dic</div>
+                    </button>
+                    <button class="px-6 py-4 bg-white/5 hover:bg-gold/20 border border-white/10 hover:border-gold rounded-xl transition text-center">
+                        <div class="text-sm text-gray-400 mb-1">Questa settimana</div>
+                        <div class="font-medium">Ven 13 Dic</div>
+                    </button>
+                </div>
+
+                <!-- Oppure scegli data -->
+                <div class="mb-8">
+                    <button class="text-sm text-gold hover:underline mb-4">
+                        📅 Oppure scegli un'altra data →
+                    </button>
+                </div>
+
+                <!-- Orari disponibili -->
+                <div>
+                    <h4 class="text-lg font-medium mb-4">Orari disponibili per Mercoledì 11 Dicembre:</h4>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-6">
+                        <button class="px-6 py-4 bg-white/5 hover:bg-gold/20 border border-white/10 hover:border-gold rounded-xl transition text-center">
+                            <div class="text-xl font-medium mb-1">09:00 - 09:30</div>
+                            <div class="text-xs text-gray-400">Mattina</div>
+                        </button>
+                        <button class="px-6 py-4 bg-white/5 hover:bg-gold/20 border border-white/10 hover:border-gold rounded-xl transition text-center">
+                            <div class="text-xl font-medium mb-1">10:00 - 10:30</div>
+                            <div class="text-xs text-gray-400">Mattina</div>
+                        </button>
+                        <button class="px-6 py-4 bg-white/5 hover:bg-gold/20 border border-white/10 hover:border-gold rounded-xl transition text-center">
+                            <div class="text-xl font-medium mb-1">11:00 - 11:30</div>
+                            <div class="text-xs text-gray-400">Mattina</div>
+                        </button>
+                        <button class="px-6 py-4 bg-gold text-black border-2 border-gold rounded-xl transition text-center">
+                            <div class="text-xl font-medium mb-1">14:00 - 14:30 ✓</div>
+                            <div class="text-xs">Selezionato</div>
+                        </button>
+                        <button class="px-6 py-4 bg-white/5 hover:bg-gold/20 border border-white/10 hover:border-gold rounded-xl transition text-center">
+                            <div class="text-xl font-medium mb-1">15:00 - 15:30</div>
+                            <div class="text-xs text-gray-400">Pomeriggio</div>
+                        </button>
+                        <button class="px-6 py-4 bg-white/5 hover:bg-gold/20 border border-white/10 hover:border-gold rounded-xl transition text-center">
+                            <div class="text-xl font-medium mb-1">16:00 - 16:30</div>
+                            <div class="text-xs text-gray-400">Pomeriggio</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Riepilogo selezione -->
+                <div class="bg-gold/10 border border-gold/30 rounded-2xl p-6 mb-6">
+                    <div class="flex items-center gap-4">
+                        <div class="text-4xl">✓</div>
+                        <div>
+                            <div class="text-sm text-gray-400 mb-1">Hai selezionato:</div>
+                            <div class="text-lg font-medium">Consulenza Generale</div>
+                            <div class="text-xl font-medium text-gold">Mercoledì 11 Dicembre, 14:00 - 14:30</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="flex gap-4">
+                    <button class="px-8 py-4 bg-white/5 hover:bg-white/10 rounded-lg transition font-medium">
+                        ← Indietro
+                    </button>
+                    <button class="flex-1 px-8 py-4 bg-gold text-black rounded-lg hover:bg-[#F4E5B8] transition font-medium text-lg">
+                        Continua allo Step 3 →
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Info Cards -->
+        <div class="mt-8 grid md:grid-cols-4 gap-4 text-center text-sm">
+            <div class="bg-white/5 rounded-xl p-4">
+                <div class="text-2xl mb-2">⏱️</div>
+                <div class="text-gray-400">30 minuti</div>
+            </div>
+            <div class="bg-white/5 rounded-xl p-4">
+                <div class="text-2xl mb-2">🎥</div>
+                <div class="text-gray-400">Google Meet</div>
+            </div>
+            <div class="bg-white/5 rounded-xl p-4">
+                <div class="text-2xl mb-2">💰</div>
+                <div class="text-gray-400">Gratuita</div>
+            </div>
+            <div class="bg-white/5 rounded-xl p-4">
+                <div class="text-2xl mb-2">🔄</div>
+                <div class="text-gray-400">Cancellabile</div>
+            </div>
+        </div>
+
+        <!-- Alternative -->
+        <div class="mt-8 text-center">
+            <p class="text-sm text-gray-500">
+                Preferisci scrivere? <a href="mailto:ciro@studiocentos.it" class="text-gold hover:underline">ciro@studiocentos.it</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- STEP 3 PREVIEW (nascosto) -->
+    <div class="max-w-4xl mx-auto mt-16 opacity-50">
+        <div class="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur rounded-3xl p-8 border border-white/10">
+            <h3 class="text-2xl font-light mb-6">Step 3: I tuoi dati</h3>
+            <div class="grid md:grid-cols-2 gap-4 mb-4">
+                <input type="text" placeholder="Nome *" class="px-4 py-3 bg-white/5 border border-white/10 rounded-lg">
+                <input type="email" placeholder="Email *" class="px-4 py-3 bg-white/5 border border-white/10 rounded-lg">
+            </div>
+            <input type="tel" placeholder="Telefono" class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg mb-4">
+            <textarea placeholder="Descrivi brevemente il tuo progetto" rows="3" class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg mb-4"></textarea>
+            <button class="w-full px-8 py-4 bg-gold text-black rounded-lg font-medium text-lg">
+                Conferma Prenotazione →
+            </button>
+        </div>
+    </div>
+
+</body>
+</html>

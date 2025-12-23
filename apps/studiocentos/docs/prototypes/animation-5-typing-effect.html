@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animation 5 - Typing Effect</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a0a; color: #fff; font-family: 'Inter', sans-serif; padding: 40px; }
+        
+        /* ANIMAZIONE 5: EFFETTO MACCHINA DA SCRIVERE */
+        .typing-container {
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 60px 0;
+        }
+        
+        .typing-text {
+            font-size: 3rem;
+            font-weight: 300;
+            line-height: 1.4;
+        }
+        
+        .typing-cursor {
+            display: inline-block;
+            width: 3px;
+            height: 1em;
+            background: #D4AF37;
+            margin-left: 4px;
+            animation: blink 1s step-end infinite;
+            vertical-align: text-bottom;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .gold { color: #D4AF37; }
+        
+        .demo-box {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 60px;
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 { color: #D4AF37; margin-bottom: 20px; }
+        p { color: #999; margin-bottom: 40px; font-size: 1.1rem; }
+        
+        .controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: #D4AF37;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #F4E5B8;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-box">
+        <h1>✨ Animation 5: Typing Effect</h1>
+        <p>Testo che appare lettera per lettera come una macchina da scrivere</p>
+        
+        <div class="typing-container">
+            <div class="typing-text" id="typingText">
+                <span class="cursor"></span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button onclick="startTyping()">▶️ Avvia Animazione</button>
+            <button onclick="resetTyping()">🔄 Reset</button>
+        </div>
+        
+        <div style="margin-top: 60px; padding: 30px; background: rgba(255,255,255,0.03); border-radius: 12px;">
+            <p style="font-size: 14px; color: #666;">
+                <strong>Uso:</strong> Hero titles, Taglines, Dynamic text<br>
+                <strong>Effetto:</strong> Testo che appare lettera per lettera<br>
+                <strong>Velocità:</strong> 50ms per lettera (customizzabile)<br>
+                <strong>Features:</strong> Cursore lampeggiante, pause tra frasi<br>
+                <strong>Varianti:</strong> Delete/rewrite, multi-line, loop infinito
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        const texts = [
+            'Trasformo idee in',
+            '<span class="gold">prodotti digitali</span>',
+            'che le persone amano'
+        ];
+        
+        let currentTextIndex = 0;
+        let currentCharIndex = 0;
+        let isDeleting = false;
+        let typingSpeed = 50;
+        let deletingSpeed = 30;
+        let pauseBetweenTexts = 2000;
+        let pauseBeforeDelete = 1500;
+        
+        const typingElement = document.getElementById('typingText');
+        
+        function type() {
+            const currentText = texts[currentTextIndex];
+            
+            if (!isDeleting) {
+                // Typing
+                const textToShow = currentText.substring(0, currentCharIndex + 1);
+                typingElement.innerHTML = textToShow + '<span class="typing-cursor"></span>';
+                currentCharIndex++;
+                
+                if (currentCharIndex === currentText.length) {
+                    // Finished typing current text
+                    if (currentTextIndex < texts.length - 1) {
+                        // Move to next text after pause
+                        setTimeout(() => {
+                            currentTextIndex++;
+                            currentCharIndex = 0;
+                            typingElement.innerHTML += '<br>';
+                            setTimeout(type, typingSpeed);
+                        }, pauseBetweenTexts);
+                        return;
+                    } else {
+                        // All texts typed, stop
+                        return;
+                    }
+                }
+            }
+            
+            setTimeout(type, typingSpeed);
+        }
+        
+        function startTyping() {
+            currentTextIndex = 0;
+            currentCharIndex = 0;
+            isDeleting = false;
+            typingElement.innerHTML = '<span class="typing-cursor"></span>';
+            setTimeout(type, 500);
+        }
+        
+        function resetTyping() {
+            currentTextIndex = 0;
+            currentCharIndex = 0;
+            isDeleting = false;
+            typingElement.innerHTML = '<span class="typing-cursor"></span>';
+        }
+        
+        // Auto-start on load
+        window.addEventListener('load', () => {
+            setTimeout(startTyping, 1000);
+        });
+    </script>
+</body>
+</html>

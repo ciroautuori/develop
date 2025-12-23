@@ -1,0 +1,16 @@
+# StudioCentOS - Software House Salerno
+# https://studiocentos.it
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://studiocentos.it/sitemap.xml
+
+# Crawl-delay for politeness
+Crawl-delay: 1
+
+# Disallow admin paths
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_*

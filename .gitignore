@@ -1,0 +1,78 @@
+# ===========================================
+# DEVELOP MONOREPO - .gitignore
+# ===========================================
+
+# Node modules
+node_modules/
+.pnpm-store/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Environment files (NEVER COMMIT!)
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker data (local only)
+**/data/
+**/postgres_data/
+**/redis_data/
+
+# Logs
+*.log
+logs/
+
+# Backups (sensitive)
+backup/
+
+# Build artifacts
+dist/
+build/
+.next/
+
+# Secrets and credentials
+*.pem
+*.key
+*.crt
+!config/ssl/*.crt
+*.gpg
+
+# Gemini/AI artifacts
+.gemini/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# ===== ALL FILES WITH HARDCODED SECRETS =====
+# StudioCentos secrets
+apps/studiocentos/docs/guides/ml_training.md
+apps/studiocentos/docs/guides/deployment.md
+apps/studiocentos/docs/guides/custom_ai_model.md
+apps/studiocentos/docs/resources/free_ai_apis.md
+apps/studiocentos/apps/ai_microservice/
+apps/studiocentos/scripts/ai/
+
+# Markettina secrets
+apps/markettina/scripts/ai/
+
+# IronRep secrets
+apps/ironRep/docs/guides/CREDITI_INFINITI_GUIDE.md
+apps/studiocentos/scripts/tests/test_model_minimal.py

@@ -1,0 +1,821 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#D4AF37', 'primaryTextColor': '#0A0A0A', 'primaryBorderColor': '#0A0A0A', 'lineColor': '#666666', 'secondaryColor': '#FAFAFA', 'tertiaryColor': '#f5f5f5'}}}%%
+
+erDiagram
+    %% ============================================================================
+    %% MARKETTINA v2.0 - ENTITY RELATIONSHIP DIAGRAM
+    %% ============================================================================
+
+    %% ============================================================================
+    %% CORE ENTITIES (Multi-Tenancy Base)
+    %% ============================================================================
+
+    accounts {
+        uuid id PK
+        varchar name
+        varchar slug UK
+        varchar plan_tier
+        boolean is_active
+        jsonb settings
+        timestamp created_at
+        timestamp deleted_at
+    }
+
+    users {
+        int id PK
+        varchar email UK
+        varchar password
+        varchar role
+        boolean is_active
+        varchar tenant_id FK
+        timestamp trial_expires_at
+        varchar username UK
+        varchar slug UK
+        timestamp created_at
+    }
+
+    admin_users {
+        int id PK
+        varchar email UK
+        varchar password_hash
+        varchar full_name
+        boolean is_2fa_enabled
+        boolean is_active
+        timestamp created_at
+    }
+
+    %% ============================================================================
+    %% IDENTITY CONTEXT
+    %% ============================================================================
+
+    social_accounts {
+        uuid id PK
+        uuid account_id FK
+        int user_id FK
+        varchar platform
+        varchar platform_user_id
+        varchar display_name
+        varchar handle
+        text access_token
+        text refresh_token
+        timestamp token_expires_at
+        boolean is_active
+        boolean is_primary
+        int followers_count
+        timestamp last_sync_at
+        varchar sync_status
+    }
+
+    social_account_health {
+        uuid id PK
+        uuid social_account_id FK
+        varchar status
+        text status_message
+        timestamp last_check_at
+        int consecutive_failures
+    }
+
+    user_permissions {
+        uuid id PK
+        uuid account_id FK
+        int user_id FK
+        varchar resource_type
+        uuid resource_id
+        varchar permission
+        timestamp granted_at
+        timestamp expires_at
+    }
+
+    %% ============================================================================
+    %% BILLING CONTEXT
+    %% ============================================================================
+
+    token_wallets {
+        int id PK
+        int user_id UK "FK to users"
+        int balance
+        int total_purchased
+        int total_used
+        int total_bonus
+        decimal total_spent_usd
+        timestamp last_purchase_at
+    }
+
+    token_transactions {
+        int id PK
+        int wallet_id FK
+        int user_id FK
+        varchar type
+        int amount
+        int balance_before
+        int balance_after
+        int package_id FK
+        decimal price_usd
+        varchar stripe_payment_intent_id
+        varchar model
+        varchar provider
+        timestamp created_at
+    }
+
+    token_packages {
+        int id PK
+        varchar name
+        varchar slug UK
+        int tokens
+        int bonus_tokens
+        decimal price_usd
+        boolean is_active
+        int sort_order
+    }
+
+    service_pricing {
+        uuid id PK
+        varchar service_type
+        varchar service_subtype
+        int token_cost
+        varchar name
+        boolean is_active
+        date effective_from
+    }
+
+    invoices {
+        uuid id PK
+        uuid account_id FK
+        varchar invoice_number UK
+        int subtotal_cents
+        int total_cents
+        varchar status
+        date issue_date
+        timestamp paid_at
+    }
+
+    invoice_items {
+        uuid id PK
+        uuid invoice_id FK
+        text description
+        int quantity
+        int unit_price_cents
+        int total_cents
+    }
+
+    promo_codes {
+        uuid id PK
+        varchar code UK
+        varchar discount_type
+        int discount_value
+        int max_uses
+        int current_uses
+        boolean is_active
+        timestamp valid_from
+        timestamp valid_to
+    }
+
+    promo_redemptions {
+        uuid id PK
+        uuid promo_code_id FK
+        uuid account_id FK
+        int user_id FK
+        int discount_amount
+        timestamp redeemed_at
+    }
+
+    referral_program {
+        uuid id PK
+        uuid referrer_account_id FK
+        varchar referral_code UK
+        uuid referred_account_id FK
+        int referrer_bonus_tokens
+        int referred_bonus_tokens
+        varchar status
+    }
+
+    %% ============================================================================
+    %% MARKETING CONTEXT (Esistente + Estensioni)
+    %% ============================================================================
+
+    leads {
+        int id PK
+        varchar company_name
+        varchar email UK
+        varchar phone
+        varchar city
+        varchar region
+        varchar source
+        varchar status
+        varchar industry
+        int score
+        jsonb tags
+        timestamp created_at
+    }
+
+    email_campaigns {
+        int id PK
+        varchar name
+        varchar subject
+        text html_content
+        varchar target_region
+        boolean is_sent
+        int total_sent
+        int total_opened
+        timestamp created_at
+    }
+
+    scheduled_posts {
+        int id PK
+        text content
+        varchar title
+        jsonb hashtags
+        jsonb media_urls
+        varchar media_type
+        jsonb platforms
+        timestamp scheduled_at
+        timestamp published_at
+        varchar status
+        boolean ai_generated
+        int campaign_id FK
+        jsonb metrics
+    }
+
+    campaigns {
+        uuid id PK
+        uuid account_id FK
+        varchar name
+        text description
+        date start_date
+        date end_date
+        varchar status
+        int target_reach
+        int budget_tokens
+        int spent_tokens
+    }
+
+    brand_settings {
+        int id PK
+        int admin_id UK "FK to admin_users"
+        text logo_url
+        varchar primary_color
+        varchar company_name
+        text tagline
+        varchar tone_of_voice
+        jsonb keywords
+        jsonb competitors
+    }
+
+    %% ============================================================================
+    %% CONTENT CONTEXT
+    %% ============================================================================
+
+    content_templates {
+        uuid id PK
+        uuid account_id FK
+        varchar name
+        varchar content_type
+        varchar platform
+        text template_content
+        jsonb variables
+        varchar tone_of_voice
+        int usage_count
+        boolean is_active
+    }
+
+    content_versions {
+        uuid id PK
+        varchar content_type
+        uuid content_id
+        int version_number
+        jsonb content_snapshot
+        text change_summary
+        timestamp created_at
+        int created_by FK
+    }
+
+    content_variants {
+        uuid id PK
+        uuid account_id FK
+        varchar parent_content_type
+        uuid parent_content_id
+        varchar variant_name
+        text variant_content
+        decimal traffic_percent
+        int impressions
+        int conversions
+        boolean is_winner
+    }
+
+    media_assets {
+        uuid id PK
+        uuid account_id FK
+        varchar filename
+        varchar mime_type
+        bigint file_size_bytes
+        varchar storage_provider
+        text storage_path
+        text public_url
+        boolean is_ai_generated
+        text ai_prompt
+        int usage_count
+    }
+
+    media_tags {
+        uuid id PK
+        uuid media_asset_id FK
+        varchar tag
+        varchar tag_type
+        decimal confidence
+    }
+
+    %% ============================================================================
+    %% ANALYTICS CONTEXT
+    %% ============================================================================
+
+    social_metrics {
+        uuid id PK
+        uuid account_id FK
+        int post_id FK
+        varchar platform
+        int impressions
+        int reach
+        int engagement_count
+        int likes
+        int comments
+        int shares
+        decimal engagement_rate
+        timestamp measured_at
+    }
+
+    sentiment_analysis {
+        uuid id PK
+        uuid account_id FK
+        int post_id FK
+        varchar platform
+        text comment_text
+        decimal sentiment_score
+        varchar sentiment_label
+        decimal confidence
+        timestamp analyzed_at
+    }
+
+    competitor_profiles {
+        uuid id PK
+        uuid account_id FK
+        varchar name
+        varchar website
+        jsonb social_handles
+        varchar industry
+        boolean is_active
+    }
+
+    competitor_metrics {
+        uuid id PK
+        uuid competitor_id FK
+        varchar platform
+        int followers_count
+        decimal avg_engagement_rate
+        decimal posting_frequency
+        int our_followers_count
+        timestamp measured_at
+    }
+
+    performance_predictions {
+        uuid id PK
+        uuid account_id FK
+        varchar prediction_type
+        uuid content_id
+        decimal predicted_value
+        decimal confidence_level
+        jsonb factors
+        jsonb recommendations
+        varchar ai_model
+    }
+
+    %% ============================================================================
+    %% SOCIAL CONTEXT
+    %% ============================================================================
+
+    cross_post_configs {
+        uuid id PK
+        uuid account_id FK
+        varchar name
+        uuid_array social_account_ids
+        boolean auto_adapt_dimensions
+        boolean auto_adapt_hashtags
+        jsonb platform_rules
+        boolean is_default
+    }
+
+    cross_posts {
+        uuid id PK
+        uuid account_id FK
+        int original_post_id FK
+        uuid config_id FK
+        jsonb platform_posts
+        varchar status
+        timestamp completed_at
+    }
+
+    social_comments {
+        uuid id PK
+        uuid account_id FK
+        int post_id FK
+        uuid social_account_id FK
+        varchar platform
+        varchar platform_comment_id
+        text comment_text
+        varchar status
+        boolean requires_attention
+        varchar sentiment_label
+    }
+
+    social_mentions {
+        uuid id PK
+        uuid account_id FK
+        varchar platform
+        varchar author_handle
+        text mention_text
+        varchar mention_type
+        varchar sentiment_label
+        varchar status
+        timestamp mention_date
+    }
+
+    %% ============================================================================
+    %% AI SERVICES CONTEXT
+    %% ============================================================================
+
+    ai_jobs {
+        uuid id PK
+        uuid account_id FK
+        varchar job_type
+        varchar status
+        int priority
+        jsonb input_data
+        jsonb result_data
+        text error_message
+        int retry_count
+        int tokens_consumed
+        timestamp created_at
+        timestamp completed_at
+    }
+
+    ai_job_logs {
+        uuid id PK
+        uuid job_id FK
+        varchar level
+        text message
+        jsonb details
+        timestamp created_at
+    }
+
+    content_generations {
+        uuid id PK
+        uuid account_id FK
+        uuid job_id FK
+        varchar content_type
+        text prompt
+        text generated_content
+        varchar ai_provider
+        varchar ai_model
+        int total_tokens
+        decimal quality_score
+        boolean was_used
+    }
+
+    image_generations {
+        uuid id PK
+        uuid account_id FK
+        uuid job_id FK
+        text prompt
+        varchar style
+        int width
+        int height
+        text image_url
+        varchar ai_provider
+        varchar ai_model
+        boolean was_used
+    }
+
+    video_generations {
+        uuid id PK
+        uuid account_id FK
+        uuid job_id FK
+        text prompt
+        int duration_seconds
+        varchar resolution
+        text video_url
+        varchar ai_provider
+        varchar status
+        int progress_percent
+    }
+
+    brand_dna {
+        uuid id PK
+        uuid account_id UK "FK to accounts"
+        varchar company_name
+        text tagline
+        text mission
+        text brand_story
+        varchar tone_of_voice
+        jsonb writing_style
+        varchar primary_color
+        text_array core_values
+        jsonb target_demographics
+        text_array keywords
+        text ai_persona
+        int version
+    }
+
+    brand_dna_versions {
+        uuid id PK
+        uuid brand_dna_id FK
+        int version_number
+        jsonb snapshot
+        text change_summary
+        timestamp changed_at
+        int changed_by FK
+    }
+
+    %% ============================================================================
+    %% WORKFLOW CONTEXT
+    %% ============================================================================
+
+    workflows {
+        uuid id PK
+        uuid account_id FK
+        varchar name
+        text description
+        varchar trigger_type
+        jsonb trigger_config
+        jsonb actions
+        varchar status
+        int execution_count
+        timestamp last_executed_at
+        boolean is_template
+    }
+
+    workflow_executions {
+        uuid id PK
+        uuid workflow_id FK
+        uuid account_id FK
+        varchar status
+        int current_action_index
+        jsonb trigger_context
+        jsonb execution_context
+        timestamp started_at
+        timestamp completed_at
+        text error_message
+    }
+
+    workflow_logs {
+        uuid id PK
+        uuid execution_id FK
+        varchar action_id
+        varchar action_type
+        varchar level
+        text message
+        jsonb details
+        timestamp created_at
+    }
+
+    workflow_schedules {
+        uuid id PK
+        uuid workflow_id FK
+        varchar cron_expression
+        varchar timezone
+        boolean is_active
+        timestamp last_run_at
+        timestamp next_run_at
+    }
+
+    approval_workflows {
+        uuid id PK
+        uuid account_id FK
+        varchar name
+        jsonb steps
+        text_array content_types
+        boolean is_default
+    }
+
+    content_approvals {
+        uuid id PK
+        uuid account_id FK
+        varchar content_type
+        uuid content_id
+        uuid workflow_id FK
+        int current_step
+        varchar status
+        jsonb approvals
+        int delegated_to FK
+    }
+
+    %% ============================================================================
+    %% KNOWLEDGE BASE CONTEXT
+    %% ============================================================================
+
+    document_categories {
+        uuid id PK
+        uuid account_id FK
+        varchar name
+        text description
+        uuid parent_id FK
+        varchar icon
+        int sort_order
+    }
+
+    knowledge_documents {
+        uuid id PK
+        uuid account_id FK
+        varchar title
+        varchar source_type
+        text content_text
+        varchar processing_status
+        int chunks_count
+        varchar vector_store
+        uuid category_id FK
+    }
+
+    document_chunks {
+        uuid id PK
+        uuid document_id FK
+        int chunk_index
+        text chunk_text
+        int chunk_size
+        varchar embedding_id
+        varchar embedding_model
+    }
+
+    search_history {
+        uuid id PK
+        uuid account_id FK
+        int user_id FK
+        text query_text
+        varchar query_type
+        int results_count
+        boolean was_helpful
+        int response_time_ms
+    }
+
+    %% ============================================================================
+    %% SHARED KERNEL (Cross-Cutting)
+    %% ============================================================================
+
+    domain_events {
+        uuid id PK
+        varchar aggregate_type
+        uuid aggregate_id
+        varchar event_type
+        jsonb event_data
+        jsonb metadata
+        int aggregate_version
+        uuid account_id FK
+        boolean processed
+        timestamp created_at
+    }
+
+    feature_flags {
+        uuid id PK
+        varchar feature_name
+        uuid account_id FK
+        boolean enabled
+        jsonb config
+        timestamp created_at
+    }
+
+    webhooks {
+        uuid id PK
+        uuid account_id FK
+        varchar name
+        text url
+        varchar secret
+        text_array events
+        boolean is_active
+        int retry_count
+        int total_deliveries
+    }
+
+    webhook_deliveries {
+        uuid id PK
+        uuid webhook_id FK
+        varchar event_type
+        uuid event_id FK
+        jsonb payload
+        varchar status
+        int response_code
+        int attempts
+        timestamp next_retry_at
+    }
+
+    api_rate_limits {
+        uuid id PK
+        uuid account_id FK
+        varchar endpoint
+        int limit_per_minute
+        int limit_per_hour
+        int current_minute_count
+        timestamp reset_minute_at
+    }
+
+    idempotency_keys {
+        varchar key PK
+        uuid account_id FK
+        varchar endpoint
+        varchar request_hash
+        jsonb response_data
+        int status_code
+        timestamp expires_at
+    }
+
+    async_jobs {
+        uuid id PK
+        uuid account_id FK
+        varchar job_type
+        varchar status
+        int priority
+        jsonb input_data
+        jsonb result_data
+        int retry_count
+        timestamp scheduled_at
+    }
+
+    %% ============================================================================
+    %% RELATIONSHIPS
+    %% ============================================================================
+
+    %% Identity Context
+    accounts ||--o{ social_accounts : "has"
+    accounts ||--o{ user_permissions : "has"
+    users ||--o{ social_accounts : "owns"
+    users ||--o{ user_permissions : "has"
+    social_accounts ||--o{ social_account_health : "has"
+
+    %% Billing Context
+    users ||--|| token_wallets : "has"
+    token_wallets ||--o{ token_transactions : "has"
+    token_packages ||--o{ token_transactions : "used_in"
+    accounts ||--o{ invoices : "has"
+    invoices ||--o{ invoice_items : "contains"
+    promo_codes ||--o{ promo_redemptions : "redeemed"
+    accounts ||--o{ promo_redemptions : "has"
+    accounts ||--o{ referral_program : "referrer"
+
+    %% Marketing Context
+    admin_users ||--|| brand_settings : "has"
+    campaigns ||--o{ scheduled_posts : "contains"
+    accounts ||--o{ campaigns : "has"
+
+    %% Content Context
+    accounts ||--o{ content_templates : "has"
+    accounts ||--o{ content_variants : "has"
+    accounts ||--o{ media_assets : "has"
+    media_assets ||--o{ media_tags : "has"
+
+    %% Analytics Context
+    accounts ||--o{ social_metrics : "has"
+    scheduled_posts ||--o{ social_metrics : "has"
+    accounts ||--o{ sentiment_analysis : "has"
+    accounts ||--o{ competitor_profiles : "has"
+    competitor_profiles ||--o{ competitor_metrics : "has"
+    accounts ||--o{ performance_predictions : "has"
+
+    %% Social Context
+    accounts ||--o{ cross_post_configs : "has"
+    accounts ||--o{ cross_posts : "has"
+    scheduled_posts ||--o{ cross_posts : "original"
+    cross_post_configs ||--o{ cross_posts : "uses"
+    accounts ||--o{ social_comments : "has"
+    accounts ||--o{ social_mentions : "has"
+
+    %% AI Services Context
+    accounts ||--o{ ai_jobs : "has"
+    ai_jobs ||--o{ ai_job_logs : "has"
+    accounts ||--o{ content_generations : "has"
+    ai_jobs ||--o{ content_generations : "produces"
+    accounts ||--o{ image_generations : "has"
+    ai_jobs ||--o{ image_generations : "produces"
+    accounts ||--o{ video_generations : "has"
+    ai_jobs ||--o{ video_generations : "produces"
+    accounts ||--|| brand_dna : "has"
+    brand_dna ||--o{ brand_dna_versions : "has"
+
+    %% Workflow Context
+    accounts ||--o{ workflows : "has"
+    workflows ||--o{ workflow_executions : "has"
+    workflow_executions ||--o{ workflow_logs : "has"
+    workflows ||--o{ workflow_schedules : "has"
+    accounts ||--o{ approval_workflows : "has"
+    accounts ||--o{ content_approvals : "has"
+    approval_workflows ||--o{ content_approvals : "uses"
+
+    %% Knowledge Base Context
+    accounts ||--o{ document_categories : "has"
+    accounts ||--o{ knowledge_documents : "has"
+    document_categories ||--o{ knowledge_documents : "categorizes"
+    knowledge_documents ||--o{ document_chunks : "has"
+    accounts ||--o{ search_history : "has"
+
+    %% Shared Kernel
+    accounts ||--o{ domain_events : "has"
+    accounts ||--o{ feature_flags : "has"
+    accounts ||--o{ webhooks : "has"
+    webhooks ||--o{ webhook_deliveries : "has"
+    accounts ||--o{ api_rate_limits : "has"
+    accounts ||--o{ idempotency_keys : "has"
+    accounts ||--o{ async_jobs : "has"

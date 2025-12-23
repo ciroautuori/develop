@@ -1,0 +1,17 @@
+# MARKETTINA - AI Marketing Automation Platform
+# https://markettina.it
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://markettina.it/sitemap.xml
+
+# Crawl-delay for politeness
+Crawl-delay: 1
+
+# Disallow admin paths
+Disallow: /admin/
+Disallow: /api/
+Disallow: /backoffice/
+Disallow: /_*

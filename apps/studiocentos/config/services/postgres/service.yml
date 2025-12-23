@@ -1,0 +1,55 @@
+# ============================================================================
+# POSTGRESQL SERVICE - Database
+# ============================================================================
+
+postgres:
+  image: postgres:16-alpine
+  container_name: studiocentos-db
+  restart: unless-stopped
+  
+  # Environment
+  environment:
+    POSTGRES_DB: ${POSTGRES_DB:-studiocentos}
+    POSTGRES_USER: ${POSTGRES_USER:-studiocentos}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-studiocentos2025}
+    POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+    PGDATA: /var/lib/postgresql/data/pgdata
+  
+  # Ports
+  ports:
+    - "${POSTGRES_PORT:-5432}:5432"
+  
+  # Volumes
+  volumes:
+    - postgres_data:/var/lib/postgresql/data
+    - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    - postgres_backups:/backups
+  
+  # Networks
+  networks:
+    - studiocentos
+  
+  # Health check
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-studiocentos} -d ${POSTGRES_DB:-studiocentos}"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 10s
+  
+  # Resources
+  deploy:
+    resources:
+      limits:
+        cpus: '2'
+        memory: 2G
+      reservations:
+        cpus: '1'
+        memory: 1G
+  
+  # Logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"

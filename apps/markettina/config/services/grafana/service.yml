@@ -1,0 +1,56 @@
+# ============================================================================
+# GRAFANA SERVICE - Visualization & Dashboards
+# ============================================================================
+
+grafana:
+  image: grafana/grafana:latest
+  container_name: markettina-grafana
+  restart: unless-stopped
+  
+  # Environment
+  environment:
+    - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+    - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+    - GF_SERVER_ROOT_URL=https://grafana.${DOMAIN:-localhost}
+    - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+  
+  # Ports
+  ports:
+    - "${GRAFANA_PORT:-3001}:3000"
+  
+  # Volumes
+  volumes:
+    - grafana_data:/var/lib/grafana
+    - ./dashboards:/etc/grafana/provisioning/dashboards:ro
+    - ./datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+  
+  # Networks
+  networks:
+    - markettina
+  
+  # Dependencies
+  depends_on:
+    - prometheus
+  
+  # Health check
+  healthcheck:
+    test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+  
+  # Labels
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.grafana.rule=Host(`grafana.${DOMAIN:-localhost}`)"
+    - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+  
+  # Resources
+  deploy:
+    resources:
+      limits:
+        cpus: '1'
+        memory: 512M
+      reservations:
+        cpus: '0.5'
+        memory: 256M

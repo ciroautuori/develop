@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animation 1 - Text Gradient Shine</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a0a; color: #fff; font-family: 'Inter', sans-serif; padding: 40px; }
+        
+        /* ANIMAZIONE 1: TESTO CON GRADIENT CHE BRILLA */
+        .hero-title {
+            font-size: 5rem;
+            font-weight: 300;
+            line-height: 1.2;
+            margin-bottom: 30px;
+        }
+        
+        .gradient-shine {
+            background: linear-gradient(
+                90deg,
+                #666 0%,
+                #666 30%,
+                #D4AF37 45%,
+                #F4E5B8 50%,
+                #D4AF37 55%,
+                #666 70%,
+                #666 100%
+            );
+            background-size: 200% 100%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 3s linear infinite;
+        }
+        
+        @keyframes shine {
+            0% { background-position: 200% center; }
+            100% { background-position: -200% center; }
+        }
+        
+        .demo-box {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 60px;
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 { color: #D4AF37; margin-bottom: 40px; }
+        p { color: #999; margin-bottom: 40px; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+    <div class="demo-box">
+        <h1>✨ Animation 1: Text Gradient Shine</h1>
+        <p>Testo con gradient oro che scorre continuamente</p>
+        
+        <div class="hero-title">
+            <div class="gradient-shine">Trasformo idee in</div>
+            <div class="gradient-shine">prodotti digitali</div>
+            <div class="gradient-shine">che le persone amano</div>
+        </div>
+        
+        <div style="margin-top: 60px; padding: 30px; background: rgba(255,255,255,0.03); border-radius: 12px;">
+            <p style="font-size: 14px; color: #666;">
+                <strong>Uso:</strong> Hero titles, H1, Section headers<br>
+                <strong>Effetto:</strong> Gradient oro che scorre da destra a sinistra<br>
+                <strong>Durata:</strong> 3s loop infinito<br>
+                <strong>Performance:</strong> GPU-accelerated, 60fps
+            </p>
+        </div>
+    </div>
+</body>
+</html>

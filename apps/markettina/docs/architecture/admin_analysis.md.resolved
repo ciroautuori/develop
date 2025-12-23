@@ -1,0 +1,60 @@
+# Admin Feature Analysis & Cleanup Report
+> **Status**: ✅ COMPLETED (R100%)
+> **Last Updated**: 2025-12-09
+> **Focus**: `apps/frontend/src/features/admin`
+
+## 🚀 Executive Summary
+The Admin Backoffice has been successfully analyzed and cleaned.
+- **Consolidated**: `SettingsHub` is now the single source of truth for all settings (Site, DB, Email, Users, Profile). `Settings.tsx` has been removed.
+- **Cleaned**: Dead code (`FinanceDashboard`, `CalendarViewSimple`) removed.
+- **Strict Mode**: Mocks removed from `EditorialCalendar` and `WeeklyCalendar`. Real API dependency enforced.
+- **Architecture**: `features/admin` is confirmed as the main Backoffice application. `features/dashboard` is minimal/unused.
+
+## 📂 Directory Structure Analysis (Post-Cleanup)
+
+### Components
+- `AnimatedLogo.tsx`
+- `BookingModal.tsx`
+- `CalendarGrid.tsx`
+- `CustomerModal.tsx`
+- `ExpenseFormModal.tsx`
+- `NotificationsDropdown.tsx`
+- `QuoteModal.tsx`
+
+### Pages
+- `AIMarketing/` (Subdirectory - Large)
+- `AdminLogin.tsx`
+- `Analytics.tsx`
+- `AnalyticsGA4.tsx`
+- `AnalyticsSEO.tsx`
+- `BusinessHub.tsx`
+- `CalendarView.tsx`
+- `CalendarViewSimple.tsx`
+- `Dashboard.tsx`
+- `EditorialCalendar.tsx`
+- `FinanceDashboard.tsx`
+- `FinanceHub.tsx`
+- `Settings.tsx`
+- `SettingsHub.tsx`
+- `UserManagement.tsx`
+
+### Hooks
+(To be populated)
+
+### Services
+(To be populated)
+
+### Types
+(To be populated)
+
+## Dead Code### 🚨 Cleanup Candidates & Action Plan (COMPLETED)
+
+#### 1. Duplicate Pages (Legacy vs Hubs)
+- [x] **Settings**: `Settings.tsx` merged into `SettingsHub.tsx`. `Settings.tsx` DELETED.
+- [x] **Finance**: `FinanceDashboard.tsx` DELETED. `FinanceHub.tsx` is the active component.
+- [x] **Calendar**: `CalendarViewSimple.tsx` DELETED. `CalendarView.tsx` (Booking) and `EditorialCalendar.tsx` (Social) preserved.
+
+#### 2. Mocks & TODOs
+- [x] **Editorial Calendar**: Removed "Mock data per development". Now handles API errors gracefully.
+- [x] **Weekly Calendar**: Removed mock distribution logic.
+- [x] **Routes**: Updated `app-routes.tsx` to remove dead imports and wire `/admin/impostazioni` to `SettingsHub`.e separation

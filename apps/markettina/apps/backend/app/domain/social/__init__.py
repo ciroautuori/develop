@@ -1,0 +1,3 @@
+"""
+Social Publisher Domain Module
+"""

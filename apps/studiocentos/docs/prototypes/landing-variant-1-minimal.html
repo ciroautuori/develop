@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudiocentOS - Variante 1: Ultra Minimal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #0a0a0a; color: #ffffff; }
+        .text-gold { color: #D4AF37; }
+        .border-gold { border-color: #D4AF37; }
+        .bg-gold { background: #D4AF37; }
+        .hover-lift { transition: transform 0.3s ease; }
+        .hover-lift:hover { transform: translateY(-4px); }
+        
+        /* Animazione fade-in */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeIn 0.8s ease-out; }
+        .fade-in-delay-1 { animation: fadeIn 0.8s ease-out 0.2s both; }
+        .fade-in-delay-2 { animation: fadeIn 0.8s ease-out 0.4s both; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header Ultra Minimal - Solo logo e CTA -->
+    <header class="fixed top-0 w-full z-50 bg-black/60 backdrop-blur-2xl border-b border-white/5">
+        <nav class="max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
+            <div class="text-2xl font-bold tracking-tight">
+                STUDIO<span class="text-gold">CENTOS</span>
+            </div>
+            <a href="#contatti" class="px-8 py-3 bg-gold text-black rounded-full font-medium hover:bg-[#F4E5B8] transition">
+                Inizia Ora
+            </a>
+        </nav>
+    </header>
+
+    <!-- Hero Ultra Minimal - Focus sul messaggio -->
+    <section class="min-h-screen flex items-center justify-center px-6">
+        <div class="max-w-5xl text-center fade-in">
+            <h1 class="text-6xl md:text-8xl font-light mb-8 leading-tight">
+                Codice che<br/>
+                <span class="text-gold font-medium">funziona</span>
+            </h1>
+            <p class="text-2xl md:text-3xl text-gray-400 mb-16 font-light max-w-3xl mx-auto">
+                React 19. FastAPI. AI Agents.<br/>
+                Production-ready dal primo giorno.
+            </p>
+            <div class="flex gap-6 justify-center">
+                <a href="#portfolio" class="px-10 py-5 bg-white text-black rounded-full hover:bg-gray-100 transition font-medium text-lg">
+                    Vedi Progetti
+                </a>
+                <a href="#contatti" class="px-10 py-5 bg-white/5 hover:bg-white/10 rounded-full transition font-medium text-lg border border-white/10">
+                    Parliamone
+                </a>
+            </div>
+            
+            <!-- Stats inline -->
+            <div class="mt-20 grid grid-cols-3 gap-8 max-w-2xl mx-auto fade-in-delay-1">
+                <div>
+                    <div class="text-4xl font-light text-gold mb-2">850+</div>
+                    <div class="text-sm text-gray-500">File Production</div>
+                </div>
+                <div>
+                    <div class="text-4xl font-light text-gold mb-2">45gg</div>
+                    <div class="text-sm text-gray-500">Time to Market</div>
+                </div>
+                <div>
+                    <div class="text-4xl font-light text-gold mb-2">100%</div>
+                    <div class="text-sm text-gray-500">Made in Italy</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Portfolio - Grid invece di timeline -->
+    <section id="portfolio" class="max-w-7xl mx-auto px-6 py-32">
+        <h2 class="text-5xl font-light mb-20 text-center">
+            Progetti <span class="text-gold">Recenti</span>
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-12">
+            <!-- Project 1 -->
+            <div class="group hover-lift">
+                <div class="aspect-video bg-gradient-to-br from-white/5 to-white/0 rounded-3xl mb-6 border border-white/10 flex items-center justify-center overflow-hidden">
+                    <div class="text-8xl">💼</div>
+                </div>
+                <div class="text-sm text-gold mb-3">2024 • SaaS Platform</div>
+                <h3 class="text-3xl font-light mb-3 group-hover:text-gold transition">CV-Lab Pro</h3>
+                <p class="text-gray-400 mb-6">Portfolio builder con AI per professionisti. 850+ file production-ready, 11 domini business.</p>
+                <div class="flex gap-3 flex-wrap mb-6">
+                    <span class="px-4 py-2 bg-white/5 rounded-full text-xs">React 19</span>
+                    <span class="px-4 py-2 bg-white/5 rounded-full text-xs">FastAPI</span>
+                    <span class="px-4 py-2 bg-white/5 rounded-full text-xs">PostgreSQL 16</span>
+                </div>
+                <a href="https://cv-lab.pro" target="_blank" class="inline-flex items-center text-gold hover:underline">
+                    Visita il sito →
+                </a>
+            </div>
+
+            <!-- Project 2 -->
+            <div class="group hover-lift">
+                <div class="aspect-video bg-gradient-to-br from-white/5 to-white/0 rounded-3xl mb-6 border border-white/10 flex items-center justify-center overflow-hidden">
+                    <div class="text-8xl">🤖</div>
+                </div>
+                <div class="text-sm text-gold mb-3">2024 • AI Platform</div>
+                <h3 class="text-3xl font-light mb-3 group-hover:text-gold transition">Phoenix AI</h3>
+                <p class="text-gray-400 mb-6">Piattaforma multi-agent per automazione enterprise. 78 AI tools pronti, monitoring integrato.</p>
+                <div class="flex gap-3 flex-wrap mb-6">
+                    <span class="px-4 py-2 bg-white/5 rounded-full text-xs">Python 3.12</span>
+                    <span class="px-4 py-2 bg-white/5 rounded-full text-xs">LangChain</span>
+                    <span class="px-4 py-2 bg-white/5 rounded-full text-xs">GPT-4</span>
+                </div>
+                <a href="https://phoenix-ai.duckdns.org" target="_blank" class="inline-flex items-center text-gold hover:underline">
+                    Visita il sito →
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Servizi - Più compatti -->
+    <section id="servizi" class="max-w-7xl mx-auto px-6 py-32">
+        <h2 class="text-5xl font-light mb-20 text-center">
+            Come posso <span class="text-gold">aiutarti</span>
+        </h2>
+
+        <div class="grid md:grid-cols-4 gap-8">
+            <div class="text-center hover-lift">
+                <div class="text-5xl mb-4">⚡</div>
+                <h3 class="text-xl font-light mb-2">Framework</h3>
+                <p class="text-sm text-gray-400">850+ file production-ready</p>
+            </div>
+            <div class="text-center hover-lift">
+                <div class="text-5xl mb-4">🤖</div>
+                <h3 class="text-xl font-light mb-2">AI Tools</h3>
+                <p class="text-sm text-gray-400">78 enterprise agents</p>
+            </div>
+            <div class="text-center hover-lift">
+                <div class="text-5xl mb-4">🧩</div>
+                <h3 class="text-xl font-light mb-2">Components</h3>
+                <p class="text-sm text-gray-400">50+ UI riutilizzabili</p>
+            </div>
+            <div class="text-center hover-lift">
+                <div class="text-5xl mb-4">🌐</div>
+                <h3 class="text-xl font-light mb-2">Custom Dev</h3>
+                <p class="text-sm text-gray-400">Soluzioni su misura</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Finale - Più grande e impattante -->
+    <section id="contatti" class="max-w-5xl mx-auto px-6 py-32 text-center">
+        <div class="bg-gradient-to-br from-gold/10 to-gold/5 backdrop-blur rounded-[3rem] p-16 border border-gold/20">
+            <h2 class="text-5xl md:text-6xl font-light mb-6">Hai un'idea?</h2>
+            <p class="text-2xl text-gray-400 mb-12">Trasformiamola in realtà.</p>
+            <div class="flex gap-6 justify-center flex-wrap">
+                <a href="mailto:ciro@studiocentos.it" class="px-12 py-5 bg-gold text-black rounded-full hover:bg-[#F4E5B8] transition font-medium text-lg">
+                    ciro@studiocentos.it
+                </a>
+                <a href="tel:+393401234567" class="px-12 py-5 bg-white/5 hover:bg-white/10 rounded-full transition font-medium text-lg border border-white/10">
+                    Chiamami
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Minimal -->
+    <footer class="border-t border-white/5 py-12">
+        <div class="max-w-7xl mx-auto px-6 text-center text-gray-500 text-sm">
+            <p>STUDIO<span class="text-gold">CENTOS</span> • Made in Italy 🇮🇹 • Salerno, Campania</p>
+            <p class="mt-2">© 2024 StudiocentOS. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+</html>

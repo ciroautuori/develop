@@ -1,0 +1,514 @@
+# 🏛️ ISS - Innovazione Sociale Salernitana APS-ETS
+# Git Ignore File for Private Repository
+
+# ========================
+# 🐍 PYTHON / BACKEND
+# ========================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# FastAPI specific
+*.db
+alembic/versions/*.py
+!alembic/versions/__init__.py
+
+# ========================
+# 🌐 NODE.JS / FRONTEND
+# ========================
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Diagnostic reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Grunt intermediate storage
+.grunt
+
+# Bower dependency directory
+bower_components
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons
+build/Release
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Snowpack dependency directory (https://snowpack.dev/)
+web_modules/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+out
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+public
+
+# Vite build output
+dist
+dist-ssr
+*.local
+
+# Rollup.js default build output
+dist/
+
+# Webpack
+.webpack/
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# ========================
+# 🐳 DOCKER
+# ========================
+
+# Docker files
+Dockerfile.prod
+docker-compose.override.yml
+docker-compose.production.yml
+
+# Docker data volumes (exclude data, allow config)
+data/
+!data/.gitkeep
+
+# Allow Docker configuration templates
+!config/
+!config/**/*.conf
+!config/**/*.sql
+!config/**/*.yml
+!config/**/*.yaml
+!config/**/*.json
+
+# ========================
+# 🗄️ DATABASE & CACHE
+# ========================
+
+# PostgreSQL
+*.sql
+*.backup
+*.dump
+
+# Redis
+dump.rdb
+
+# SQLite
+*.sqlite
+*.sqlite3
+*.db
+
+# ========================
+# 🔐 SECURITY & CONFIG
+# ========================
+
+# Environment variables
+.env*
+!.env.example
+.envrc
+
+# Secrets
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer
+*.p7b
+*.p7r
+*.spc
+
+# API Keys & Configuration
+config/local.py
+config/production.py
+*secret*
+*password*
+*api_key*
+
+# Docker Configuration Files (ALLOW SPECIFIC)
+!config/postgres/postgresql.conf
+!config/postgres/init.sql
+!config/redis/redis.conf
+!config/nginx/nginx.conf
+!config/backend/logging.conf
+
+# SSH Keys
+id_rsa
+id_rsa.pub
+known_hosts
+
+# ========================
+# 📁 SYSTEM & OS
+# ========================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.tmp
+*.temp
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ========================
+# 🛠️ IDEs & EDITORS
+# ========================
+
+# VSCode
+.vscode/
+!.vscode/settings.json.example
+!.vscode/tasks.json.example
+!.vscode/launch.json.example
+!.vscode/extensions.json.example
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Sublime Text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
+# Atom
+.atom/
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+Session.vim
+Sessionx.vim
+.netrwhist
+*~
+tags
+[._]*.un~
+
+# ========================
+# 🏗️ BUILD & DEPLOY
+# ========================
+
+# Build directories
+build/
+dist/
+out/
+target/
+bin/
+obj/
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# ========================
+# 📊 MONITORING & ANALYTICS
+# ========================
+
+# Prometheus
+prometheus_data/
+
+# Grafana
+grafana_data/
+
+# ========================
+# 🚀 ISS SPECIFIC
+# ========================
+
+# Volume data (Docker)
+postgres_data/
+redis_data/
+pgadmin_data/
+backend_uploads/
+backend_logs/
+
+# Test files
+test_files/
+test_data/
+
+# Generated documentation
+docs/build/
+docs/_build/
+
+# Local development
+local/
+development/
+
+# ISS Bot data
+iss-bot/data/
+iss-bot/cache/
+iss-bot/logs/
+
+# Brand assets (keep main ones, ignore variations)
+logo/variations/
+logo/old/
+brand/archive/
+
+# Analytics & tracking
+analytics/
+tracking/
+
+# User uploads
+uploads/
+media/private/
+
+# Cache directories
+.cache/
+cache/
+
+# Local configuration overrides
+local.yml
+local.json
+config.local.*
+
+# ========================
+# 📝 DOCUMENTATION TEMP
+# ========================
+
+# Temporary docs
+*.tmp.md
+draft_*.md
+TODO_PRIVATE.md
+NOTES_DEV.md

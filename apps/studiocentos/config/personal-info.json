@@ -1,0 +1,165 @@
+{
+  "personal": {
+    "firstName": "Ciro",
+    "lastName": "Autuori",
+    "fullName": "Ciro Autuori",
+    "role": "Full-Stack Developer & AI Specialist",
+    "tagline": "AI-Powered Development Made in Italy",
+    "bio": "Sviluppatore full-stack specializzato in intelligenza artificiale e architetture moderne. Trasformo idee in prodotti digitali scalabili con tecnologie all'avanguardia.",
+    "bioLong": "Con oltre 10 anni di esperienza nello sviluppo software, mi sono specializzato nella creazione di soluzioni enterprise basate su AI. Utilizzo stack tecnologici moderni come React 19, FastAPI e PostgreSQL per costruire applicazioni performanti e scalabili. La mia missione è portare l'innovazione tecnologica nelle aziende italiane, combinando la qualità del Made in Italy con le più recenti tecnologie di intelligenza artificiale.",
+    "photo": "/assets/profile.jpg",
+    "yearsExperience": 10,
+    "projectsCompleted": 50,
+    "clientsSatisfied": 30,
+    "coffeeCups": 9999
+  },
+  "contact": {
+    "email": "info@studiocentos.it",
+    "phone": "+39 XXX XXX XXXX",
+    "location": "Italia",
+    "timezone": "Europe/Rome",
+    "availableForHire": true
+  },
+  "social": {
+    "github": "https://github.com/studiocentos",
+    "linkedin": "https://linkedin.com/company/studiocentos",
+    "twitter": "https://twitter.com/studiocentos",
+    "instagram": "https://instagram.com/studiocentos"
+  },
+  "skills": {
+    "frontend": [
+      "React 19",
+      "TypeScript",
+      "TailwindCSS",
+      "Framer Motion",
+      "TanStack Router",
+      "Vite"
+    ],
+    "backend": [
+      "FastAPI",
+      "Python",
+      "PostgreSQL",
+      "SQLAlchemy",
+      "Alembic",
+      "Redis"
+    ],
+    "devops": [
+      "Docker",
+      "Nginx",
+      "Linux (Arch)",
+      "CI/CD",
+      "Let's Encrypt"
+    ],
+    "ai": [
+      "OpenAI API",
+      "LangChain",
+      "Vector Databases",
+      "RAG Systems",
+      "Gemini AI"
+    ]
+  },
+  "services": {
+    "mainServices": [
+      {
+        "id": "web-development",
+        "title": "Sviluppo Web Full-Stack",
+        "description": "Applicazioni web moderne e performanti con React e FastAPI",
+        "icon": "🌐",
+        "price": "A partire da €5.000"
+      },
+      {
+        "id": "ai-integration",
+        "title": "Integrazione AI",
+        "description": "Potenzia il tuo business con l'intelligenza artificiale",
+        "icon": "🤖",
+        "price": "A partire da €3.000"
+      },
+      {
+        "id": "consulting",
+        "title": "Consulenza Tecnica",
+        "description": "Supporto strategico per scelte tecnologiche e architetturali",
+        "icon": "💡",
+        "price": "€150/ora"
+      }
+    ]
+  },
+  "process": {
+    "steps": [
+      {
+        "number": 1,
+        "title": "Discovery",
+        "description": "Parliamo del tuo progetto. Capisco obiettivi, utenti, requisiti.",
+        "icon": "🔍",
+        "duration": "1-2 giorni"
+      },
+      {
+        "number": 2,
+        "title": "Planning",
+        "description": "Definisco architettura, tech stack, timeline. Ti mostro mockup.",
+        "icon": "📐",
+        "duration": "3-5 giorni"
+      },
+      {
+        "number": 3,
+        "title": "Development",
+        "description": "Sviluppo in sprint settimanali. Demo ogni venerdì.",
+        "icon": "⚡",
+        "duration": "4-12 settimane"
+      },
+      {
+        "number": 4,
+        "title": "Launch",
+        "description": "Deploy, monitoring, documentazione. Supporto post-lancio.",
+        "icon": "🚀",
+        "duration": "1 settimana"
+      }
+    ]
+  },
+  "testimonials": [
+    {
+      "id": 1,
+      "name": "Marco Rossi",
+      "role": "CEO, TechStart SRL",
+      "avatar": "👨‍💼",
+      "text": "Ciro ha trasformato la nostra idea in un prodotto funzionante in tempo record. Professionalità e competenza tecnica eccezionali.",
+      "rating": 5,
+      "project": "Piattaforma E-Commerce B2B"
+    },
+    {
+      "id": 2,
+      "name": "Laura Bianchi",
+      "role": "Product Manager, InnovaSoft",
+      "avatar": "👩‍💻",
+      "text": "L'integrazione AI che ha sviluppato ha aumentato la nostra produttività del 300%. Consigliatissimo!",
+      "rating": 5,
+      "project": "Sistema RAG per Customer Support"
+    },
+    {
+      "id": 3,
+      "name": "Giuseppe Verdi",
+      "role": "CTO, DataFlow SpA",
+      "avatar": "👨‍🔬",
+      "text": "Codice pulito, architettura solida, deployment impeccabile. Un vero professionista.",
+      "rating": 5,
+      "project": "Dashboard Analytics Real-time"
+    }
+  ],
+  "availability": {
+    "status": "available",
+    "nextAvailable": "2025-11-25",
+    "workingHours": "Lun-Ven 9:00-18:00 CET",
+    "responseTime": "Entro 24 ore"
+  },
+  "legal": {
+    "companyName": "STUDIOCENTOS",
+    "vatNumber": "IT00000000000",
+    "fiscalCode": "XXXXXXXXXXXXX",
+    "address": "Via Example 123, 00100 Roma, Italia",
+    "pec": "studiocentos@pec.it"
+  },
+  "metadata": {
+    "lastUpdated": "2025-11-10",
+    "version": "1.0.0",
+    "configFormat": "studiocentos-personal-v1"
+  }
+}
