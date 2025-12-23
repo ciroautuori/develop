@@ -75,4 +75,4 @@ apps/markettina/scripts/ai/
 # IronRep secrets
 apps/ironRep/docs/guides/CREDITI_INFINITI_GUIDE.md
 apps/studiocentos/scripts/tests/test_model_minimal.py
-apps/studiocentos/apps/ai_microservice/
+# apps/studiocentos/apps/ai_microservice/ - NOW SAFE

@@ -1,0 +1,64 @@
+[project]
+name = "studiocentos-ai-service"
+version = "1.0.0"
+description = "StudiocentOS AI Microservice - Unified AI service for all platforms"
+authors = [{name = "StudiocentOS Team", email = "ciro@studiocentos.it"}]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    # Core Framework
+    "fastapi>=0.115.6",
+    "uvicorn[standard]>=0.34.0",
+    "pydantic[email]>=2.10.4",
+    "pydantic-settings>=2.11.0",
+    "python-dotenv>=1.0.1",
+    "python-multipart>=0.0.17",
+    # AI - API HTTP (GROQ, Google, OpenRouter, HuggingFace)
+    "groq>=0.9.0",
+    "google-generativeai>=0.8.3",
+    "openai>=1.0.0",  # For OpenRouter
+    # ML Embeddings & Vector Store
+    "chromadb>=0.4.22",
+    # LiteLLM per multi-provider LLM management
+    "litellm>=1.53.0",
+    # HTTP & Async
+    "aiohttp>=3.13.0",
+    "httpx>=0.28.1",
+    # Logging & Monitoring
+    "structlog>=24.4.0",
+    "prometheus-client>=0.21.1",
+    # Utilities
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    # Image Processing (for branding overlay)
+    "Pillow>=10.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.4",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.8.5",
+    "black>=24.10.0",
+    "mypy>=1.13.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.setuptools]
+packages = ["app"]
