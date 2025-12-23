@@ -800,6 +800,138 @@ Se non trovi bandi validi, rispondi: {{"bandi": []}}
                 groq_results = await self.search_with_groq(query)
                 all_bandi.extend(groq_results)
                 results['sources']['groq'] = results['sources'].get('groq', 0) + len(groq_results)
+
+        except Exception as e:
+            logger.error(f"❌ Errore durante loop ricerca completa: {e}")
+            results['status'] = 'error'
+            results['error'] = str(e)
+
+        # Rimuovi duplicati basati su link o titolo
+        unique_bandi = []
+        seen_links = set()
+        seen_titles = set()
+
+        for b in all_bandi:
+            link = b.get('link', '').strip()
+            title = b.get('title', '').strip().lower()
+            
+            if link and link not in seen_links and title not in seen_titles:
+                seen_links.add(link)
+                seen_titles.add(title)
+                unique_bandi.append(b)
+
+        logger.info(f"✅ Ricerca completata. Trovati {len(unique_bandi)} bandi unici.")
+        
+        # Salva nel DB
+        saved_count = 0
+        from app.crud.bando import bando_crud
+        from app.schemas.bando import BandoCreate
+        
+        for b in unique_bandi:
+            try:
+                # Crea schema 
+                bando_in = BandoCreate(
+                    title=b['title'],
+                    ente=b['ente'],
+                    scadenza_raw=b.get('scadenza_raw'),
+                    link=b['link'],
+                    descrizione=b.get('descrizione'),
+                    fonte=b['fonte'],
+                    importo=b.get('importo'),
+                    categoria=b.get('categoria'),
+                    keyword_match=b.get('keyword_match', str(b.get('ai_source', 'ai')))
+                )
+                
+                # Salva (gestisce duplicati internamente)
+                await bando_crud.create_bando(db, bando_in)
+                saved_count += 1
+            except Exception as e:
+                logger.warning(f"Errore salvataggio bando {b.get('title')}: {e}")
+
+        results['status'] = 'completed'
+        results['completed_at'] = datetime.now().isoformat()
+        results['total_found'] = len(unique_bandi)
+        results['new_saved'] = saved_count
+        
+        return results
+
+    async def analyze_match(self, tender_text: str, association_profile: str) -> Dict[str, Any]:
+        """
+        🧠 Analizza il match tra un bando e il profilo dell'associazione.
+        Restituisce un punteggio (0-100) e una spiegazione.
+        """
+        match_result = {
+            "score": 0,
+            "reasoning": "Analisi non riuscita",
+            "strengths": [],
+            "weaknesses": []
+        }
+
+        # Usa Ollama se disponibile (gratis e privato), altrimenti Groq (veloce) o Gemini
+        try:
+            prompt = f"""Sei un consulente esperto per il Terzo Settore. Analizza la compatibilità tra questo bando e l'associazione.
+
+--- PROFILO ASSOCIAZIONE ---
+{association_profile}
+
+--- BANDO ---
+{tender_text[:3000]}
+
+--- TASK ---
+Valuta quanto questo bando è adatto all'associazione.
+Assegna un punteggio da 0 a 100.
+0 = Completamente fuori target
+100 = Bando perfetto
+
+Rispondi SOLO in JSON:
+{{
+    "score": <numero 0-100>,
+    "reasoning": "<breve spiegazione discorsiva>",
+    "strengths": ["<punto di forza 1>", "<punto di forza 2>"],
+    "weaknesses": ["<punto debole 1>", "<punto debole 2>"]
+}}
+"""
+            
+            # 1. Prova con Ollama (Llama 3)
+            if settings.use_ollama:
+                payload = {
+                    "model": self.ollama_model,
+                    "prompt": prompt,
+                    "stream": False,
+                    "format": "json"
+                }
+                response = await self.session.post(self.ollama_url, json=payload, timeout=60.0)
+                if response.status_code == 200:
+                    data = response.json()
+                    json_str = data.get("response", "")
+                    match_result = json.loads(json_str)
+                    return match_result
+
+            # 2. Fallback su Groq
+            if self.groq_api_key:
+                url = "https://api.groq.com/openai/v1/chat/completions"
+                headers = {"Authorization": f"Bearer {self.groq_api_key}"}
+                payload = {
+                    "model": "llama-3.1-8b-instant",
+                    "messages": [
+                        {"role": "system", "content": "Rispondi sempre in JSON valido."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "response_format": {"type": "json_object"}
+                }
+                response = await self.session.post(url, json=payload, headers=headers)
+                if response.status_code == 200:
+                    content = response.json()["choices"][0]["message"]["content"]
+                    match_result = json.loads(content)
+                    return match_result
+
+        except Exception as e:
+            logger.error(f"Errore durante analyze_match: {e}")
+            match_result["reasoning"] = f"Errore analisi AI: {str(e)}"
+
+        return match_result
+                all_bandi.extend(groq_results)
+                results['sources']['groq'] = results['sources'].get('groq', 0) + len(groq_results)
                 await asyncio.sleep(0.5)
 
             # 4. Scraping intelligente di pagine chiave

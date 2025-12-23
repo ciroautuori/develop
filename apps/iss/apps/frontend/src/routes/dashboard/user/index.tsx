@@ -34,7 +34,7 @@ interface BandiResponse {
   total: number
 }
 
-export const Route = createFileRoute('/dashboard/user')({
+export const Route = createFileRoute('/dashboard/user/')({
   component: UserDashboard,
 })
 
@@ -225,7 +225,7 @@ function UserDashboard() {
             title="Cerca Bandi"
             description={`${totalBandi} opportunità disponibili`}
             icon={Search}
-            onClick={() => {}}
+            onClick={() => { }}
             variant="primary"
           />
         </Link>
@@ -233,21 +233,21 @@ function UserDashboard() {
           title="Eventi"
           description="Formazione e networking"
           icon={Calendar}
-          onClick={() => {}}
+          onClick={() => { }}
           variant="secondary"
         />
         <QuickAction
           title="Volontariato"
           description="Opportunità di impegno"
           icon={Heart}
-          onClick={() => {}}
+          onClick={() => { }}
           variant="default"
         />
         <QuickAction
           title="Risorse"
           description="Guide e materiali"
           icon={BookOpen}
-          onClick={() => {}}
+          onClick={() => { }}
           variant="destructive"
         />
       </div>

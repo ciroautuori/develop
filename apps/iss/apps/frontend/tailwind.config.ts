@@ -115,6 +115,7 @@ export default {
       },
       fontFamily: {
         sans: [
+          'Outfit', // Modern primary font
           'Inter',
           '-apple-system',
           'BlinkMacSystemFont',
@@ -122,6 +123,7 @@ export default {
           'Roboto',
           'sans-serif',
         ],
+        body: ['Inter', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
       keyframes: {

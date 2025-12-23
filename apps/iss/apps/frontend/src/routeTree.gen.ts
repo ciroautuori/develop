@@ -25,11 +25,21 @@ import { Route as VolontariatoImport } from './routes/volontariato'
 import { Route as NewsImport } from './routes/news'
 import { Route as PartnersImport } from './routes/partners'
 import { Route as DashboardImport } from './routes/dashboard/index'
-import { Route as DashboardAdminImport } from './routes/dashboard/admin'
+import { Route as DashboardAdminImport } from './routes/dashboard/admin/route'
+import { Route as DashboardAdminIndexImport } from './routes/dashboard/admin/home'
 import { Route as DashboardUserImport } from './routes/dashboard/user'
 import { Route as DashboardPartnerImport } from './routes/dashboard/partner'
 import { Route as DashboardAdminUsersImport } from './routes/dashboard/admin/users'
 import { Route as DashboardAdminBandiImport } from './routes/dashboard/admin/bandi'
+import { Route as DashboardAdminMatchImport } from './routes/dashboard/admin/match'
+import { Route as DashboardAdminEventsImport } from './routes/dashboard/admin/events'
+import { Route as DashboardAdminVolunteerImport } from './routes/dashboard/admin/volunteer'
+import { Route as DashboardAdminPartnersImport } from './routes/dashboard/admin/partners'
+import { Route as DashboardAdminAnalyticsImport } from './routes/dashboard/admin/analytics'
+import { Route as DashboardAdminSystemImport } from './routes/dashboard/admin/system'
+import { Route as DashboardAdminSecurityImport } from './routes/dashboard/admin/security'
+import { Route as DashboardAdminNotificationsImport } from './routes/dashboard/admin/notifications'
+import { Route as DashboardAdminSettingsImport } from './routes/dashboard/admin/settings'
 
 // Create Virtual Routes
 
@@ -98,6 +108,11 @@ const DashboardAdminRoute = DashboardAdminImport.update({
   getParentRoute: () => DashboardRoute,
 } as any)
 
+const DashboardAdminIndexRoute = DashboardAdminIndexImport.update({
+  path: '/',
+  getParentRoute: () => DashboardAdminRoute,
+} as any)
+
 const DashboardUserRoute = DashboardUserImport.update({
   path: '/user',
   getParentRoute: () => DashboardRoute,
@@ -115,6 +130,51 @@ const DashboardAdminUsersRoute = DashboardAdminUsersImport.update({
 
 const DashboardAdminBandiRoute = DashboardAdminBandiImport.update({
   path: '/bandi',
+  getParentRoute: () => DashboardAdminRoute,
+} as any)
+
+const DashboardAdminMatchRoute = DashboardAdminMatchImport.update({
+  path: '/match',
+  getParentRoute: () => DashboardAdminRoute,
+} as any)
+
+const DashboardAdminEventsRoute = DashboardAdminEventsImport.update({
+  path: '/events',
+  getParentRoute: () => DashboardAdminRoute,
+} as any)
+
+const DashboardAdminVolunteerRoute = DashboardAdminVolunteerImport.update({
+  path: '/volunteer',
+  getParentRoute: () => DashboardAdminRoute,
+} as any)
+
+const DashboardAdminPartnersRoute = DashboardAdminPartnersImport.update({
+  path: '/partners',
+  getParentRoute: () => DashboardAdminRoute,
+} as any)
+
+const DashboardAdminAnalyticsRoute = DashboardAdminAnalyticsImport.update({
+  path: '/analytics',
+  getParentRoute: () => DashboardAdminRoute,
+} as any)
+
+const DashboardAdminSystemRoute = DashboardAdminSystemImport.update({
+  path: '/system',
+  getParentRoute: () => DashboardAdminRoute,
+} as any)
+
+const DashboardAdminSecurityRoute = DashboardAdminSecurityImport.update({
+  path: '/security',
+  getParentRoute: () => DashboardAdminRoute,
+} as any)
+
+const DashboardAdminNotificationsRoute = DashboardAdminNotificationsImport.update({
+  path: '/notifications',
+  getParentRoute: () => DashboardAdminRoute,
+} as any)
+
+const DashboardAdminSettingsRoute = DashboardAdminSettingsImport.update({
+  path: '/settings',
   getParentRoute: () => DashboardAdminRoute,
 } as any)
 
@@ -213,6 +273,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAdminImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/admin/': {
+      id: '/dashboard/admin/'
+      path: '/'
+      fullPath: '/dashboard/admin/'
+      preLoaderRoute: typeof DashboardAdminIndexImport
+      parentRoute: typeof DashboardAdminRoute
+    }
     '/dashboard/user': {
       id: '/dashboard/user'
       path: '/user'
@@ -235,10 +302,73 @@ declare module '@tanstack/react-router' {
       parentRoute: typeof DashboardAdminRoute
     }
     '/dashboard/admin/bandi': {
-      id: '/dashboard/admin/bandi' 
+      id: '/dashboard/admin/bandi'
       path: '/bandi'
       fullPath: '/dashboard/admin/bandi'
       preLoaderRoute: typeof DashboardAdminBandiImport
+      parentRoute: typeof DashboardAdminRoute
+    }
+    '/dashboard/admin/match': {
+      id: '/dashboard/admin/match'
+      path: '/match'
+      fullPath: '/dashboard/admin/match'
+      preLoaderRoute: typeof DashboardAdminMatchImport
+      parentRoute: typeof DashboardAdminRoute
+    }
+    '/dashboard/admin/events': {
+      id: '/dashboard/admin/events'
+      path: '/events'
+      fullPath: '/dashboard/admin/events'
+      preLoaderRoute: typeof DashboardAdminEventsImport
+      parentRoute: typeof DashboardAdminRoute
+    }
+    '/dashboard/admin/volunteer': {
+      id: '/dashboard/admin/volunteer'
+      path: '/volunteer'
+      fullPath: '/dashboard/admin/volunteer'
+      preLoaderRoute: typeof DashboardAdminVolunteerImport
+      parentRoute: typeof DashboardAdminRoute
+    }
+    '/dashboard/admin/partners': {
+      id: '/dashboard/admin/partners'
+      path: '/partners'
+      fullPath: '/dashboard/admin/partners'
+      preLoaderRoute: typeof DashboardAdminPartnersImport
+      parentRoute: typeof DashboardAdminRoute
+    }
+    '/dashboard/admin/analytics': {
+      id: '/dashboard/admin/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/admin/analytics'
+      preLoaderRoute: typeof DashboardAdminAnalyticsImport
+      parentRoute: typeof DashboardAdminRoute
+    }
+    '/dashboard/admin/system': {
+      id: '/dashboard/admin/system'
+      path: '/system'
+      fullPath: '/dashboard/admin/system'
+      preLoaderRoute: typeof DashboardAdminSystemImport
+      parentRoute: typeof DashboardAdminRoute
+    }
+    '/dashboard/admin/security': {
+      id: '/dashboard/admin/security'
+      path: '/security'
+      fullPath: '/dashboard/admin/security'
+      preLoaderRoute: typeof DashboardAdminSecurityImport
+      parentRoute: typeof DashboardAdminRoute
+    }
+    '/dashboard/admin/notifications': {
+      id: '/dashboard/admin/notifications'
+      path: '/notifications'
+      fullPath: '/dashboard/admin/notifications'
+      preLoaderRoute: typeof DashboardAdminNotificationsImport
+      parentRoute: typeof DashboardAdminRoute
+    }
+    '/dashboard/admin/settings': {
+      id: '/dashboard/admin/settings'
+      path: '/settings'
+      fullPath: '/dashboard/admin/settings'
+      preLoaderRoute: typeof DashboardAdminSettingsImport
       parentRoute: typeof DashboardAdminRoute
     }
   }
@@ -246,7 +376,7 @@ declare module '@tanstack/react-router' {
 
 // Create and export the route tree
 
-export const routeTree = rootRoute.addChildren({ 
+export const routeTree = rootRoute.addChildren({
   IndexRoute,
   AuthRoute: AuthRoute.addChildren({
     AuthLoginRoute,
@@ -261,8 +391,18 @@ export const routeTree = rootRoute.addChildren({
   PartnersRoute,
   DashboardRoute: DashboardRoute.addChildren({
     DashboardAdminRoute: DashboardAdminRoute.addChildren({
+      DashboardAdminIndexRoute,
       DashboardAdminUsersRoute,
       DashboardAdminBandiRoute,
+      DashboardAdminMatchRoute,
+      DashboardAdminEventsRoute,
+      DashboardAdminVolunteerRoute,
+      DashboardAdminPartnersRoute,
+      DashboardAdminAnalyticsRoute,
+      DashboardAdminSystemRoute,
+      DashboardAdminSecurityRoute,
+      DashboardAdminNotificationsRoute,
+      DashboardAdminSettingsRoute,
     }),
     DashboardUserRoute,
     DashboardPartnerRoute,

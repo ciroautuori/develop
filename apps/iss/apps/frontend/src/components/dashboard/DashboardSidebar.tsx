@@ -16,7 +16,8 @@ import {
   Bell,
   LogOut,
   X,
-  Home
+  Home,
+  Sparkles
 } from "lucide-react"
 import { Link, useLocation } from "@tanstack/react-router"
 
@@ -47,6 +48,12 @@ export function DashboardSidebar({ userRole, className, onClose }: SidebarProps)
       icon: FileText,
       href: "/dashboard/admin/bandi",
       badge: "74"
+    },
+    {
+      title: "AI Perfect Match",
+      icon: Sparkles,
+      href: "/dashboard/admin/match",
+      badge: "NEW"
     },
     {
       title: "Eventi",

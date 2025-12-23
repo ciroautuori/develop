@@ -29,7 +29,7 @@ interface BandiStats {
   fonti: Record<string, number>
 }
 
-export const Route = createFileRoute('/dashboard/admin')({
+export const Route = createFileRoute('/dashboard/admin/')({
   component: AdminDashboard,
 })
 
@@ -64,9 +64,9 @@ function AdminDashboard() {
   // Prepare chart data from real stats
   const userRolesData = userStats?.users_by_role
     ? Object.entries(userStats.users_by_role).map(([name, value]) => ({
-        name: name.replace('_', ' ').charAt(0).toUpperCase() + name.replace('_', ' ').slice(1),
-        value
-      }))
+      name: name.replace('_', ' ').charAt(0).toUpperCase() + name.replace('_', ' ').slice(1),
+      value
+    }))
     : [{ name: 'Utenti', value: userStats?.total_users || 0 }]
 
   const bandiBySourceData = bandiStats?.fonti
@@ -169,7 +169,7 @@ function AdminDashboard() {
             title="Utenti"
             description={`${userStats?.total_users ?? 0} registrati`}
             icon={Users}
-            onClick={() => {}}
+            onClick={() => { }}
             variant="primary"
           />
         </Link>
@@ -178,7 +178,7 @@ function AdminDashboard() {
             title="Bandi"
             description={`${bandiStats?.totali ?? 0} trovati`}
             icon={FileText}
-            onClick={() => {}}
+            onClick={() => { }}
             variant="secondary"
           />
         </Link>
@@ -195,7 +195,7 @@ function AdminDashboard() {
           title="Sicurezza"
           description="Log e audit"
           icon={Shield}
-          onClick={() => {}}
+          onClick={() => { }}
           variant="destructive"
         />
       </div>

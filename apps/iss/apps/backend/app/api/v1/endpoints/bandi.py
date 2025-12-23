@@ -244,21 +244,27 @@ async def ai_search_bandi(
     }
 
 
-@router.post("/ai-search-sync")
-async def ai_search_bandi_sync(
-    keywords: Optional[List[str]] = Query(None, description="Keywords specifiche"),
-    db: AsyncSession = Depends(get_db),
-    current_admin: AdminUser = Depends(get_current_admin)
-):
-    """
-    🤖 Esegue ricerca AI sincrona (attende risultati) - Solo Admin.
-    """
-    from app.services.ai_bandi_agent import ai_bandi_agent
-
     async with ai_bandi_agent as agent:
         results = await agent.run_full_search(db, keywords)
 
     return results
+
+
+@router.get("/best-matches")
+async def get_best_matches(
+    limit: int = Query(5, ge=1, le=20),
+    db: AsyncSession = Depends(get_db)
+    # Autenticazione admin opzionale per demo, ma consigliata
+):
+    """
+    🧠 Analizza i bandi attivi e trova i 'Perfect Match' per ISS.
+    Usa il profilo associazione predefinito (Mission, Target, Progetti).
+    """
+    from app.services.match_service import match_service
+    
+    matches = await match_service.get_perfect_matches(db, limit=limit)
+    return matches
+
 
 
 async def _run_ai_search(keywords: Optional[List[str]] = None):
