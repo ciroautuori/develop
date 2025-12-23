@@ -67,7 +67,6 @@ apps/studiocentos/docs/guides/ml_training.md
 apps/studiocentos/docs/guides/deployment.md
 apps/studiocentos/docs/guides/custom_ai_model.md
 apps/studiocentos/docs/resources/free_ai_apis.md
-apps/studiocentos/apps/ai_microservice/
 apps/studiocentos/scripts/ai/
 
 # Markettina secrets
@@ -76,3 +75,4 @@ apps/markettina/scripts/ai/
 # IronRep secrets
 apps/ironRep/docs/guides/CREDITI_INFINITI_GUIDE.md
 apps/studiocentos/scripts/tests/test_model_minimal.py
+apps/studiocentos/apps/ai_microservice/
