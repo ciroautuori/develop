@@ -171,34 +171,40 @@ status:
 
 # ============================================================================
 # 🚀 GIT SUBTREE - Push to App Repos
+# Usage: make push-iss MSG="Fix bug"  or  make push-all MSG="Sync all"
 # ============================================================================
 
-push-all: push-develop push-iss push-studiocentos push-markettina push-ironrep
+MSG ?= "Auto-sync: $(shell date +%Y-%m-%d_%H:%M)"
+
+push-all: _commit push-develop push-iss push-studiocentos push-markettina push-ironrep
 	@echo -e "$(GREEN)✅ Tutti i push completati!$(NC)"
 
-push-develop:
+_commit:
+	@git add . && git commit -m "$(MSG)" 2>/dev/null || echo "Nothing to commit"
+
+push-develop: _commit
 	@echo -e "$(CYAN)📤 Push develop...$(NC)"
-	@git add . && git commit -m "Auto-sync: $$(date +%Y-%m-%d)" 2>/dev/null || true
 	@git push origin main
 	@echo -e "$(GREEN)✅ develop → origin$(NC)"
 
-push-iss:
+push-iss: _commit
 	@echo -e "$(CYAN)📤 Push ISS...$(NC)"
-	@git subtree push --prefix=apps/iss iss-repo main
+	@git push iss-repo $$(git subtree split --prefix=apps/iss):main --force
 	@echo -e "$(GREEN)✅ apps/iss → iss_ws.git$(NC)"
 
-push-studiocentos:
+push-studiocentos: _commit
 	@echo -e "$(CYAN)📤 Push StudioCentos...$(NC)"
-	@git subtree push --prefix=apps/studiocentos studiocentos-repo main
+	@git push studiocentos-repo $$(git subtree split --prefix=apps/studiocentos):main --force
 	@echo -e "$(GREEN)✅ apps/studiocentos → studiocentos_ws.git$(NC)"
 
-push-markettina:
+push-markettina: _commit
 	@echo -e "$(CYAN)📤 Push Markettina...$(NC)"
-	@git subtree push --prefix=apps/markettina markettina-repo main
+	@git push markettina-repo $$(git subtree split --prefix=apps/markettina):main --force
 	@echo -e "$(GREEN)✅ apps/markettina → markettina.git$(NC)"
 
-push-ironrep:
+push-ironrep: _commit
 	@echo -e "$(CYAN)📤 Push IronRep...$(NC)"
-	@git subtree push --prefix=apps/ironRep ironrep-repo main
+	@git push ironrep-repo $$(git subtree split --prefix=apps/ironRep):main --force
 	@echo -e "$(GREEN)✅ apps/ironRep → ironrep.git$(NC)"
+
 
