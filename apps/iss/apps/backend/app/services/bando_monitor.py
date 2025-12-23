@@ -1136,48 +1136,57 @@ class BandoMonitorService:
 
         # BANDI INVITALIA REALI CON LINK DIRETTI VERIFICATI
         invitalia_incentivi = [
+            # Esistenti
             {
                 'title': 'Resto al Sud - Incentivi per imprenditoria giovanile nel Mezzogiorno',
                 'link': 'https://www.invitalia.it/cosa-facciamo/creiamo-nuove-aziende/resto-al-sud',
-                'descrizione': 'Finanziamento a fondo perduto fino al 50% + prestito a tasso zero per avviare attività nel Sud Italia. Per under 56 residenti in Abruzzo, Basilicata, Calabria, Campania, Molise, Puglia, Sardegna, Sicilia.',
+                'descrizione': 'Finanziamento a fondo perduto fino al 50% + prestito a tasso zero per avviare attività nel Sud Italia.',
                 'scadenza': 'A sportello - sempre aperto',
                 'categoria': 'imprenditoria'
             },
             {
                 'title': 'ON - Oltre Nuove Imprese a Tasso Zero',
                 'link': 'https://www.invitalia.it/cosa-facciamo/creiamo-nuove-aziende/nuove-imprese-a-tasso-zero',
-                'descrizione': 'Finanziamento agevolato per donne e giovani under 35 che vogliono avviare micro e piccole imprese. Copertura fino al 90% delle spese ammissibili.',
+                'descrizione': 'Finanziamento agevolato per donne e giovani under 35.',
                 'scadenza': 'A sportello - sempre aperto',
                 'categoria': 'imprenditoria'
             },
+            # Nuovi aggiunti per aumentare i risultati
             {
-                'title': 'Cultura Crea Plus - Incentivi per imprese culturali e creative',
-                'link': 'https://www.invitalia.it/cosa-facciamo/creiamo-nuove-aziende/cultura-crea-plus',
-                'descrizione': 'Contributi a fondo perduto e finanziamenti agevolati per imprese del settore culturale, creativo e turistico nel Mezzogiorno.',
-                'scadenza': 'A sportello - sempre aperto',
+                'title': 'Cultura Crea 2.0 - Sostegno alla filiera culturale e creativa',
+                'link': 'https://www.invitalia.it/cosa-facciamo/creiamo-nuove-aziende/cultura-crea',
+                'descrizione': 'Incentivi per la nascita e la crescita di imprese nel settore turistico-culturale.',
+                'scadenza': 'A sportello',
                 'categoria': 'cultura'
             },
             {
-                'title': 'Smart&Start Italia - Finanziamento startup innovative',
+                'title': 'Digital Transformation - Incentivi per la digitalizzazione delle PMI',
+                'link': 'https://www.invitalia.it/cosa-facciamo/rafforziamo-le-imprese/digital-transformation',
+                'descrizione': 'Sostegno alla trasformazione tecnologica dei processi produttivi.',
+                'scadenza': 'Verifica sul sito',
+                'categoria': 'digitale'
+            },
+            {
+                'title': 'Oltre Nuove Imprese a Tasso Zero - Investimenti fino a 3 milioni',
+                'link': 'https://www.invitalia.it/cosa-facciamo/creiamo-nuove-aziende/nuove-imprese-a-tasso-zero/incentivi',
+                'descrizione': 'Agevolazioni per la creazione di micro e piccole imprese a prevalente o totale partecipazione giovanile o femminile.',
+                'scadenza': 'Sempre aperto',
+                'categoria': 'impresa'
+            },
+            {
+                'title': 'Smart&Start Italia - Startup Innovative',
                 'link': 'https://www.invitalia.it/cosa-facciamo/creiamo-nuove-aziende/smartstart-italia',
-                'descrizione': 'Mutuo a tasso zero per startup innovative. Fino a 1,5 milioni di euro, con contributo a fondo perduto fino al 30% per startup del Mezzogiorno.',
-                'scadenza': 'A sportello - sempre aperto',
+                'descrizione': 'L\'incentivo che sostiene la nascita e la crescita delle startup innovative.',
+                'scadenza': 'A sportello',
                 'categoria': 'innovazione'
             },
             {
-                'title': 'SELFIEmployment - Microcredito per giovani NEET',
+                'title': 'SELFIEmployment - Fondo Rotativo Nazionale',
                 'link': 'https://www.invitalia.it/cosa-facciamo/creiamo-nuove-aziende/selfiemployment',
-                'descrizione': 'Finanziamenti a tasso zero da 5.000 a 50.000 euro per giovani NEET che vogliono avviare attività di lavoro autonomo o impresa.',
-                'scadenza': 'A sportello - sempre aperto',
+                'descrizione': 'Finanziamenti a tasso zero per l\'avvio di piccole iniziative imprenditoriali.',
+                'scadenza': 'A sportello',
                 'categoria': 'giovani'
-            },
-            {
-                'title': 'Fondo Impresa Femminile',
-                'link': 'https://www.invitalia.it/cosa-facciamo/rafforziamo-le-imprese/fondo-impresa-femminile',
-                'descrizione': 'Incentivi per la nascita e il rafforzamento delle imprese femminili. Contributi a fondo perduto e finanziamenti agevolati.',
-                'scadenza': 'Verifica apertura sportello',
-                'categoria': 'imprenditoria'
-            },
+            }
         ]
 
         for incentivo in invitalia_incentivi:
@@ -1352,8 +1361,9 @@ class BandoMonitorService:
                 try:
                     text = item.get_text()
 
-                    # Solo avvisi rilevanti per terzo settore
-                    if not any(t in text.lower() for t in ['sociale', 'comunità', 'inclusione', 'rigenerazione', 'giovani', 'associazioni']):
+                    # Solo avvisi rilevanti per terzo settore - Filtro allentato per non perdere opportunità
+                    relevant_terms = ['sociale', 'comunità', 'inclusione', 'rigenerazione', 'giovani', 'associazioni', 'cultura', 'ambiente', 'digitale', 'formazione', 'terzo settore']
+                    if not any(t in text.lower() for t in relevant_terms):
                         continue
 
                     title_elem = item.find(['h2', 'h3', 'h4', 'a'])

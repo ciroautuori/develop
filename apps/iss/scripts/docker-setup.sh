@@ -95,18 +95,15 @@ check_health() {
     # Wait for services to be ready
     sleep 30
     
-    # Check PostgreSQL
-    if docker-compose exec -T postgres pg_isready -U postgres -d iss_wbs > /dev/null 2>&1; then
-        log_success "PostgreSQL is healthy"
+    # Check Central Stack connectivity via Backend
+    if docker-compose exec -T backend python -c "import asyncio; from app.database.database import engine; async def check(): 
+        try:
+            async with engine.connect() as conn: print('DB OK'); 
+        except Exception as e: print(f'DB FAIL: {e}'); exit(1);
+    asyncio.run(check())" > /dev/null 2>&1; then
+        log_success "Database connectivity via Backend is healthy"
     else
-        log_error "PostgreSQL is not healthy"
-    fi
-    
-    # Check Redis
-    if docker-compose exec -T redis redis-cli ping > /dev/null 2>&1; then
-        log_success "Redis is healthy"
-    else
-        log_error "Redis is not healthy"
+        log_error "Database connectivity via Backend failed"
     fi
     
     # Check Backend

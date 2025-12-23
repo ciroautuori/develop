@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from datetime import datetime, timedelta
 
 from app.database import get_db
@@ -23,19 +23,26 @@ router = APIRouter()
 @router.post("/login", response_model=AuthResponse)
 async def login(login_data: LoginRequest, db: AsyncSession = Depends(get_db)):
     """Endpoint di login per admin"""
-    result = await db.execute(select(User).where(User.username == login_data.username))
+    # Cerca per email (più comune per login) o username
+    result = await db.execute(
+        select(User).where(
+            or_(User.email == login_data.username, User.username == login_data.username)
+        )
+    )
     user = result.scalar_one_or_none()
     
     if not user or not verify_password(login_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Username o password incorretti"
+            detail="Credenziali incorrette"
         )
     
-    if not user.is_admin:
+    # Permetti login a Admin, Responsabili APS e Operatori APS
+    allowed_roles = [UserRole.ADMIN, UserRole.APS_RESPONSABILE, UserRole.APS_OPERATORE]
+    if user.role not in allowed_roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Accesso negato: privilegi di amministratore richiesti"
+            detail="Accesso negato: privilegi insufficienti"
         )
     
     # Aggiorna ultimo accesso

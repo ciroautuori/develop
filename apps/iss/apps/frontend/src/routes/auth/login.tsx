@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Eye, 
-  EyeOff, 
-  LogIn, 
-  Mail, 
+import {
+  Eye,
+  EyeOff,
+  LogIn,
+  Mail,
   Lock,
   AlertCircle,
   ArrowLeft
@@ -49,14 +49,14 @@ function LoginPage() {
       }
 
       const data = await response.json();
-      
+
       // Salva token in localStorage
       localStorage.setItem('iss_token', data.access_token);
       localStorage.setItem('iss_user', JSON.stringify(data.user));
-      
+
       // Redirect to dashboard
       window.location.href = '/dashboard';
-      
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Errore durante il login');
     } finally {
@@ -75,8 +75,8 @@ function LoginPage() {
     <div className="space-y-6">
       {/* Back to Home */}
       <div className="flex items-center gap-2 text-iss-bordeaux-600 hover:text-iss-bordeaux-700 transition-colors">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           size="sm"
           onClick={() => window.location.href = '/'}
         >
@@ -94,7 +94,7 @@ function LoginPage() {
             Inserisci le tue credenziali per accedere alla piattaforma ISS
           </p>
         </CardHeader>
-        
+
         <CardContent className="space-y-6">
           {error && (
             <Alert variant="destructive">
@@ -157,8 +157,8 @@ function LoginPage() {
                 <input type="checkbox" className="rounded border-gray-300 text-iss-gold-500 focus:ring-iss-gold-400" />
                 <span className="text-gray-600">Ricordami</span>
               </label>
-              <a 
-                href="/auth/forgot-password" 
+              <a
+                href="/auth/forgot-password"
                 className="text-iss-bordeaux-600 hover:text-iss-bordeaux-700 font-medium"
               >
                 Password dimenticata?
@@ -199,8 +199,8 @@ function LoginPage() {
           <div className="text-center">
             <p className="text-gray-600">
               Non hai ancora un account?{' '}
-              <a 
-                href="/auth/register" 
+              <a
+                href="/auth/register"
                 className="text-iss-bordeaux-600 hover:text-iss-bordeaux-700 font-semibold"
               >
                 Registrati gratuitamente
@@ -208,16 +208,6 @@ function LoginPage() {
             </p>
           </div>
 
-          {/* Demo Credentials */}
-          <div className="bg-iss-gold-50 border border-iss-gold-200 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-iss-gold-800 mb-2">
-              🚀 Account Demo Disponibili
-            </h4>
-            <div className="text-xs text-iss-gold-700 space-y-1">
-              <div><strong>Admin:</strong> admin@iss.salerno.it / AdminISS2025!</div>
-              <div><strong>APS:</strong> test_1758638182@example.com / TestUser2025!</div>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>

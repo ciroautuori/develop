@@ -26,7 +26,7 @@ RUN mkdir -p public
 # Copia il codice sorgente
 COPY src/ ./src/
 COPY index.html ./
-# COPY public/ ./public/
+COPY public/ ./public/
 
 # Build ottimizzato per produzione
 ENV NODE_ENV=production

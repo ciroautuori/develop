@@ -68,6 +68,16 @@ class BandoSchedulerService:
                 max_instances=1
             )
 
+            # 🧪 TEST JOB - 16:20 (Today)
+            self.scheduler.add_job(
+                func=self._run_ai_bandi_search,
+                trigger=CronTrigger(hour=16, minute=20),
+                id='test_research_1620',
+                name='Test Research 16:20',
+                replace_existing=True,
+                max_instances=1
+            )
+
             # Job di pulizia giornaliera (alle 02:00)
             self.scheduler.add_job(
                 func=self._daily_cleanup,
