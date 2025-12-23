@@ -1,14 +1,15 @@
 """
-LLM Service with Multi-Provider Fallback Chain - NOVEMBRE 2025
+LLM Service with Multi-Provider Fallback Chain - DICEMBRE 2025
 
-ROLLBACK: Cloud APIs only (GROQ primary + OpenRouter fallback)
+UPDATED: Ollama PRIMARY + Cloud APIs fallback
 
 Features:
+- Ollama local (central-ollama:11434) - FREE, no rate limits
 - Multiple Groq keys rotation (6 keys = 600k tokens/day)
-- OpenRouter free models (unlimited with training opt-in)
 - Google Gemini free (unlimited with soft rate limiting)
 """
 import os
+import httpx
 from typing import List, Dict, Optional, Any
 import asyncio
 from enum import Enum
@@ -26,9 +27,9 @@ logger = get_logger(__name__)
 
 
 class LLMProvider(Enum):
-    """Available LLM providers - NOVEMBRE 2025."""
+    """Available LLM providers - DICEMBRE 2025."""
+    OLLAMA = "ollama"  # PRIMARY - Local, free
     GROQ = "groq"
-    # OPENROUTER = "openrouter" (Removed)
     GOOGLE = "google"
 
 
@@ -37,8 +38,8 @@ class LLMService:
     LLM Service with Multi-Provider Fallback Chain.
 
     FALLBACK CHAIN (in order):
-    1. GROQ Llama 3.3 70B (6 keys rotation = 600k tokens/day)
-    2. OpenRouter Free Models (unlimited)
+    1. OLLAMA (central-ollama:11434) - FREE, local, no rate limits
+    2. GROQ Llama 3.3 70B (6 keys rotation = 600k tokens/day)
     3. Google Gemini Free (unlimited)
     """
 
@@ -53,15 +54,43 @@ class LLMService:
         # Initialize provider clients
         self._init_providers()
 
+    async def _check_ollama_available(self) -> bool:
+        """Check if Ollama service is available."""
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                ollama_host = os.getenv("OLLAMA_HOST", "central-ollama")
+                ollama_port = os.getenv("OLLAMA_PORT", "11434")
+                response = await client.get(f"http://{ollama_host}:{ollama_port}/api/tags")
+                return response.status_code == 200
+        except Exception:
+            return False
+
     def _init_providers(self):
-        """Initialize all LLM provider clients - GROQ PRIMARY (Dec 2024)."""
+        """Initialize all LLM providers - OLLAMA PRIMARY (Dec 2025)."""
         self.fallback_chain = []
+        
+        # Ollama config
+        self.ollama_host = os.getenv("OLLAMA_HOST", "central-ollama")
+        self.ollama_port = os.getenv("OLLAMA_PORT", "11434")
+        self.ollama_model = os.getenv("OLLAMA_MODEL", "llama3.2:latest")
+        self.use_ollama = os.getenv("USE_OLLAMA", "true").lower() == "true"
 
         # =====================================================================
-        # GROQ PRIMARY - Ultra-fast inference with Llama 3.3
+        # OLLAMA PRIMARY - FREE, local, no rate limits
+        # =====================================================================
+        if self.use_ollama:
+            logger.info(f"🟣 Initializing OLLAMA as PRIMARY: {self.ollama_model}")
+            # Ollama doesn't need a LangChain client, we'll call API directly
+            self.fallback_chain.append(
+                (LLMProvider.OLLAMA, None, "ollama-local", self.ollama_model)
+            )
+            logger.info(f"✅ OLLAMA initialized at {self.ollama_host}:{self.ollama_port}")
+
+        # =====================================================================
+        # GROQ FALLBACK - Ultra-fast inference with Llama 3.3
         # =====================================================================
         primary_model = settings.primary_llm_model
-        logger.info(f"🔵 Initializing GROQ as PRIMARY: {primary_model}")
+        logger.info(f"🔵 Initializing GROQ as FALLBACK: {primary_model}")
         for i, key in enumerate(self.groq_api_keys):
             try:
                 client = ChatGroq(
@@ -78,9 +107,8 @@ class LLMService:
                 logger.warning(f"Failed to initialize Groq key {i+1}: {e}")
 
         # =====================================================================
-        # OPENROUTER FALLBACK - REMOVED for optimization
+        # (OpenRouter REMOVED for optimization)
         # =====================================================================
-        # (OpenRouter requires langchain_openai package which adds bloat)
 
         # =====================================================================
         # GOOGLE GEMINI - Last resort fallback
@@ -105,6 +133,42 @@ class LLMService:
         for i, (provider, _, name, model) in enumerate(self.fallback_chain):
             logger.info(f"   {i+1}. {name} ({model})")
 
+    async def _call_ollama(
+        self,
+        messages: List[BaseMessage],
+        temperature: float = 0.7,
+        max_tokens: int = 2048
+    ) -> str:
+        """Call Ollama API directly."""
+        # Convert LangChain messages to Ollama format
+        ollama_messages = []
+        for msg in messages:
+            if isinstance(msg, SystemMessage):
+                ollama_messages.append({"role": "system", "content": msg.content})
+            elif isinstance(msg, HumanMessage):
+                ollama_messages.append({"role": "user", "content": msg.content})
+            else:
+                ollama_messages.append({"role": "assistant", "content": msg.content})
+        
+        payload = {
+            "model": self.ollama_model,
+            "messages": ollama_messages,
+            "stream": False,
+            "options": {
+                "temperature": temperature,
+                "num_predict": max_tokens,
+            }
+        }
+        
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                f"http://{self.ollama_host}:{self.ollama_port}/api/chat",
+                json=payload
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data.get("message", {}).get("content", "")
+
     async def call_with_fallback(
         self,
         messages: List[BaseMessage],
@@ -128,7 +192,23 @@ class LLMService:
             try:
                 logger.debug(f"Trying {provider_name} ({model})...")
 
-                # Call LLM
+                # Handle Ollama separately (no LangChain client)
+                if provider == LLMProvider.OLLAMA:
+                    if await self._check_ollama_available():
+                        content = await self._call_ollama(messages, temperature, max_tokens)
+                        logger.info(f"✅ Success with {provider_name}")
+                        return {
+                            "content": content,
+                            "provider": provider.value,
+                            "provider_name": provider_name,
+                            "model": model,
+                            "success": True
+                        }
+                    else:
+                        logger.warning("Ollama not available, trying next provider...")
+                        continue
+
+                # Call LangChain client for other providers
                 response = await client.ainvoke(messages)
 
                 logger.info(f"✅ Success with {provider_name}")
