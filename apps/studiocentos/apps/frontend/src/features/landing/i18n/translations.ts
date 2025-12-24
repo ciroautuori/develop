@@ -119,10 +119,10 @@ export const translations = {
       responseTime: 'Rispondo entro 24 ore',
       freeConsult: 'Consulenza gratuita 30min',
       officeAI: {
-        title: 'Office Strumenti AI su Misura',
-        subtitle: 'Costruiamo il tuo ecosistema di produttività AI.',
-        description: 'Studiamo il tuo flusso di lavoro e configuriamo per te un set personalizzato di strumenti (IDE, Notion, Obsidian, LLM, Google Labs) per massimizzare la tua efficienza.',
-        cta: 'Richiedi Setup Office AI',
+        title: 'Office AI & Digital Workspace',
+        subtitle: 'Consulenza a 360° per il tuo ecosistema AI.',
+        description: 'Dal potenziamento di Google Workspace al setup di NotebookLM e Colab. Integriamo Gemini, AI Studio, Claude, GPT e Manus nei tuoi processi. Rimani sempre aggiornato e massimizza la produttività con un Office su misura.',
+        cta: 'Richiedi Consulenza Office AI',
       },
     },
     // ToolAI Section
@@ -433,10 +433,10 @@ export const translations = {
       responseTime: 'I respond within 24 hours',
       freeConsult: 'Free 30min consultation',
       officeAI: {
-        title: 'Tailor-Made AI Office Tools',
-        subtitle: 'We build your AI productivity ecosystem.',
-        description: 'We analyze your workflow and configure a custom set of tools (IDEs, Notion, Obsidian, LLMs, Google Labs) to maximize your efficiency.',
-        cta: 'Request AI Office Setup',
+        title: 'Office AI & Digital Workspace',
+        subtitle: '360° Consultation for your AI ecosystem.',
+        description: 'From Google Workspace optimization to NotebookLM and Colab setup. We integrate Gemini, AI Studio, Claude, GPT, and Manus into your workflows. Stay updated and maximize productivity with a custom-tailored Office.',
+        cta: 'Request Office AI Consultation',
       },
     },
     // ToolAI Section
@@ -745,10 +745,10 @@ export const translations = {
       responseTime: 'Respondo en 24 horas',
       freeConsult: 'Consulta gratuita 30min',
       officeAI: {
-        title: 'Office Herramientas IA a Medida',
-        subtitle: 'Construimos tu ecosistema de productividad IA.',
-        description: 'Estudiamos tu flujo de trabajo y configuramos un set personalizado de herramientas (IDEs, Notion, Obsidian, LLMs, Google Labs) para maximizar tu eficiencia.',
-        cta: 'Solicitar Setup Office IA',
+        title: 'Office IA & Digital Workspace',
+        subtitle: 'Consultoría 360° para tu ecosistema IA.',
+        description: 'Desde la optimización de Google Workspace hasta el setup de NotebookLM y Colab. Integramos Gemini, AI Studio, Claude, GPT y Manus en tus procesos. Mantente actualizado y maximiza la productividad con una Office a medida.',
+        cta: 'Solicitar Consultoría Office IA',
       },
     },
     // ToolAI Section
