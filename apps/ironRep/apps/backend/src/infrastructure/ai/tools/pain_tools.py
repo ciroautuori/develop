@@ -1,13 +1,15 @@
+```
 """
 Pain Analysis Tool for LangChain
 
-Wraps PainAnalyzer domain service as a LangChain tool for AI agents.
+Custom tools for analyzing pain trends.
 """
-from langchain_core.tools import Tool
+from langchain_core.tools import Tool, StructuredTool, BaseTool
 from typing import List
 
 from src.domain.services.pain_analyzer import PainAnalyzer
 from src.domain.repositories.pain_repository import IPainRepository
+from src.domain.services.red_flags_checker import RedFlagsChecker
 
 
 def create_pain_analysis_tool(pain_repository: IPainRepository) -> Tool:

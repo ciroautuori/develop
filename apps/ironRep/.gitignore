@@ -109,3 +109,8 @@ docker-compose.override.yml
 *.o
 *.a
 *.dylib
+
+# ================================
+# Agent Knowledge Base
+# ================================
+

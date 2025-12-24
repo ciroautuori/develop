@@ -6,7 +6,12 @@ Focus su: diagnosi, dolore, red flags, check-in giornaliero, progressione recupe
 """
 from typing import List, Dict, Any
 try:
-    from langchain.agents import AgentExecutor, create_tool_calling_agent
+    from langchain.agents import AgentExecutor
+    from langchain.agents.format_scratchpad.tools import format_to_tool_messages
+    from langchain.agents.output_parsers.tools import ToolsAgentOutputParser
+    # create_tool_calling_agent is bypassed, so it's not strictly needed here,
+    # but keeping it for the fallback structure if it were used elsewhere.
+    from langchain.agents import create_tool_calling_agent as _create_tool_calling_agent_placeholder
 except ImportError:
     # Fallback for broken langchain installation
     class AgentExecutor:
@@ -14,7 +19,14 @@ except ImportError:
         def invoke(self, *args, **kwargs): return {"output": "Agent unavailable due to dependency error"}
         async def ainvoke(self, *args, **kwargs): return {"output": "Agent unavailable due to dependency error"}
 
-    def create_tool_calling_agent(*args, **kwargs): return None
+    def _create_tool_calling_agent_placeholder(*args, **kwargs): return None # Placeholder for the bypassed function
+    # Define necessary components for the manual agent construction as mocks
+    def format_to_tool_messages(*args, **kwargs): return []
+    class ToolsAgentOutputParser:
+        def __init__(self, *args, **kwargs): pass
+        def parse(self, *args, **kwargs): return {"output": "Agent unavailable due to dependency error"}
+
+
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.tools import BaseTool
 
@@ -224,12 +236,20 @@ ESEMPI DOMANDE DA REDIRIGERE:
         ])
 
         # Create agent
-        self.agent = create_tool_calling_agent(
-            llm=self.llm,
-            tools=self.tools,
-            prompt=self.prompt
+        # self.agent = create_tool_calling_agent(llm=self.llm, tools=self.tools, prompt=self.prompt)
+        
+        # Manually create the tool calling agent to avoid introspection bugs in create_tool_calling_agent
+        self.llm_with_tools = self.llm.bind_tools(self.tools)
+        self.agent = (
+            {
+                "input": lambda x: x["input"],
+                "agent_scratchpad": lambda x: format_to_tool_messages(x["intermediate_steps"]),
+            }
+            | self.prompt
+            | self.llm_with_tools
+            | ToolsAgentOutputParser()
         )
-
+        
         # Create executor
         self.agent_executor = AgentExecutor(
             agent=self.agent,

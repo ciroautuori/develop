@@ -118,6 +118,12 @@ export const translations = {
       cta: '📅 Prenota Consulenza',
       responseTime: 'Rispondo entro 24 ore',
       freeConsult: 'Consulenza gratuita 30min',
+      officeAI: {
+        title: 'Office Strumenti AI su Misura',
+        subtitle: 'Costruiamo il tuo ecosistema di produttività AI.',
+        description: 'Studiamo il tuo flusso di lavoro e configuriamo per te un set personalizzato di strumenti (IDE, Notion, Obsidian, LLM, Google Labs) per massimizzare la tua efficienza.',
+        cta: 'Richiedi Setup Office AI',
+      },
     },
     // ToolAI Section
     toolai: {
@@ -426,6 +432,12 @@ export const translations = {
       cta: '📅 Book Consultation',
       responseTime: 'I respond within 24 hours',
       freeConsult: 'Free 30min consultation',
+      officeAI: {
+        title: 'Tailor-Made AI Office Tools',
+        subtitle: 'We build your AI productivity ecosystem.',
+        description: 'We analyze your workflow and configure a custom set of tools (IDEs, Notion, Obsidian, LLMs, Google Labs) to maximize your efficiency.',
+        cta: 'Request AI Office Setup',
+      },
     },
     // ToolAI Section
     toolai: {
@@ -732,6 +744,12 @@ export const translations = {
       cta: '📅 Reservar Consulta',
       responseTime: 'Respondo en 24 horas',
       freeConsult: 'Consulta gratuita 30min',
+      officeAI: {
+        title: 'Office Herramientas IA a Medida',
+        subtitle: 'Construimos tu ecosistema de productividad IA.',
+        description: 'Estudiamos tu flujo de trabajo y configuramos un set personalizado de herramientas (IDEs, Notion, Obsidian, LLMs, Google Labs) para maximizar tu eficiencia.',
+        cta: 'Solicitar Setup Office IA',
+      },
     },
     // ToolAI Section
     toolai: {

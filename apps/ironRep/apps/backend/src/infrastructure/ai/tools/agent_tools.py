@@ -4,7 +4,7 @@ LangChain Tools for Sciatica Coach Agent
 Custom tools that give the agent access to user data and domain logic.
 """
 from typing import List, Dict, Any, Optional
-from langchain_core.tools import Tool, StructuredTool
+from langchain_core.tools import Tool, StructuredTool, BaseTool
 from pydantic import BaseModel, Field
 from datetime import datetime, timedelta
 

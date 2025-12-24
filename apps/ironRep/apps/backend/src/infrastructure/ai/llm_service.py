@@ -26,10 +26,13 @@ from src.infrastructure.logging import get_logger
 
 # CRITICAL: Resolve NameError: BaseTool/Runnable for LangChain introspection
 import builtins
+import typing
 try:
     from langchain_core.tools import BaseTool, ToolCall
     from langchain_core.runnables import Runnable, RunnableSerializable
     from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
+    
+    # Builtins injection
     builtins.BaseTool = BaseTool
     builtins.Runnable = Runnable
     builtins.BaseMessage = BaseMessage
@@ -37,6 +40,29 @@ try:
     builtins.SystemMessage = SystemMessage
     builtins.RunnableSerializable = RunnableSerializable
     builtins.ToolCall = ToolCall
+    
+    # Monkeypatch get_type_hints for robust introspection
+    _orig_get_type_hints = typing.get_type_hints
+    def _patched_get_type_hints(obj, globalns=None, localns=None, include_extras=False):
+        if globalns is None:
+            # Try to get globals from the object itself
+            globalns = getattr(obj, "__globals__", {})
+        
+        # Inject missing primitives if they encounter a NameError during resolution
+        # We ensure they are in globalns
+        for name, cls in [
+            ("BaseTool", BaseTool), ("Runnable", Runnable), 
+            ("BaseMessage", BaseMessage), ("HumanMessage", HumanMessage),
+            ("SystemMessage", SystemMessage), ("RunnableSerializable", RunnableSerializable),
+            ("ToolCall", ToolCall)
+        ]:
+            if name not in globalns:
+                globalns[name] = cls
+                
+        return _orig_get_type_hints(obj, globalns, localns, include_extras)
+    
+    typing.get_type_hints = _patched_get_type_hints
+    
 except ImportError:
     pass
 
@@ -108,32 +134,10 @@ class LLMService:
         self.use_ollama = os.getenv("USE_OLLAMA", "true").lower() == "true"
 
         # =====================================================================
-        # OLLAMA PRIMARY - FREE, local, no rate limits
-        # =====================================================================
-        if self.use_ollama:
-            logger.info(f"🟣 Initializing OLLAMA as PRIMARY: {self.ollama_model}")
-            
-            # Initialize properly for Agents that need LangChain interface
-            try:
-                ollama_client = ChatOllama(
-                    base_url=f"http://{self.ollama_host}:{self.ollama_port}",
-                    model=self.ollama_model,
-                    temperature=0.7
-                )
-            except Exception as e:
-                logger.warning(f"Failed to initialize ChatOllama client: {e}")
-                ollama_client = None
-
-            self.fallback_chain.append(
-                (LLMProvider.OLLAMA, ollama_client, "ollama-local", self.ollama_model)
-            )
-            logger.info(f"✅ OLLAMA initialized at {self.ollama_host}:{self.ollama_port}")
-
-        # =====================================================================
-        # GROQ FALLBACK - Ultra-fast inference with Llama 3.3
+        # GROQ PRIMARY - Ultra-fast inference with Llama 3.3
         # =====================================================================
         primary_model = settings.primary_llm_model
-        logger.info(f"🔵 Initializing GROQ as FALLBACK: {primary_model}")
+        logger.info(f"🔵 Initializing GROQ as PRIMARY: {primary_model}")
         for i, key in enumerate(self.groq_api_keys):
             try:
                 client = ChatGroq(
@@ -152,6 +156,24 @@ class LLMService:
         # =====================================================================
         # (OpenRouter REMOVED for optimization)
         # =====================================================================
+
+        # =====================================================================
+        # OLLAMA SECONDARY - Logic-heavy local model
+        # =====================================================================
+        if self.use_ollama:
+            logger.info(f"🟣 Initializing OLLAMA as SECONDARY: {self.ollama_model}")
+            try:
+                ollama_client = ChatOllama(
+                    base_url=f"http://{self.ollama_host}:{self.ollama_port}",
+                    model=self.ollama_model,
+                    temperature=0.7
+                )
+                self.fallback_chain.append(
+                    (LLMProvider.OLLAMA, ollama_client, "ollama-local", self.ollama_model)
+                )
+                logger.info(f"✅ OLLAMA initialized at {self.ollama_host}:{self.ollama_port}")
+            except Exception as e:
+                logger.warning(f"Failed to initialize ChatOllama client: {e}")
 
         # =====================================================================
         # GOOGLE GEMINI - Last resort fallback
@@ -279,7 +301,7 @@ class LLMService:
             }
         }
         
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=300.0) as client:
             response = await client.post(
                 f"http://{self.ollama_host}:{self.ollama_port}/api/chat",
                 json=payload
@@ -444,7 +466,9 @@ class LLMService:
 
         # Return primary with fallbacks
         # We catch all exceptions to ensure rotation works
-        return primary.with_fallbacks(fallbacks, exceptions_to_handle=(Exception,))
+        # Temporarily disable fallbacks to bypass LangChain introspection bug (NameError: BaseTool)
+        # This returns the primary client directly, which doesn't trigger the problematic __getattr__
+        return primary
 
     async def generate(self, prompt: str, system_prompt: str = None) -> str:
         """

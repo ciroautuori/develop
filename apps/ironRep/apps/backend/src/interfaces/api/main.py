@@ -3,6 +3,54 @@ FastAPI Main Application
 
 Entry point for the REST API.
 """
+import os
+import logging
+from typing import Dict, Any
+
+# ==============================================================================
+# 🛠️ GLOBAL MONKEYPATCH: Resolve LangChain Introspection NameErrors (BaseTool/Runnable)
+# ==============================================================================
+import builtins
+import typing
+try:
+    from langchain_core.tools import BaseTool, ToolCall
+    from langchain_core.runnables import Runnable, RunnableSerializable
+    from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
+    
+    builtins.BaseTool = BaseTool
+    builtins.Runnable = Runnable
+    builtins.BaseMessage = BaseMessage
+    builtins.HumanMessage = HumanMessage
+    builtins.SystemMessage = SystemMessage
+    builtins.RunnableSerializable = RunnableSerializable
+    builtins.ToolCall = ToolCall
+    
+    _orig_get_type_hints = typing.get_type_hints
+    def _patched_get_type_hints(obj, globalns=None, localns=None, include_extras=False):
+        # Always try to get a dictionary we can modify
+        if globalns is None:
+            globalns = getattr(obj, "__globals__", {})
+        
+        # Aggressive injection: if we have a dict, ensure LangChain primitives are there
+        # Also inject into the typing module itself as a last resort
+        for name, cls in [
+            ("BaseTool", BaseTool), ("Runnable", Runnable), 
+            ("BaseMessage", BaseMessage), ("HumanMessage", HumanMessage),
+            ("SystemMessage", SystemMessage), ("RunnableSerializable", RunnableSerializable),
+            ("ToolCall", ToolCall)
+        ]:
+            if isinstance(globalns, dict) and name not in globalns:
+                globalns[name] = cls
+            # Ultimate hack: inject into typing module
+            setattr(typing, name, cls)
+                
+        return _orig_get_type_hints(obj, globalns, localns, include_extras)
+    
+    typing.get_type_hints = _patched_get_type_hints
+except ImportError:
+    pass
+# ==============================================================================
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
