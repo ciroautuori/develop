@@ -109,6 +109,22 @@ async def get_recent_bandi(
     return await bando_crud.get_recent_bandi(db, limit=limit)
 
 
+@router.get("/best-matches")
+async def get_best_matches(
+    limit: int = Query(5, ge=1, le=20),
+    db: AsyncSession = Depends(get_db)
+    # Autenticazione admin opzionale per demo, ma consigliata
+):
+    """
+    🧠 Analizza i bandi attivi e trova i 'Perfect Match' per ISS.
+    Usa il profilo associazione predefinito (Mission, Target, Progetti).
+    """
+    from app.services.match_service import match_service
+    
+    matches = await match_service.get_perfect_matches(db, limit=limit)
+    return matches
+
+
 @router.get("/{bando_id}", response_model=BandoRead)
 async def get_bando(
     bando_id: int,
@@ -250,20 +266,7 @@ async def ai_search_bandi(
     return results
 
 
-@router.get("/best-matches")
-async def get_best_matches(
-    limit: int = Query(5, ge=1, le=20),
-    db: AsyncSession = Depends(get_db)
-    # Autenticazione admin opzionale per demo, ma consigliata
-):
-    """
-    🧠 Analizza i bandi attivi e trova i 'Perfect Match' per ISS.
-    Usa il profilo associazione predefinito (Mission, Target, Progetti).
-    """
-    from app.services.match_service import match_service
-    
-    matches = await match_service.get_perfect_matches(db, limit=limit)
-    return matches
+
 
 
 
