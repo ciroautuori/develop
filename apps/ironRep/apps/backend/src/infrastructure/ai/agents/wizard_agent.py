@@ -427,15 +427,35 @@ Wizard: "No glutine. Riepilogo: Bodybuilding 5x/sett 75min, palestra completa, s
                     session["agent_config"]["medical_mode"] = MedicalMode.WELLNESS_TIPS
 
             # Map injury details if passed separately or inside intake
-            injury = initial_context.get("injury") or (intake.get("injuryDetails") if intake.get("hasInjury") else None)
+            # Now supports rich object from InjuryDetailsStep
+            injury = initial_context.get("injuryDetails") or initial_context.get("injury") or (intake.get("injuryDetails") if intake.get("hasInjury") else None)
             
             if injury:
+                session["collected_data"]["has_injury_details_from_ui"] = True
                 if "diagnosis" in injury:
-                    session["collected_data"]["injury_diagnosis"] = injury["diagnosis"] # Key expected by _determine_next_phase
-                if "painLevel" in injury:
+                    session["collected_data"]["injury_diagnosis"] = injury["diagnosis"]
+                if "painLevel" in injury: # Frontend uses camelCase
                     session["collected_data"]["pain_level"] = injury["painLevel"]
+                elif "pain_level" in injury:
+                    session["collected_data"]["pain_level"] = injury["pain_level"]
                 if "location" in injury:
                     session["collected_data"]["pain_locations"] = [injury["location"]]
+                if "injury_description" in injury:
+                    session["collected_data"]["injury_description"] = injury["injury_description"]
+                if "injury_date" in injury:
+                    session["collected_data"]["injury_date"] = injury["injury_date"]
+
+            # Map Food Preferences from FoodPreferencesStep (Visual)
+            food_prefs = initial_context.get("foodPreferences")
+            if food_prefs:
+                session["collected_data"]["has_food_prefs_from_ui"] = True
+                if "liked" in food_prefs:
+                    session["collected_data"]["favorite_foods"] = food_prefs["liked"]
+                if "disliked" in food_prefs:
+                    session["collected_data"]["disliked_foods"] = food_prefs["disliked"]
+                
+                # If they filled this out, they definitely want nutrition
+                session["agent_config"]["nutrition_mode"] = NutritionMode.FULL_DIET_PLAN
 
         # CRITICAL: Trigger config update to detect modes from initial data
         self._update_agent_config(session, "", {})
@@ -1007,16 +1027,9 @@ Genera un saluto BREVE (max 2 frasi). Non chiedere email o nome.
 
     def _determine_next_phase(self, session: Dict) -> InterviewPhase:
         """
-        FLUSSO COMPLETO v3:
-
-        1. GREETING → chiede infortunio (sì/no)
-        2. PAIN_ASSESSMENT → SE ha infortunio, chiede dettagli completi
-        3. SPORT_SELECTION → che sport + obiettivo
-        4. EQUIPMENT → dove ti alleni + attrezzatura
-        5. PREFERENCES → giorni + durata sessione
-        6. NUTRITION_MODE → vuole nutrizione? + obiettivo (deficit/surplus/maint)
-        7. NUTRITION_DETAILS → SE vuole nutrizione, chiedi allergie/preferenze
-        8. SUMMARY → riepilogo completo e conferma
+        FLUSSO COMPLETO v3 (SMART SKIP):
+        
+        Logica che salta automaticamente le fasi se i dati sono già presenti (dal setup visivo).
         """
         collected = session["collected_data"]
         current = session["phase"]
@@ -1025,7 +1038,9 @@ Genera un saluto BREVE (max 2 frasi). Non chiedere email o nome.
         # Data checks
         has_injury = agent_config.get("has_injury", False)
         # Check if injury details were collected via UI or previous chat
-        has_injury_details = collected.get("injury_diagnosis") or collected.get("injury_type") or collected.get("pain_level")
+        # If has_injury_details_from_ui is true, we have comprehensive data
+        has_injury_details = collected.get("has_injury_details_from_ui") or \
+                             (collected.get("injury_diagnosis") and collected.get("injury_description"))
         
         has_goals = collected.get("goals") or collected.get("primary_goal")
         has_equipment = collected.get("equipment") or collected.get("equipment_available") or collected.get("training_location")
@@ -1034,7 +1049,10 @@ Genera un saluto BREVE (max 2 frasi). Non chiedere email o nome.
         
         nutrition_mode = agent_config.get("nutrition_mode")
         nutrition_enabled = nutrition_mode and nutrition_mode not in [NutritionMode.DISABLED, "disabled"]
-        has_nutrition_details = collected.get("allergies") or collected.get("disliked_foods") or \
+        
+        # Check if nutrition details come from UI (FoodPreferencesStep)
+        has_nutrition_from_ui = collected.get("has_food_prefs_from_ui")
+        has_nutrition_details = has_nutrition_from_ui or collected.get("allergies") or collected.get("disliked_foods") or \
                                 collected.get("diet_type") or collected.get("favorite_foods")
 
         # ===== FLUSSO COMPLETO CON SMART SKIP =====
@@ -1044,6 +1062,7 @@ Genera un saluto BREVE (max 2 frasi). Non chiedere email o nome.
             if has_injury:
                 if not has_injury_details:
                     return InterviewPhase.PAIN_ASSESSMENT
+                # Se abbiamo già i dettagli, salta a SPORT
                 return InterviewPhase.SPORT_SELECTION
             else:
                 if agent_config.get("has_injury") is None:
@@ -1076,6 +1095,11 @@ Genera un saluto BREVE (max 2 frasi). Non chiedere email o nome.
 
         # 6. NUTRITION_MODE -> decide se saltare
         if current == InterviewPhase.NUTRITION_MODE:
+            # Se abbiamo preferenze cibo dalla UI, l'utente vuole nutrizione
+            if has_nutrition_from_ui:
+                 # Abbiamo già i dettagli, salta al summary
+                 return InterviewPhase.SUMMARY
+                 
             if nutrition_mode and nutrition_mode != "disabled":
                 if has_nutrition_details:
                     return InterviewPhase.SUMMARY
