@@ -54,6 +54,10 @@ class Bando(Base):
     importo = Column(String(100), nullable=True)
     categoria = Column(String(100), nullable=True)
 
+    # AI Analysis Persistence
+    ai_score = Column(Integer, nullable=True, index=True)
+    ai_reasoning = Column(Text, nullable=True)
+
     # Relazioni con sistema utenti
     applications = relationship("BandoApplication", back_populates="bando")
     watchlists = relationship("BandoWatchlist", back_populates="bando")

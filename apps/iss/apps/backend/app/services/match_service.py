@@ -63,24 +63,44 @@ class MatchService:
 
     async def get_perfect_matches(self, db: AsyncSession, limit: int = 5) -> List[Dict]:
         """
-        Trova i bandi 'perfetti' analizzando quelli attivi nel DB in parallelo.
+        Trova i bandi 'perfetti' leggendo i punteggi pre-calcolati nel DB.
+        Evita il bottleneck dell'AI in tempo reale.
         """
-        # 1. Recupera bandi attivi e recenti
-        # Ridotto a 5 per garantire risposta entro i timeout di Nginx (60s)
-        bandi = await bando_crud.get_recent_bandi(db, limit=5) 
+        # CERCA NEL DB BANDI GIÀ ANALIZZATI DALL'AI CON SCORE > 40
+        from app.models.bando import Bando, BandoStatus
+        from sqlalchemy import select, desc
         
-        async with ai_bandi_agent as agent:
-            # Crea task per analisi parallela
-            tasks = [self._analyze_single_bando(agent, bando, ISS_PROFILE) for bando in bandi]
-            results = await asyncio.gather(*tasks)
+        query = select(Bando).where(
+            Bando.ai_score >= 40,
+            Bando.status == BandoStatus.ATTIVO
+        ).order_by(desc(Bando.ai_score), desc(Bando.data_trovato)).limit(limit)
+        
+        result = await db.execute(query)
+        bandi = result.scalars().all()
+        
+        matches = []
+        for bando in bandi:
+            matches.append({
+                **bando.__dict__,
+                "match_score": bando.ai_score,
+                "match_reasoning": bando.ai_reasoning,
+                "match_strengths": [], # Eventualmente da estrarre da reasoning se strutturato
+                "match_weaknesses": []
+            })
             
-            # Filtra i None (errori o score basso)
-            matches = [r for r in results if r is not None]
+        logger.info(f"Recuperati {len(matches)} match pre-calcolati dal database.")
         
-        # Ordina per score decrescente
-        matches.sort(key=lambda x: x['match_score'], reverse=True)
-        
-        logger.info(f"Match completati. Trovati {len(matches)} risultati validi.")
+        # Se non ci sono match pre-calcolati, prova a recuperare gli ultimi per analisi rapida (max 3 per evitare timeout)
+        if not matches:
+            logger.info("Nessun match pre-calcolato trovato. Eseguo analisi rapida (max 3).")
+            recent_bandi = await bando_crud.get_recent_bandi(db, limit=3)
+            async with ai_bandi_agent as agent:
+                tasks = [self._analyze_single_bando(agent, b, ISS_PROFILE) for b in recent_bandi]
+                quick_results = await asyncio.gather(*tasks)
+                matches = [r for r in quick_results if r is not None]
+                
+                # In background (optional), salva questi risultati se vuoi
+                # qui li restituiamo e basta per velocità
         
         return matches[:limit]
 

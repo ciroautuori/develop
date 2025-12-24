@@ -37,6 +37,8 @@ class BandoBase(BaseModel):
 class BandoCreate(BandoBase):
     """Schema per la creazione di un nuovo bando"""
     keyword_match: Optional[str] = None
+    ai_score: Optional[int] = None
+    ai_reasoning: Optional[str] = None
 
 
 class BandoUpdate(BaseModel):
@@ -51,6 +53,8 @@ class BandoUpdate(BaseModel):
     categoria: Optional[str] = Field(None, max_length=100)
     notificato_email: Optional[bool] = None
     notificato_telegram: Optional[bool] = None
+    ai_score: Optional[int] = None
+    ai_reasoning: Optional[str] = None
 
 
 class BandoRead(BandoBase):
@@ -64,6 +68,8 @@ class BandoRead(BandoBase):
     notificato_email: bool
     notificato_telegram: bool
     keyword_match: Optional[str] = None
+    ai_score: Optional[int] = None
+    ai_reasoning: Optional[str] = None
 
     class Config:
         from_attributes = True

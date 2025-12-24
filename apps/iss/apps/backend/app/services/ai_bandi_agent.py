@@ -822,10 +822,11 @@ Se non trovi bandi validi, rispondi: {{"bandi": []}}
 
         logger.info(f"✅ Ricerca completata. Trovati {len(unique_bandi)} bandi unici.")
         
-        # Salva nel DB
+        # Salva nel DB e analizza
         saved_count = 0
         from app.crud.bando import bando_crud
-        from app.schemas.bando import BandoCreate
+        from app.schemas.bando import BandoCreate, BandoUpdate
+        from app.services.match_service import ISS_PROFILE
         
         for b in unique_bandi:
             try:
@@ -843,10 +844,19 @@ Se non trovi bandi validi, rispondi: {{"bandi": []}}
                 )
                 
                 # Salva (gestisce duplicati internamente)
-                await bando_crud.create_bando(db, bando_in)
-                saved_count += 1
+                bando_obj = await bando_crud.create_bando(db, bando_in)
+                if bando_obj:
+                    # Analisi immediata del match per persistenza
+                    tender_text = f"TITOLO: {bando_obj.title}\nENTE: {bando_obj.ente}\nDESCRIZIONE: {bando_obj.descrizione or ''}"
+                    analysis = await self.analyze_match(tender_text, ISS_PROFILE)
+                    
+                    await bando_crud.update_bando(db, bando_obj.id, BandoUpdate(
+                        ai_score=analysis.get('score', 0),
+                        ai_reasoning=analysis.get('reasoning', '')
+                    ))
+                    saved_count += 1
             except Exception as e:
-                logger.warning(f"Errore salvataggio bando {b.get('title')}: {e}")
+                logger.warning(f"Errore salvataggio/analisi bando {b.get('title')}: {e}")
 
         results['status'] = 'completed'
         results['completed_at'] = datetime.now().isoformat()
@@ -926,7 +936,7 @@ Rispondi SOLO in JSON:
                     return match_result
 
         except Exception as e:
-            logger.error(f"Errore durante analyze_match: {e}")
+            logger.error(f"Errore durante analyze_match [{type(e).__name__}]: {str(e)}")
             match_result["reasoning"] = f"Errore analisi AI: {str(e)}"
 
         return match_result
