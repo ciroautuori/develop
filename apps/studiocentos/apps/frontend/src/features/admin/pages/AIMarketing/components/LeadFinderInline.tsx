@@ -216,19 +216,16 @@ const StepIndicator = ({
   const currentIndex = getStepIndex(currentStep);
 
   return (
-    <div className="flex gap-2 p-1 rounded-xl bg-muted/50 mb-6">
+    <div className="flex gap-2 p-1 rounded-xl bg-muted/50">
       {steps.map((step, index) => (
         <button
           key={step.id}
-          onClick={() => index <= currentIndex && onStepClick(step.id)}
-          disabled={index > currentIndex}
+          onClick={() => onStepClick(step.id)}
           className={cn(
-            'flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all',
+            'flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium transition-all cursor-pointer',
             currentStep === step.id
               ? 'bg-primary text-primary-foreground shadow-sm'
-              : index < currentIndex
-                ? 'bg-primary/20 text-primary cursor-pointer hover:bg-primary/30'
-                : 'text-muted-foreground'
+              : 'text-muted-foreground hover:bg-background hover:text-foreground'
           )}
         >
           {step.icon}
@@ -662,19 +659,8 @@ export function LeadFinderInline({ onCreateEmailCampaign }: LeadFinderInlineProp
 
   return (
     <div className="space-y-6">
-      {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <StepIndicator currentStep={step} onStepClick={setStep} />
-
-        <Button
-          onClick={() => setIsSEOModalOpen(true)}
-          variant="outline"
-          className="w-full sm:w-auto gap-2 border-primary/20 hover:border-primary hover:bg-primary/5 text-primary"
-        >
-          <Search className="w-4 h-4" />
-          Strategia SEO
-        </Button>
-      </div>
+      {/* Step Navigation */}
+      <StepIndicator currentStep={step} onStepClick={setStep} />
 
       {/* STEP 1: SEARCH */}
       {step === 'search' && (
@@ -1215,10 +1201,12 @@ export function LeadFinderInline({ onCreateEmailCampaign }: LeadFinderInlineProp
         </motion.div>
       )}
       {/* SEO Modal */}
-      <SEOStrategyModal
-        isOpen={isSEOModalOpen}
-        onClose={() => setIsSEOModalOpen(false)}
-      />
+      {isSEOModalOpen && (
+        <SEOStrategyModal
+          isOpen={isSEOModalOpen}
+          onClose={() => setIsSEOModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

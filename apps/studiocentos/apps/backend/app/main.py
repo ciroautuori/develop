@@ -278,6 +278,10 @@ app.include_router(marketing_calendar_router, prefix="/api/v1")
 # Register Marketing router (Leads & Email Campaigns)
 app.include_router(marketing_router, prefix="/api/v1/marketing")
 
+# Register Acquisition router (Search & Auto-Pilot)
+from app.domain.marketing.acquisition_router import router as acquisition_router
+app.include_router(acquisition_router, prefix="/api/v1/marketing")
+
 # Register Marketing Scheduler router (Batch Content Generation Control)
 from app.domain.marketing.scheduler_router import router as marketing_scheduler_router
 app.include_router(marketing_scheduler_router, prefix="/api/v1/marketing")

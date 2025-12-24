@@ -269,6 +269,36 @@ async def launch_acquisition_campaign(
         logger.error("acquisition_campaign_failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/search")
+async def search_leads(
+    query: str,
+    city: Optional[str] = None,
+    lat: Optional[float] = None,
+    lng: Optional[float] = None,
+    radius: Optional[float] = 25000,
+    db: Session = Depends(get_db)
+):
+    """
+    🔍 Search for leads using Google Places API.
+    """
+    from .lead_enrichment_service import LeadEnrichmentService
+    service = LeadEnrichmentService(db)
+
+    try:
+        # Convert radius from meters to km
+        radius_km = int(radius / 1000) if radius else 25
+        
+        results = await service.search_google_places(
+            query=query,
+            location=city,
+            radius_km=radius_km,
+            lat=lat,
+            lng=lng
+        )
+        
+        return {"results": results}
+    finally:
+        await service.close()
 
 @router.get("/stats", response_model=AcquisitionStats)
 async def get_acquisition_stats(

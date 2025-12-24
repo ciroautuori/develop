@@ -62,7 +62,9 @@ class LeadEnrichmentService:
         self,
         query: str,
         location: Optional[str] = None,
-        radius_km: int = 50
+        radius_km: int = 50,
+        lat: Optional[float] = None,
+        lng: Optional[float] = None
     ) -> list[dict]:
         """
         Cerca attività su Google Places API.
@@ -71,6 +73,8 @@ class LeadEnrichmentService:
             query: Nome azienda o tipo business
             location: Città o indirizzo (es. "Salerno, Italia")
             radius_km: Raggio di ricerca in km
+            lat: Latitudine (opzionale, override location)
+            lng: Longitudine (opzionale, override location)
 
         Returns:
             Lista di risultati con info aziendali
@@ -108,20 +112,25 @@ class LeadEnrichmentService:
                 "maxResultCount": 20
             }
 
-            # Add location bias if provided
-            if location:
+            # Resolve coordinates
+            if location and not (lat and lng):
                 # Geocode location first
                 geo_result = await self._geocode_location(location, api_key)
                 if geo_result:
-                    payload["locationBias"] = {
-                        "circle": {
-                            "center": {
-                                "latitude": geo_result["lat"],
-                                "longitude": geo_result["lng"]
-                            },
-                            "radius": radius_km * 1000  # Convert to meters
-                        }
+                    lat = geo_result["lat"]
+                    lng = geo_result["lng"]
+
+            # Add location bias if coordinates available
+            if lat and lng:
+                payload["locationBias"] = {
+                    "circle": {
+                        "center": {
+                            "latitude": lat,
+                            "longitude": lng
+                        },
+                        "radius": radius_km * 1000  # Convert to meters
                     }
+                }
 
             response = await client.post(url, headers=headers, json=payload)
 

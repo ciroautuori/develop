@@ -3858,7 +3858,16 @@ from app.domain.marketing.content_creator import (
 
 # Initialize ContentCreatorAgent singleton
 try:
-    content_creator_agent = ContentCreatorAgent()
+    from app.infrastructure.agents.base_agent import AgentConfig
+    content_creator_agent = ContentCreatorAgent(
+        config=AgentConfig(
+            id="content_creator_singleton",
+            agent_type="marketing_content_creator",
+            name="StudioCentOS Content Creator",
+            model="llama-3.3-70b-versatile",
+            temperature=0.7
+        )
+    )
 except Exception as e:
     logger.warning(f"ContentCreatorAgent init failed: {e}")
     content_creator_agent = None
