@@ -6,7 +6,8 @@ in ChromaDB for personalized agent responses.
 
 Uses HuggingFace embeddings (all-MiniLM-L6-v2) - same as RAGService for consistency.
 """
-from typing import List, Dict, Optional, Literal
+from typing import Dict, Any, List, Optional, Literal
+from langchain_core.tools import BaseTool
 from datetime import datetime
 import os
 

@@ -44,7 +44,7 @@ export function FoodPreferencesStep({ onComplete, onSkip, initialData }: FoodPre
   };
 
   return (
-    <div className="flex flex-col h-full bg-background overflow-hidden">
+    <div className="flex flex-col h-full bg-background overflow-y-auto">
       {/* Header */}
       <div className="p-6 pb-4 safe-area-top">
         <div className="flex items-center gap-3 mb-4">

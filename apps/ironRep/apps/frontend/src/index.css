@@ -96,19 +96,7 @@
   }
 }
 
-@media (max-width: 1024px) {
-  html,
-  body {
-    height: 100%;
-    overflow: hidden;
-    overscroll-behavior: none;
-  }
-
-  #root {
-    height: 100dvh;
-    overflow: hidden;
-  }
-}
+/* Removed restrictive overflow: hidden to allow mobile scrolling */
 
 @layer utilities {
   /* Safe Area Utilities */

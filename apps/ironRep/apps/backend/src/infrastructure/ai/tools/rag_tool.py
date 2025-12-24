@@ -2,11 +2,11 @@ import json
 import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional
-from .base import BaseTool
+from .base import IronRepBaseTool
 
 logger = logging.getLogger(__name__)
 
-class RAGTool(BaseTool):
+class RAGTool(IronRepBaseTool):
     """Tool for retrieving knowledge from local RAG files."""
     
     def __init__(self, name: str, description: str, data_paths: List[str]):

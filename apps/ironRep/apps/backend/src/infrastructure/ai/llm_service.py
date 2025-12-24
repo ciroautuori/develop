@@ -19,9 +19,26 @@ from langchain_groq import ChatGroq
 from langchain_google_genai import ChatGoogleGenerativeAI
 # from langchain_openai import ChatOpenAI (Removed for lighter build)
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
+from langchain_core.tools import BaseTool
 
 from src.infrastructure.config.settings import settings
 from src.infrastructure.logging import get_logger
+
+# CRITICAL: Resolve NameError: BaseTool/Runnable for LangChain introspection
+import builtins
+try:
+    from langchain_core.tools import BaseTool, ToolCall
+    from langchain_core.runnables import Runnable, RunnableSerializable
+    from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
+    builtins.BaseTool = BaseTool
+    builtins.Runnable = Runnable
+    builtins.BaseMessage = BaseMessage
+    builtins.HumanMessage = HumanMessage
+    builtins.SystemMessage = SystemMessage
+    builtins.RunnableSerializable = RunnableSerializable
+    builtins.ToolCall = ToolCall
+except ImportError:
+    pass
 
 logger = get_logger(__name__)
 
@@ -34,6 +51,8 @@ class LLMProvider(Enum):
 
 
 from src.infrastructure.ai.tools import FatSecretTool, get_medical_rag_tool, get_training_rag_tool
+
+from langchain_community.chat_models import ChatOllama
 
 class LLMService:
     """
@@ -93,9 +112,20 @@ class LLMService:
         # =====================================================================
         if self.use_ollama:
             logger.info(f"🟣 Initializing OLLAMA as PRIMARY: {self.ollama_model}")
-            # Ollama doesn't need a LangChain client, we'll call API directly
+            
+            # Initialize properly for Agents that need LangChain interface
+            try:
+                ollama_client = ChatOllama(
+                    base_url=f"http://{self.ollama_host}:{self.ollama_port}",
+                    model=self.ollama_model,
+                    temperature=0.7
+                )
+            except Exception as e:
+                logger.warning(f"Failed to initialize ChatOllama client: {e}")
+                ollama_client = None
+
             self.fallback_chain.append(
-                (LLMProvider.OLLAMA, None, "ollama-local", self.ollama_model)
+                (LLMProvider.OLLAMA, ollama_client, "ollama-local", self.ollama_model)
             )
             logger.info(f"✅ OLLAMA initialized at {self.ollama_host}:{self.ollama_port}")
 

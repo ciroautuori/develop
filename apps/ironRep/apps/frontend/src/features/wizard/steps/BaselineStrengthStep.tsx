@@ -75,9 +75,9 @@ export function BaselineStrengthStep({ onComplete, onSkip, initialData }: Baseli
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-background to-secondary/10 overflow-hidden">
-      {/* Content (NO SCROLL) */}
-      <div className="flex-1 overflow-hidden px-4 py-6 pb-safe">
+    <div className="flex flex-col h-full bg-gradient-to-b from-background to-secondary/10 overflow-y-auto">
+      {/* Content */}
+      <div className="flex-1 px-4 py-6 pb-safe">
         <div className="max-w-md mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
           {/* Header */}
           <div className="text-center space-y-2 pt-4">

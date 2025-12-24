@@ -1,49 +1,18 @@
 name: iss
 services:
-  # PostgreSQL Database - Ottimizzato per produzione
-  postgres:
-    image: postgres:16-alpine
-    container_name: iss-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: iss_wbs
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
-      PGDATA: /var/lib/postgresql/data/pgdata
-      # Ottimizzazioni PostgreSQL
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./config/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
-      - ./config/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    ports:
-      - "${POSTGRES_PORT:-5433}:5432"
-    networks:
-      - iss-network
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d iss_wbs" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 256M
 
   # ISS Backend API - Ottimizzato per produzione
   backend:
     build:
-      context: ./apps/backend
+      context: ../apps/backend
       dockerfile: Dockerfile
       target: production
     container_name: iss-backend
     restart: unless-stopped
     environment:
       # Database
-      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-postgres123}@postgres:5432/iss_wbs
+      # Database
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-central_admin_password_2025}@central-postgres:5432/iss_wbs
       DATABASE_POOL_SIZE: 20
       DATABASE_MAX_OVERFLOW: 30
 
@@ -101,8 +70,6 @@ services:
     networks:
       - iss-network
     depends_on:
-      postgres:
-        condition: service_healthy
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
       interval: 30s
@@ -139,7 +106,7 @@ services:
   # ISS Frontend - React + Nginx ottimizzato
   frontend:
     build:
-      context: ./apps/frontend
+      context: ../apps/frontend
       dockerfile: Dockerfile
       target: production
     container_name: iss-frontend
@@ -185,13 +152,6 @@ services:
       - iss-network
 
 volumes:
-  # Database persistente
-  postgres_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${DATA_DIR:-./data}/postgres
 
   # Upload files backend
   backend_uploads:

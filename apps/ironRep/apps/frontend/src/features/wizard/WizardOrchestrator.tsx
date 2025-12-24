@@ -15,7 +15,7 @@
  * @production-ready Complete user profiling for all agents
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { WizardChat } from "./WizardChat";
 import {
   BiometricsStep,
@@ -54,18 +54,18 @@ type WizardStep =
 const calculateTotalSteps = (config: Record<string, unknown>, hasNutrition: boolean): number => {
   let steps = 4; // biometrics + training_goals + lifestyle + chat always
   if (hasNutrition) steps += 2; // nutrition_goals + food_prefs
-  if (config.medical_mode === "injury_recovery" || config.has_injury) steps++;
-  if (config.coach_mode !== "disabled" && config.sport_type) steps++;
+  if (config.medical_mode === "injury_recovery" || config.has_injury || config.health_conditions) steps++;
+  if (config.coach_mode !== "disabled" || config.sport_type) steps++;
   return steps;
 };
 
 const getStepNumber = (step: WizardStep, config: Record<string, unknown>, hasNutrition: boolean): number => {
   const stepOrder: WizardStep[] = ["biometrics", "training_goals", "lifestyle"];
   if (hasNutrition) stepOrder.push("nutrition_goals");
-  stepOrder.push("chat");
   if (hasNutrition) stepOrder.push("food_prefs");
-  if (config.medical_mode === "injury_recovery" || config.has_injury) stepOrder.push("injury");
-  if (config.coach_mode !== "disabled" && config.sport_type) stepOrder.push("strength");
+  if (config.medical_mode === "injury_recovery" || config.has_injury || config.health_conditions) stepOrder.push("injury");
+  if (config.coach_mode !== "disabled" || config.sport_type) stepOrder.push("strength");
+  stepOrder.push("chat");
   return stepOrder.indexOf(step) + 1;
 };
 
@@ -101,108 +101,130 @@ export function WizardOrchestrator({ onComplete }: WizardOrchestratorProps) {
 
   const hasNutritionEnabled = nutritionGoalsData !== null || trainingGoalsData?.primary_goal === "fat_loss" || trainingGoalsData?.primary_goal === "muscle_gain";
   const [isRestoring, setIsRestoring] = useState(true);
+  const [googleUpdates, setGoogleUpdates] = useState<string[]>([]);
 
   // RESTORE STATE FROM BACKEND ON MOUNT
   useEffect(() => {
     const restoreProgress = async () => {
       try {
+        // Sync with Google Fit first to get latest biometrics
+        const googleSyncFields: string[] = [];
+        try {
+          const syncResult = await usersApi.syncGoogleFit();
+          if (syncResult.success && syncResult.updates) {
+            const fields = Object.keys(syncResult.updates);
+            googleSyncFields.push(...fields);
+            setGoogleUpdates(fields);
+            logger.info("Google Fit sync completed on wizard mount", syncResult.updates);
+          }
+        } catch (syncErr) {
+          logger.warn("Google Fit sync failed on mount (likely not linked)", syncErr);
+        }
+
         const user = await usersApi.getMe();
         if (!user) return;
 
-        // Restore Biometrics
-        if (user.age && user.weight_kg && user.height_cm && user.sex) {
-          const bio: BiometricsData = {
-            age: user.age,
-            weight_kg: user.weight_kg,
-            height_cm: user.height_cm,
-            sex: user.sex,
-          };
+        // 1. Restore Biometrics (even if partial)
+        const bio: any = {};
+        if (user.age) bio.age = user.age;
+        if (user.weight_kg) bio.weight_kg = user.weight_kg;
+        if (user.height_cm) bio.height_cm = user.height_cm;
+        if (user.sex) bio.sex = user.sex;
+
+        if (Object.keys(bio).length > 0) {
           setBiometricsData(bio);
           setCollectedData(prev => ({ ...prev, ...bio }));
-
-          // Restore Training Goals
-          if (user.primary_goal && user.training_experience) {
-            const goals: TrainingGoalsData = {
-              primary_goal: user.primary_goal as any,
-              secondary_goals: user.secondary_goals || [],
-              training_experience: user.training_experience as any,
-              training_years: user.training_years || 0,
-              available_days: user.available_days || 3,
-              session_duration: user.session_duration_minutes || 60,
-              equipment_available: user.equipment_available || [],
-              preferred_time: user.preferred_time || "any",
-              intensity_preference: user.intensity_preference || "medium",
-            };
-            setTrainingGoalsData(goals);
-            setCollectedData(prev => ({ ...prev, ...goals }));
-
-            // Restore Lifestyle
-            if (user.activity_level && user.work_type) {
-              const life: LifestyleData = {
-                activity_level: user.activity_level as any,
-                work_type: user.work_type as any,
-                work_hours_per_day: user.work_hours_per_day || 8,
-                commute_active: user.commute_active || false,
-                stress_level: user.stress_level || 5,
-                stress_sources: user.stress_sources || [],
-                sleep_hours: user.sleep_hours || 7,
-                sleep_quality: (user.sleep_quality as any) || "average",
-                sleep_schedule: (user.sleep_schedule as any) || "variable",
-                recovery_capacity: (user.recovery_capacity as any) || "average",
-                health_conditions: user.health_conditions || [],
-                supplements_used: user.supplements_used || [],
-              };
-              setLifestyleData(life);
-              setCollectedData(prev => ({ ...prev, ...life }));
-
-              // Determine next step
-              const nutritionRelatedGoals = ["fat_loss", "muscle_gain", "recomp", "lean_bulk"];
-              const needsNutrition = nutritionRelatedGoals.includes(goals.primary_goal);
-
-              if (needsNutrition) {
-                if (user.nutrition_goal && user.diet_type) {
-                  const nut: NutritionGoalsData = {
-                    nutrition_goal: user.nutrition_goal,
-                    diet_type: user.diet_type,
-                    calorie_preference: user.calorie_preference || "auto",
-                    custom_calories: user.custom_calories,
-                    protein_priority: user.protein_priority || "balanced",
-                    macro_preference: user.macro_preference || "balanced",
-                    meal_frequency: user.meal_frequency || 3,
-                    meal_timing: user.meal_timing || "regular",
-                    intermittent_window: user.intermittent_window,
-                    allergies: user.allergies || [],
-                    intolerances: user.intolerances || [],
-                    dietary_restrictions: user.dietary_restrictions || [],
-                    budget_preference: user.budget_preference || "medium",
-                    cooking_skill: user.cooking_skill || "basic",
-                    meal_prep_available: user.meal_prep_available || false,
-                    supplements_interest: user.supplements_interest || [],
-                  };
-                  setNutritionGoalsData(nut);
-                  setCollectedData(prev => ({ ...prev, ...nut }));
-                  setCurrentStep("chat"); // Assuming chat hasn't happened yet, or we restart chat.
-                } else {
-                  setCurrentStep("nutrition_goals");
-                }
-              } else {
-                setCurrentStep("chat");
-              }
-            } else {
-              setCurrentStep("lifestyle");
-            }
-          } else {
-            setCurrentStep("training_goals");
-          }
-        } else {
-          setCurrentStep("biometrics");
         }
-      } catch (e) {
-        logger.error("Failed to restore progress", { error: e });
+
+        // 2. Restore Training Goals (even if partial)
+        const goals: any = {};
+        if (user.primary_goal) goals.primary_goal = user.primary_goal;
+        if (user.secondary_goals) goals.secondary_goals = user.secondary_goals;
+        if (user.training_experience) goals.training_experience = user.training_experience;
+        if (user.training_years) goals.training_years = user.training_years;
+        if (user.available_days) goals.available_days = user.available_days;
+        if (user.session_duration_minutes) goals.session_duration = user.session_duration_minutes;
+        if (user.equipment_available) goals.equipment_available = user.equipment_available;
+        if (user.preferred_time) goals.preferred_time = user.preferred_time;
+        if (user.intensity_preference) goals.intensity_preference = user.intensity_preference;
+
+        if (Object.keys(goals).length > 0) {
+          setTrainingGoalsData(goals);
+          setCollectedData(prev => ({ ...prev, ...goals }));
+        }
+
+        // 3. Restore Lifestyle (even if partial, e.g. activity_level from Google Fit)
+        const life: any = {};
+        if (user.activity_level) life.activity_level = user.activity_level;
+        if (user.work_type) life.work_type = user.work_type;
+        if (user.work_hours_per_day) life.work_hours_per_day = user.work_hours_per_day;
+        if (user.commute_active !== undefined) life.commute_active = user.commute_active;
+        if (user.stress_level) life.stress_level = user.stress_level;
+        if (user.stress_sources) life.stress_sources = user.stress_sources;
+        if (user.sleep_hours) life.sleep_hours = user.sleep_hours;
+        if (user.sleep_quality) life.sleep_quality = user.sleep_quality;
+        if (user.sleep_schedule) life.sleep_schedule = user.sleep_schedule;
+        if (user.recovery_capacity) life.recovery_capacity = user.recovery_capacity;
+        if (user.health_conditions) life.health_conditions = user.health_conditions;
+        if (user.supplements_used) life.supplements_used = user.supplements_used;
+
+        if (Object.keys(life).length > 0) {
+          setLifestyleData(life);
+          setCollectedData(prev => ({ ...prev, ...life }));
+        }
+
+        // 4. Restore Nutrition Goals
+        const nut: any = {};
+        if (user.nutrition_goal) nut.nutrition_goal = user.nutrition_goal;
+        if (user.diet_type) nut.diet_type = user.diet_type;
+        if (user.calorie_preference) nut.calorie_preference = user.calorie_preference;
+        if (user.custom_calories) nut.custom_calories = user.custom_calories;
+        if (user.protein_priority) nut.protein_priority = user.protein_priority;
+        if (user.macro_preference) nut.macro_preference = user.macro_preference;
+        if (user.meal_frequency) nut.meal_frequency = user.meal_frequency;
+        if (user.meal_timing) nut.meal_timing = user.meal_timing;
+        if (user.intermittent_window) nut.intermittent_window = user.intermittent_window;
+        if (user.allergies) nut.allergies = user.allergies;
+        if (user.intolerances) nut.intolerances = user.intolerances;
+        if (user.dietary_restrictions) nut.dietary_restrictions = user.dietary_restrictions;
+        if (user.budget_preference) nut.budget_preference = user.budget_preference;
+        if (user.cooking_skill) nut.cooking_skill = user.cooking_skill;
+        if (user.meal_prep_available !== undefined) nut.meal_prep_available = user.meal_prep_available;
+        if (user.supplements_interest) nut.supplements_interest = user.supplements_interest;
+
+        if (Object.keys(nut).length > 0) {
+          setNutritionGoalsData(nut);
+          setCollectedData(prev => ({ ...prev, ...nut }));
+        }
+
+        // Determine CURRENT STEP based on missing data
+        if (!user.age || !user.weight_kg || !user.height_cm || !user.sex) {
+          setCurrentStep("biometrics");
+        } else if (!user.primary_goal || !user.training_experience) {
+          setCurrentStep("training_goals");
+        } else if (!user.activity_level || !user.work_type || !user.sleep_quality) {
+          setCurrentStep("lifestyle");
+        } else {
+          const nutritionRelatedGoals = ["fat_loss", "muscle_gain", "recomp", "lean_bulk"];
+          const needsNutrition = nutritionRelatedGoals.includes(user.primary_goal);
+
+          if (needsNutrition && (!user.nutrition_goal || !user.diet_type)) {
+            setCurrentStep("nutrition_goals");
+          } else if (user.has_injury) {
+            setCurrentStep("injury");
+          } else if (user.sport_type) {
+            setCurrentStep("strength");
+          } else {
+            setCurrentStep("chat");
+          }
+        }
+      } catch (err) {
+        logger.error("Failed to restore progress", err as Record<string, unknown>);
       } finally {
         setIsRestoring(false);
       }
     };
+
     restoreProgress();
   }, []);
   const handleBiometricsComplete = async (data: BiometricsData) => {
@@ -288,8 +310,11 @@ export function WizardOrchestrator({ onComplete }: WizardOrchestratorProps) {
     const nutritionRelatedGoals = ["fat_loss", "muscle_gain", "recomp", "lean_bulk"];
     if (trainingGoalsData && nutritionRelatedGoals.includes(trainingGoalsData.primary_goal)) {
       setCurrentStep("nutrition_goals");
+    } else if (lifestyleData?.health_conditions || agentConfig.has_injury) {
+      setCurrentStep("injury");
+    } else if (trainingGoalsData?.sport_type || agentConfig.sport_type) {
+      setCurrentStep("strength");
     } else {
-      // Skip nutrition, go directly to chat
       setCurrentStep("chat");
     }
   };
@@ -326,7 +351,7 @@ export function WizardOrchestrator({ onComplete }: WizardOrchestratorProps) {
     }
 
     setStepHistory(prev => [...prev, "nutrition_goals"]);
-    setCurrentStep("chat");
+    setCurrentStep("food_prefs");
   };
 
   // Back navigation handler
@@ -341,109 +366,29 @@ export function WizardOrchestrator({ onComplete }: WizardOrchestratorProps) {
     }
   }, [stepHistory]);
 
-  // STEP 5: Handle chat completion → conditional food preferences or next step
+  // STEP 5: Handle chat completion -> Finish onboarding
   const handleChatComplete = (data: Record<string, unknown>) => {
-    logger.info("✅ Chat wizard completed with RAG intelligence", { data });
-
-    // Merge chat data with all previously collected inline data
-    const mergedData = {
-      ...data,
-      // Training Goals
-      ...(trainingGoalsData && {
-        primary_goal: trainingGoalsData.primary_goal,
-        secondary_goals: trainingGoalsData.secondary_goals,
-        training_experience: trainingGoalsData.training_experience,
-        training_years: trainingGoalsData.training_years,
-        available_days: trainingGoalsData.available_days,
-        session_duration_minutes: trainingGoalsData.session_duration,
-        equipment_available: trainingGoalsData.equipment_available,
-        preferred_time: trainingGoalsData.preferred_time,
-        intensity_preference: trainingGoalsData.intensity_preference,
-      }),
-      // Lifestyle
-      ...(lifestyleData && {
-        activity_level: lifestyleData.activity_level,
-        work_type: lifestyleData.work_type,
-        work_hours_per_day: lifestyleData.work_hours_per_day,
-        commute_active: lifestyleData.commute_active,
-        stress_level: lifestyleData.stress_level,
-        stress_sources: lifestyleData.stress_sources,
-        sleep_hours: lifestyleData.sleep_hours,
-        sleep_quality: lifestyleData.sleep_quality,
-        sleep_schedule: lifestyleData.sleep_schedule,
-        recovery_capacity: lifestyleData.recovery_capacity,
-        health_conditions: lifestyleData.health_conditions,
-        supplements_used: lifestyleData.supplements_used,
-      }),
-      // Nutrition Goals
-      ...(nutritionGoalsData && {
-        nutrition_goal: nutritionGoalsData.nutrition_goal,
-        diet_type: nutritionGoalsData.diet_type,
-        calorie_preference: nutritionGoalsData.calorie_preference,
-        custom_calories: nutritionGoalsData.custom_calories,
-        protein_priority: nutritionGoalsData.protein_priority,
-        macro_preference: nutritionGoalsData.macro_preference,
-        meal_frequency: nutritionGoalsData.meal_frequency,
-        meal_timing: nutritionGoalsData.meal_timing,
-        intermittent_window: nutritionGoalsData.intermittent_window,
-        allergies: nutritionGoalsData.allergies,
-        intolerances: nutritionGoalsData.intolerances,
-        dietary_restrictions: nutritionGoalsData.dietary_restrictions,
-        budget_preference: nutritionGoalsData.budget_preference,
-        cooking_skill: nutritionGoalsData.cooking_skill,
-        meal_prep_available: nutritionGoalsData.meal_prep_available,
-        supplements_interest: nutritionGoalsData.supplements_interest,
-      }),
-    };
-
-    setCollectedData(mergedData);
-    setStepHistory(prev => [...prev, "chat"]);
-
-    // Extract agent config from RAG analysis
-    const config = (data.agent_config || {}) as Record<string, unknown>;
-
-    // Enhance config with inline data
-    const enhancedConfig = {
-      ...config,
-      // Force nutrition_mode if we collected nutrition goals
-      nutrition_mode: nutritionGoalsData ? "full_diet_plan" : config.nutrition_mode,
-      // Force coach_mode if we have training goals with equipment
-      coach_mode: trainingGoalsData?.equipment_available?.length ? "personalized" : config.coach_mode,
-      // Keep sport_type from agent analysis (do not overwrite with goal)
-      sport_type: config.sport_type,
-    };
-    setAgentConfig(enhancedConfig);
-
-    // If nutrition goals collected, go to food preferences
-    if (nutritionGoalsData) {
-      setCurrentStep("food_prefs");
-    } else if (
-      enhancedConfig.medical_mode === "injury_recovery" ||
-      enhancedConfig.has_injury === true
-    ) {
-      setCurrentStep("injury");
-    } else if (enhancedConfig.coach_mode !== "disabled" && enhancedConfig.sport_type) {
-      setCurrentStep("strength");
-    } else {
-      completeOnboarding(biometricsData!, null, null);
-    }
+    logger.info("✅ Chat wizard completed", { data });
+    completeOnboarding(biometricsData!, injuryData, null);
   };
 
   // STEP 3: Handle food preferences completion → next step
   const handleFoodPreferencesComplete = (preferences: { liked: string[], disliked: string[] }) => {
     logger.info("✅ Food preferences collected", { preferences });
     setFoodPreferencesData(preferences);
+    setCollectedData(prev => ({
+      ...prev,
+      favorite_foods: preferences.liked,
+      disliked_foods: preferences.disliked
+    }));
     setStepHistory(prev => [...prev, "food_prefs"]);
 
-    if (
-      agentConfig.medical_mode === "injury_recovery" ||
-      agentConfig.has_injury === true
-    ) {
+    if (lifestyleData?.health_conditions || agentConfig.has_injury) {
       setCurrentStep("injury");
-    } else if (agentConfig.coach_mode !== "disabled" && agentConfig.sport_type) {
+    } else if (trainingGoalsData?.sport_type || agentConfig.sport_type) {
       setCurrentStep("strength");
     } else {
-      completeOnboarding(biometricsData!, null, null);
+      setCurrentStep("chat");
     }
   };
 
@@ -456,13 +401,19 @@ export function WizardOrchestrator({ onComplete }: WizardOrchestratorProps) {
   const handleInjuryComplete = (data: InjuryDetails) => {
     logger.info("Injury details collected", { data });
     setInjuryData(data);
+    setCollectedData(prev => ({
+      ...prev,
+      injury_diagnosis: data.diagnosis,
+      injury_description: data.injury_description,
+      injury_date: data.injury_date
+    }));
     setStepHistory(prev => [...prev, "injury"]);
 
     // Check if strength baseline needed
-    if (agentConfig.coach_mode !== "disabled" && agentConfig.sport_type) {
+    if (trainingGoalsData?.sport_type || agentConfig.sport_type) {
       setCurrentStep("strength");
     } else {
-      completeOnboarding(biometricsData!, data, null);
+      setCurrentStep("chat");
     }
   };
 
@@ -470,22 +421,29 @@ export function WizardOrchestrator({ onComplete }: WizardOrchestratorProps) {
   const handleInjurySkip = () => {
     logger.info("Injury details skipped");
 
-    if (agentConfig.coach_mode !== "disabled" && agentConfig.sport_type) {
+    if (trainingGoalsData?.sport_type || agentConfig.sport_type) {
       setCurrentStep("strength");
     } else {
-      completeOnboarding(biometricsData!, null, null);
+      setCurrentStep("chat");
     }
   };
 
   // Handle strength completion or skip → complete
   const handleStrengthComplete = (data: BaselineStrength) => {
     logger.info("Strength baseline collected", { data });
-    completeOnboarding(biometricsData!, injuryData, data);
+    setCollectedData(prev => ({
+      ...prev,
+      deadlift_1rm: data.baseline_deadlift_1rm,
+      squat_1rm: data.baseline_squat_1rm
+    }));
+    setStepHistory(prev => [...prev, "strength"]);
+    setCurrentStep("chat");
   };
 
   const handleStrengthSkip = () => {
     logger.info("Strength baseline skipped");
-    completeOnboarding(biometricsData!, injuryData, null);
+    setStepHistory(prev => [...prev, "strength"]);
+    setCurrentStep("chat");
   };
 
   // ============================================================================
@@ -628,7 +586,7 @@ export function WizardOrchestrator({ onComplete }: WizardOrchestratorProps) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [collectedData, agentConfig, foodPreferencesData, navigate, onComplete]);
+  }, [biometricsData, collectedData, agentConfig, foodPreferencesData, navigate, onComplete]);
 
   // Retry handler
   const handleRetry = useCallback(() => {
@@ -653,7 +611,7 @@ export function WizardOrchestrator({ onComplete }: WizardOrchestratorProps) {
 
   if (currentStep === "biometrics") {
     // BiometricsStep has its own internal header - no wrapper needed
-    return <BiometricsStep onComplete={handleBiometricsComplete} />;
+    return <BiometricsStep onComplete={handleBiometricsComplete} initialData={biometricsData || undefined} />;
   }
 
   if (currentStep === "training_goals") {
@@ -721,6 +679,9 @@ export function WizardOrchestrator({ onComplete }: WizardOrchestratorProps) {
           trainingGoals: trainingGoalsData,
           lifestyle: lifestyleData,
           nutritionGoals: nutritionGoalsData,
+          foodPreferences: foodPreferencesData,
+          injury: injuryData,
+          googleSyncFields: googleUpdates,
         }}
       />
     );

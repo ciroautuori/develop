@@ -205,7 +205,7 @@ export function NutritionGoalsStep({ onComplete, initialData }: NutritionGoalsSt
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-background to-secondary/10 overflow-hidden">
+    <div className="flex flex-col h-full bg-gradient-to-b from-background to-secondary/10 overflow-y-auto">
       {/* Progress Bar */}
       <div className="px-4 pt-4 safe-area-top">
         <div className="flex gap-1 mb-2">
@@ -225,7 +225,7 @@ export function NutritionGoalsStep({ onComplete, initialData }: NutritionGoalsSt
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-hidden lg:overflow-y-auto px-4 py-6 pb-32">
+      <div className="flex-1 overflow-y-auto px-4 py-6 pb-32">
         <div className="max-w-md mx-auto animate-in fade-in slide-in-from-right-4 duration-300">
 
           {/* Section 0: Nutrition Goal */}
@@ -271,11 +271,7 @@ export function NutritionGoalsStep({ onComplete, initialData }: NutritionGoalsSt
                 ))}
               </div>
 
-              {DIET_TYPES.length > MAX_VISIBLE_OPTIONS && (
-                <p className="text-xs text-muted-foreground/70">
-                  Lista lunga: mostro le prime {MAX_VISIBLE_OPTIONS} opzioni (NO SCROLL attivo).
-                </p>
-              )}
+
 
               {errors.nutritionGoal && (
                 <p className="text-sm text-red-500 text-center">{errors.nutritionGoal}</p>
@@ -517,7 +513,7 @@ export function NutritionGoalsStep({ onComplete, initialData }: NutritionGoalsSt
               <div className="space-y-3">
                 <label className="text-sm font-medium">Allergie alimentari</label>
                 <div className="flex flex-wrap gap-2">
-                  {COMMON_ALLERGIES.slice(0, MAX_VISIBLE_OPTIONS).map((allergy) => (
+                  {COMMON_ALLERGIES.map((allergy) => (
                     <button
                       key={allergy.value}
                       onClick={() => toggleArrayItem(allergies, setAllergies, allergy.value)}
@@ -533,18 +529,14 @@ export function NutritionGoalsStep({ onComplete, initialData }: NutritionGoalsSt
                   ))}
                 </div>
 
-                {COMMON_ALLERGIES.length > MAX_VISIBLE_OPTIONS && (
-                  <p className="text-xs text-muted-foreground/70">
-                    Lista lunga: mostro le prime {MAX_VISIBLE_OPTIONS} opzioni (NO SCROLL attivo).
-                  </p>
-                )}
+
               </div>
 
               {/* Intolerances */}
               <div className="space-y-3 pt-4 border-t">
                 <label className="text-sm font-medium">Intolleranze</label>
                 <div className="flex flex-wrap gap-2">
-                  {COMMON_INTOLERANCES.slice(0, MAX_VISIBLE_OPTIONS).map((intol) => (
+                  {COMMON_INTOLERANCES.map((intol) => (
                     <button
                       key={intol.value}
                       onClick={() => toggleArrayItem(intolerances, setIntolerances, intol.value)}
@@ -560,18 +552,14 @@ export function NutritionGoalsStep({ onComplete, initialData }: NutritionGoalsSt
                   ))}
                 </div>
 
-                {COMMON_INTOLERANCES.length > MAX_VISIBLE_OPTIONS && (
-                  <p className="text-xs text-muted-foreground/70">
-                    Lista lunga: mostro le prime {MAX_VISIBLE_OPTIONS} opzioni (NO SCROLL attivo).
-                  </p>
-                )}
+
               </div>
 
               {/* Dietary Restrictions */}
               <div className="space-y-3 pt-4 border-t">
                 <label className="text-sm font-medium">Restrizioni alimentari</label>
                 <div className="flex flex-wrap gap-2">
-                  {DIETARY_RESTRICTIONS.slice(0, MAX_VISIBLE_OPTIONS).map((restr) => (
+                  {DIETARY_RESTRICTIONS.map((restr) => (
                     <button
                       key={restr.value}
                       onClick={() => toggleArrayItem(dietaryRestrictions, setDietaryRestrictions, restr.value)}
@@ -587,11 +575,7 @@ export function NutritionGoalsStep({ onComplete, initialData }: NutritionGoalsSt
                   ))}
                 </div>
 
-                {DIETARY_RESTRICTIONS.length > MAX_VISIBLE_OPTIONS && (
-                  <p className="text-xs text-muted-foreground/70">
-                    Lista lunga: mostro le prime {MAX_VISIBLE_OPTIONS} opzioni (NO SCROLL attivo).
-                  </p>
-                )}
+
               </div>
 
               {/* None selected notice */}

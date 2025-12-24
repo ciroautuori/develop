@@ -73,22 +73,24 @@ class WizardAgent:
     # ========== WIZARD v3 - FLUSSO COMPLETO CON DETTAGLI ==========
     SYSTEM_PROMPT = """Sei il Wizard di IronRep. Raccogli informazioni COMPLETE per personalizzare l'esperienza.
 
+📋 REGOLA D'ORO:
+Controlla SEMPRE i "DATI GIÀ RACCOLTI". Se un'informazione è già presente (es. infortunio, sport, obiettivi), NON chiederla di nuovo. Acknowledge l'informazione ("Ho visto che fai CrossFit...") e passa alla prossima domanda mancante.
+
 📋 FLUSSO DOMANDE (in sequenza):
-1. "Hai un infortunio attivo o dolore?" → SÌ/NO
-2. SE SÌ: "Dove? Che tipo? Da quanto tempo? Livello dolore 1-10?"
-3. "Che sport pratichi? Qual è il tuo obiettivo principale?"
-4. "Dove ti alleni? Che attrezzatura hai?"
-5. "Quanti giorni/settimana? Quanto tempo per sessione?"
-6. "Vuoi supporto nutrizionale? Che obiettivo?" → deficit/mantenimento/surplus
-7. SE NUTRIZIONE SÌ: "Allergie? Cibi che eviti? Preferenze?"
-8. RIEPILOGO COMPLETO + conferma
+1. Infortunio/Dolore (se già noto, passa oltre)
+2. Dettagli Infortunio (se già noti, passa oltre)
+3. Sport + Obiettivo (se già noti, passa oltre)
+4. Equipment/Location (se già noti, passa oltre)
+5. Giorni + Durata (se già noti, passa oltre)
+6. Nutrizione (Sì/No + Obiettivo)
+7. Dettagli Nutrizione (Allergie/Preferenze)
+8. Riepilogo + Conferma
 
 ⛔ REGOLE:
 - MAX 2 frasi per risposta
-- NON ripetere domande
-- Estrai TUTTI i dettagli dalle risposte
-- Se l'utente dà info extra, salvale
-- Vai al punto, no giri di parole"""
+- NON ripetere domande se il dato è già presente
+- Se l'utente dà info extra, salvale subito
+- Sii diretto e professionale, ma incoraggiante"""
 
     FEW_SHOT_EXAMPLES = """
 === FLUSSO CON INFORTUNIO ===
@@ -126,14 +128,14 @@ Wizard: "No glutine. Riepilogo: Bodybuilding 5x/sett 75min, palestra completa, s
 
     # FASI COMPLETE
     PHASE_PROMPTS = {
-        InterviewPhase.GREETING: "Chiedi se ha infortuni o dolori attivi",
-        InterviewPhase.PAIN_ASSESSMENT: "Chiedi DOVE, CHE TIPO, DA QUANTO TEMPO, LIVELLO DOLORE 1-10",
-        InterviewPhase.SPORT_SELECTION: "Chiedi SPORT + OBIETTIVO principale",
-        InterviewPhase.EQUIPMENT: "Chiedi DOVE si allena + che ATTREZZATURA ha disponibile",
-        InterviewPhase.PREFERENCES: "Chiedi GIORNI/settimana + DURATA sessione",
-        InterviewPhase.NUTRITION_MODE: "Chiedi se vuole nutrizione + OBIETTIVO (deficit/mantenimento/surplus)",
-        InterviewPhase.NUTRITION_DETAILS: "Chiedi: Hai ALLERGIE o intolleranze? Ci sono CIBI che eviti o non ti piacciono? Hai PREFERENZE particolari (vegano, vegetariano, etc)?",
-        InterviewPhase.SUMMARY: "Fai RIEPILOGO COMPLETO e chiedi conferma finale"
+        InterviewPhase.GREETING: "Saluta e chiedi se ha infortuni (se non già noto). Se sai già tutto, fai un piccolo riepilogo di benvenuto.",
+        InterviewPhase.PAIN_ASSESSMENT: "Chiedi dettagli mancanti sull'infortunio: DOVE, CHE TIPO, DURATA, LIVELLO DOLORE 1-10.",
+        InterviewPhase.SPORT_SELECTION: "Chiedi SPORT (CrossFit, Gym, Running, etc.) e OBIETTIVO principale.",
+        InterviewPhase.EQUIPMENT: "Chiedi DOVE si allena (Box, Home Gym, Commercial) e che ATTREZZATURA ha.",
+        InterviewPhase.PREFERENCES: "Chiedi GIORNI/settimana e DURATA sessione (es. 60 min).",
+        InterviewPhase.NUTRITION_MODE: "Chiedi se vuole nutrizione e l'OBIETTIVO calorico (deficit/mantenimento/surplus).",
+        InterviewPhase.NUTRITION_DETAILS: "Chiedi ALLERGIE, CIBI da evitare e PREFERENZE (Vegano, Keto, etc.).",
+        InterviewPhase.SUMMARY: "Genera il RIEPILOGO COMPLETO e chiedi la conferma finale."
     }
 
     def __init__(
@@ -356,7 +358,8 @@ Wizard: "No glutine. Riepilogo: Bodybuilding 5x/sett 75min, palestra completa, s
         session_id: str,
         user_email: str = None,
         user_name: str = None,
-        biometrics: Dict[str, Any] = None
+        biometrics: Dict[str, Any] = None,
+        initial_context: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """
         Start a new wizard interview.
@@ -386,6 +389,30 @@ Wizard: "No glutine. Riepilogo: Bodybuilding 5x/sett 75min, palestra completa, s
             for k, v in biometrics.items():
                 session["collected_data"][k] = v
 
+        # Store initial context (from Wizard UI steps)
+        if initial_context:
+            session["initial_context"] = initial_context
+            # Map frontend names to backend names for better consistency
+            mappings = {
+                "trainingGoals": "training_goals",
+                "lifestyle": "lifestyle",
+                "nutritionGoals": "nutrition_goals",
+                "foodPreferences": "food_preferences",
+                "injury": "injury_details"
+            }
+            
+            for fe_key, be_key in mappings.items():
+                if fe_key in initial_context:
+                    data = initial_context[fe_key]
+                    session["collected_data"][be_key] = data
+                    # Also flatten for the agent logic to find fields like 'primary_goal' directly
+                    if isinstance(data, dict):
+                        for k, v in data.items():
+                            session["collected_data"][k] = v
+
+        # CRITICAL: Trigger config update to detect modes from initial data
+        self._update_agent_config(session, "", {})
+
         # Generate greeting - short and direct
         prompt = f"""
 {self.SYSTEM_PROMPT}
@@ -393,6 +420,13 @@ Wizard: "No glutine. Riepilogo: Bodybuilding 5x/sett 75min, palestra completa, s
 L'utente si è già registrato con email: {user_email or 'sconosciuta'}
 {f'Si chiama: {user_name}' if user_name else ''}
 {f'Dati biometrici noti: {biometrics}' if biometrics else ''}
+{f'Contesto iniziale: {initial_context}' if initial_context else ''}
+
+ISTRUZIONI PER IL SALUTO:
+1. Sii breve e diretto.
+2. Salutalo per nome se lo conosci.
+3. Se vedi dati importati da Google Fit (googleSyncFields nel contesto), faglielo sapere in modo magico ("Ho già importato il tuo peso da Google Fit!").
+4. Non chiedere cose che già vedi qui sopra.
 
 Fase attuale: SALUTO INIZIALE
 {self.PHASE_PROMPTS[InterviewPhase.GREETING]}
@@ -962,47 +996,66 @@ NON chiedere email o nome, li hai già!
 
         # Data checks
         has_injury = agent_config.get("has_injury", False)
-        has_equipment = collected.get("equipment") or collected.get("training_location")
+        # Check if injury details were collected via UI or previous chat
+        has_injury_details = collected.get("injury_diagnosis") or collected.get("injury_type") or collected.get("pain_level")
+        
+        has_goals = collected.get("goals") or collected.get("primary_goal")
+        has_equipment = collected.get("equipment") or collected.get("equipment_available") or collected.get("training_location")
+        has_preferences = (collected.get("training_days") or collected.get("available_days")) and \
+                          (collected.get("session_duration") or collected.get("session_duration_minutes"))
+        
         nutrition_mode = agent_config.get("nutrition_mode")
         nutrition_enabled = nutrition_mode and nutrition_mode not in [NutritionMode.DISABLED, "disabled"]
+        has_nutrition_details = collected.get("allergies") or collected.get("disliked_foods") or \
+                                collected.get("diet_type") or collected.get("favorite_foods")
 
-        # ===== FLUSSO COMPLETO =====
-
-        # GREETING → se ha detto che ha infortunio, chiedi dettagli
+        # ===== FLUSSO COMPLETO CON SMART SKIP =====
+        
+        # 1. GREETING -> decide se chiedere infortuni o saltare
         if current == InterviewPhase.GREETING:
             if has_injury:
-                return InterviewPhase.PAIN_ASSESSMENT
+                if not has_injury_details:
+                    return InterviewPhase.PAIN_ASSESSMENT
+                return InterviewPhase.SPORT_SELECTION
             else:
+                if agent_config.get("has_injury") is None:
+                     return InterviewPhase.GREETING
                 return InterviewPhase.SPORT_SELECTION
 
-        # PAIN_ASSESSMENT → vai a sport
-        if current == InterviewPhase.PAIN_ASSESSMENT:
+        # 2. PAIN_ASSESSMENT -> decide se saltare
+        if current == InterviewPhase.PAIN_ASSESSMENT or (current == InterviewPhase.GREETING and has_injury):
+            if has_injury_details:
+                return InterviewPhase.SPORT_SELECTION
+            return InterviewPhase.PAIN_ASSESSMENT
+
+        # 3. SPORT_SELECTION -> decide se saltare
+        if current == InterviewPhase.SPORT_SELECTION:
+            if agent_config.get("sport_type") and has_goals:
+                return InterviewPhase.EQUIPMENT
             return InterviewPhase.SPORT_SELECTION
 
-        # SPORT_SELECTION → chiedi equipment
-        if current == InterviewPhase.SPORT_SELECTION:
+        # 4. EQUIPMENT -> decide se saltare
+        if current == InterviewPhase.EQUIPMENT:
+            if has_equipment:
+                return InterviewPhase.PREFERENCES
             return InterviewPhase.EQUIPMENT
 
-        # EQUIPMENT → chiedi giorni e durata
-        if current == InterviewPhase.EQUIPMENT:
+        # 5. PREFERENCES -> decide se saltare
+        if current == InterviewPhase.PREFERENCES:
+            if has_preferences:
+                return InterviewPhase.NUTRITION_MODE
             return InterviewPhase.PREFERENCES
 
-        # PREFERENCES → chiedi nutrizione
-        if current == InterviewPhase.PREFERENCES:
-            return InterviewPhase.NUTRITION_MODE
-
-        # NUTRITION_MODE → se vuole nutrizione, chiedi dettagli (SEMPRE se non disabled)
+        # 6. NUTRITION_MODE -> decide se saltare
         if current == InterviewPhase.NUTRITION_MODE:
-            # Check if user wants nutrition support
-            # nutrition_mode can be NutritionMode enum OR string value from DB
-            if nutrition_mode:
-                nutrition_value = nutrition_mode.value if isinstance(nutrition_mode, NutritionMode) else nutrition_mode
-                if nutrition_value != "disabled":
-                    # User wants nutrition support - ALWAYS ask for food details
-                    return InterviewPhase.NUTRITION_DETAILS
-
-            # User disabled nutrition OR no preference set - skip food details
-            return InterviewPhase.SUMMARY        # NUTRITION_DETAILS → verifica se ha risposto alle allergie/intolleranze prima di andare al summary
+            if nutrition_mode and nutrition_mode != "disabled":
+                if has_nutrition_details:
+                    return InterviewPhase.SUMMARY
+                return InterviewPhase.NUTRITION_DETAILS
+            elif nutrition_mode == "disabled" or nutrition_mode is not None:
+                return InterviewPhase.SUMMARY
+            return InterviewPhase.NUTRITION_MODE
+        # NUTRITION_DETAILS → verifica se ha risposto alle allergie/intolleranze prima di andare al summary
         if current == InterviewPhase.NUTRITION_DETAILS:
             # Check if user mentioned intolerances/allergies but didn't specify which ones
             last_message = session["conversation_history"][-1]["content"] if session["conversation_history"] else ""

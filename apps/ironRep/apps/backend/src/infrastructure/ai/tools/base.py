@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
 
-class BaseTool(ABC):
+class IronRepBaseTool(ABC):
     """Base interface for AI Tools."""
     
     @property

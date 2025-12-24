@@ -75,14 +75,12 @@ export function WizardChat({ onComplete, initialBiometrics, initialContext }: Wi
     logger.info(`WizardChat ${WIZARD_VERSION} loaded - intelligent replies enabled`);
   }, []);
 
-  const MAX_VISIBLE_MESSAGES = 10;
-  const visibleMessages = messages.slice(-MAX_VISIBLE_MESSAGES);
-  const isTruncated = messages.length > MAX_VISIBLE_MESSAGES;
+
 
   // Start wizard on mount
   useEffect(() => {
     startWizard();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Suggested replies now come from backend - phase-aware and intelligent
@@ -97,7 +95,10 @@ export function WizardChat({ onComplete, initialBiometrics, initialContext }: Wi
         ...(initialContext?.lifestyle || {}),
         ...(initialContext?.nutritionGoals || {}),
       };
-      const response = await wizardApi.start(Object.keys(contextData).length > 0 ? contextData : undefined);
+      const response = await wizardApi.start(
+        Object.keys(contextData).length > 0 ? contextData : undefined,
+        { googleSyncFields: initialContext?.googleSyncFields || [] }
+      );
 
       if (response.success) {
         setSessionId(response.session_id);
@@ -254,7 +255,7 @@ export function WizardChat({ onComplete, initialBiometrics, initialContext }: Wi
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] min-h-[100dvh] bg-gradient-to-b from-background to-secondary/10 overflow-hidden">
+    <div className="flex flex-col h-[100dvh] min-h-[100dvh] bg-gradient-to-b from-background to-secondary/10 overflow-y-auto">
       {/* Header with selections */}
       <div className="bg-primary/10 border-b px-4 py-3">
         <div className="flex items-center justify-between">
@@ -302,14 +303,10 @@ export function WizardChat({ onComplete, initialBiometrics, initialContext }: Wi
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-hidden p-3 sm:p-4 flex flex-col gap-3">
-        {isTruncated && (
-          <div className="text-[11px] text-muted-foreground/70 bg-secondary/40 border border-border/40 rounded-xl px-3 py-2">
-            Conversazione lunga: mostro gli ultimi {MAX_VISIBLE_MESSAGES} messaggi (NO SCROLL attivo).
-          </div>
-        )}
+      <div className="flex-1 p-3 sm:p-4 flex flex-col gap-3 overflow-y-auto">
 
-        {visibleMessages.map((message) => (
+
+        {messages.map((message) => (
           <div
             key={message.id}
             className={"flex " + (message.role === "user" ? "justify-end" : "justify-start")}

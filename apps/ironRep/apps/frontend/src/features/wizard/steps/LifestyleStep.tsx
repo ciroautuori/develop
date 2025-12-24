@@ -179,7 +179,7 @@ export function LifestyleStep({ onComplete, initialData }: LifestyleStepProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-background to-secondary/10 overflow-hidden">
+    <div className="flex flex-col h-full bg-gradient-to-b from-background to-secondary/10 overflow-y-auto">
       {/* Progress Bar */}
       <div className="px-4 pt-4 safe-area-top">
         <div className="flex gap-1 mb-2">
@@ -199,7 +199,7 @@ export function LifestyleStep({ onComplete, initialData }: LifestyleStepProps) {
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-hidden lg:overflow-y-auto px-4 py-6 pb-32">
+      <div className="flex-1 overflow-y-auto px-4 py-6 pb-32">
         <div className="max-w-md mx-auto animate-in fade-in slide-in-from-right-4 duration-300">
 
           {/* Section 0: Activity Level */}
@@ -412,7 +412,7 @@ export function LifestyleStep({ onComplete, initialData }: LifestyleStepProps) {
                         stressLevel === level
                           ? level <= 2 ? "bg-green-500 text-white" :
                             level === 3 ? "bg-yellow-500 text-white" :
-                            "bg-red-500 text-white"
+                              "bg-red-500 text-white"
                           : "bg-secondary hover:bg-secondary/80"
                       )}
                     >
@@ -431,7 +431,7 @@ export function LifestyleStep({ onComplete, initialData }: LifestyleStepProps) {
                 <div className="space-y-3">
                   <label className="text-sm font-medium">Fonti di stress principali</label>
                   <div className="flex flex-wrap gap-2">
-                    {STRESS_SOURCES.slice(0, MAX_VISIBLE_OPTIONS).map((source) => (
+                    {STRESS_SOURCES.map((source) => (
                       <button
                         key={source.value}
                         onClick={() => toggleArrayItem(stressSources, setStressSources, source.value)}
@@ -447,11 +447,7 @@ export function LifestyleStep({ onComplete, initialData }: LifestyleStepProps) {
                     ))}
                   </div>
 
-                  {STRESS_SOURCES.length > MAX_VISIBLE_OPTIONS && (
-                    <p className="text-xs text-muted-foreground/70">
-                      Lista lunga: mostro le prime {MAX_VISIBLE_OPTIONS} opzioni (NO SCROLL attivo).
-                    </p>
-                  )}
+
                 </div>
               )}
             </div>
@@ -508,7 +504,7 @@ export function LifestyleStep({ onComplete, initialData }: LifestyleStepProps) {
                   ⚠️ Consulta sempre un medico prima di iniziare un programma di allenamento
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {HEALTH_CONDITIONS.slice(0, MAX_VISIBLE_OPTIONS).map((cond) => (
+                  {HEALTH_CONDITIONS.map((cond) => (
                     <button
                       key={cond.value}
                       onClick={() => {
@@ -536,18 +532,14 @@ export function LifestyleStep({ onComplete, initialData }: LifestyleStepProps) {
                   ))}
                 </div>
 
-                {HEALTH_CONDITIONS.length > MAX_VISIBLE_OPTIONS && (
-                  <p className="text-xs text-muted-foreground/70">
-                    Lista lunga: mostro le prime {MAX_VISIBLE_OPTIONS} opzioni (NO SCROLL attivo).
-                  </p>
-                )}
+
               </div>
 
               {/* Supplements */}
               <div className="space-y-3 pt-4 border-t">
                 <label className="text-sm font-medium">Integratori utilizzati (opzionale)</label>
                 <div className="flex flex-wrap gap-2">
-                  {SUPPLEMENTS.slice(0, MAX_VISIBLE_OPTIONS).map((supp) => (
+                  {SUPPLEMENTS.map((supp) => (
                     <button
                       key={supp.value}
                       onClick={() => toggleArrayItem(supplements, setSupplements, supp.value)}
@@ -563,11 +555,7 @@ export function LifestyleStep({ onComplete, initialData }: LifestyleStepProps) {
                   ))}
                 </div>
 
-                {SUPPLEMENTS.length > MAX_VISIBLE_OPTIONS && (
-                  <p className="text-xs text-muted-foreground/70">
-                    Lista lunga: mostro le prime {MAX_VISIBLE_OPTIONS} opzioni (NO SCROLL attivo).
-                  </p>
-                )}
+
               </div>
 
               {/* Summary */}

@@ -5,6 +5,7 @@ Coordinates the flow between agents: Wizard → Medical → Coach → Nutrition.
 Manages constraints passing and decision logging.
 """
 from typing import Dict, Any, List, Optional
+from langchain_core.tools import BaseTool
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum

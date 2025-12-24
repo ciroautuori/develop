@@ -16,6 +16,7 @@ except ImportError:
 
     def create_tool_calling_agent(*args, **kwargs): return None
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.tools import BaseTool
 
 from ..llm_service import LLMService
 

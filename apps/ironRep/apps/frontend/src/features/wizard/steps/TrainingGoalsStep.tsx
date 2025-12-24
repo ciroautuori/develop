@@ -14,14 +14,14 @@ import { hapticFeedback } from "../../../lib/haptics";
 
 export interface TrainingGoalsData {
   primary_goal:
-    | "muscle_gain"
-    | "fat_loss"
-    | "strength"
-    | "endurance"
-    | "recomp"
-    | "athletic_performance"
-    | "general_fitness"
-    | "injury_recovery";
+  | "muscle_gain"
+  | "fat_loss"
+  | "strength"
+  | "endurance"
+  | "recomp"
+  | "athletic_performance"
+  | "general_fitness"
+  | "injury_recovery";
   secondary_goals: string[];
   training_experience: "beginner" | "intermediate" | "advanced" | "athlete";
   training_years?: number;
@@ -198,7 +198,7 @@ export function TrainingGoalsStep({ onComplete, initialData }: TrainingGoalsStep
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-hidden lg:overflow-y-auto px-4 py-6 pb-32">
+      <div className="flex-1 overflow-y-auto px-4 py-6 pb-32">
         <div className="max-w-md mx-auto animate-in fade-in slide-in-from-right-4 duration-300">
 
           {/* Section 0: Primary Goal */}

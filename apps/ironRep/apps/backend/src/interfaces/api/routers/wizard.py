@@ -31,6 +31,7 @@ class WizardMessageRequest(BaseModel):
 class StartWizardRequest(BaseModel):
     """Request model for starting wizard."""
     biometrics: Dict[str, Any] = None
+    initial_context: Dict[str, Any] = None
 
 
 @router.post("/start", response_model=Dict[str, Any])
@@ -58,13 +59,14 @@ async def start_wizard_interview(
             session_id=session_id,
             user_email=current_user.email,
             user_name=getattr(current_user, 'name', None),
-            biometrics=request.biometrics
+            biometrics=request.biometrics if request else None,
+            initial_context=request.initial_context if request else None
         )
 
         return result
 
     except Exception as e:
-        logger.error(f"Error starting wizard: {e}")
+        logger.exception("Error starting wizard")
         raise HTTPException(
             status_code=500,
             detail=f"Error starting wizard: {str(e)}"

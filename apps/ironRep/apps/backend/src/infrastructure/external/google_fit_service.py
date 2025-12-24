@@ -113,11 +113,45 @@ class GoogleFitService:
             logger.error(f"Failed to get calories burned: {e}")
             return 0
 
+    def get_height(self) -> Optional[float]:
+        """Get latest height measurement from Google Fit."""
+        end_time = datetime.now()
+        start_time = end_time - timedelta(days=365)  # Height doesn't change much for adults
+        dataset_id = f"{self._datetime_to_nanoseconds(start_time)}-{self._datetime_to_nanoseconds(end_time)}"
+
+        try:
+            response = self.service.users().dataSources().datasets().get(
+                userId="me", dataSourceId="derived:com.google.height:com.google.android.gms:merge_height",
+                datasetId=dataset_id,
+            ).execute()
+
+            points = response.get("point", [])
+            if not points:
+                return None
+
+            # Get latest
+            latest_point = sorted(points, key=lambda x: int(x.get("startTimeNanos", 0)), reverse=True)[0]
+            height_m = latest_point.get("value", [{}])[0].get("fpVal", 0)
+            return round(height_m * 100, 1)  # Convert to cm
+        except Exception as e:
+            logger.error(f"Failed to get height: {e}")
+            return None
+
+    def get_average_steps(self, days: int = 7) -> int:
+        """Calculate average step count over a period of days."""
+        history = self.get_steps_history(days)
+        if not history:
+            return 0
+        total_steps = sum(d["steps"] for d in history)
+        return int(total_steps / len(history))
+
     def sync_all_biometrics(self, days: int = 7) -> Dict[str, Any]:
         """Sync all available biometric data."""
         return {
             "weight": self.get_weight_history(days),
+            "height": self.get_height(),
             "steps": self.get_steps_history(days),
+            "avg_steps": self.get_average_steps(days),
             "heart_rate": self.get_heart_rate_history(days),
             "calories_today": self.get_calories_burned(),
             "synced_at": datetime.now().isoformat(),

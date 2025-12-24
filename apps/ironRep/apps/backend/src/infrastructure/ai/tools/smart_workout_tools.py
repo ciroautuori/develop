@@ -8,7 +8,7 @@ Workflow:
 4. Cross-reference con nutrizione (post-workout)
 """
 from typing import List, Dict, Any, Optional
-from langchain_core.tools import Tool, StructuredTool
+from langchain_core.tools import Tool, StructuredTool, BaseTool
 from pydantic import BaseModel, Field
 
 from src.infrastructure.ai.rag_service import get_rag_service

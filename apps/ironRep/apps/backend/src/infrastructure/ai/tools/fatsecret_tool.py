@@ -4,11 +4,11 @@ import logging
 import asyncio
 from typing import Dict, Any, Optional, List
 from src.infrastructure.config.settings import settings
-from .base import BaseTool
+from .base import IronRepBaseTool
 
 logger = logging.getLogger(__name__)
 
-class FatSecretTool(BaseTool):
+class FatSecretTool(IronRepBaseTool):
     """Tool for retrieving verified nutrition data from FatSecret API."""
     
     BASE_URL = "https://platform.fatsecret.com/rest/server.api"

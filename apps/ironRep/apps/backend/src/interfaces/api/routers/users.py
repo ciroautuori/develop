@@ -13,6 +13,8 @@ from src.infrastructure.config.dependencies import get_user_repository, get_onbo
 from src.application.dtos.dtos import UserDTO, OnboardingRequestDTO
 from src.infrastructure.security.security import CurrentUser
 from src.infrastructure.ai.user_context_rag import get_user_context_rag
+from src.infrastructure.external.google_fit_service import GoogleFitService
+from src.infrastructure.external.google_oauth_service import google_oauth_service
 
 router = APIRouter()
 
@@ -167,6 +169,92 @@ async def update_user_profile(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Errore aggiornamento profilo: {str(e)}"
         )
+
+
+@router.get("/me/sync-fit", response_model=Dict[str, Any])
+async def sync_user_google_fit(
+    current_user: CurrentUser,
+    db: Session = Depends(get_db)
+):
+    """
+    Sync biometric data from Google Fit to user profile.
+    """
+    if not current_user.google_account:
+        return {
+            "success": False,
+            "message": "Nessun account Google collegato"
+        }
+
+    try:
+        # Get credentials
+        creds = google_oauth_service.get_credentials(
+            access_token=current_user.google_account.access_token,
+            refresh_token=current_user.google_account.refresh_token,
+            expires_at=current_user.google_account.token_expires_at
+        )
+
+        # Update tokens if refreshed
+        if creds.token != current_user.google_account.access_token:
+            current_user.google_account.access_token = creds.token
+            current_user.google_account.token_expires_at = creds.expiry
+            db.add(current_user.google_account)
+            db.commit()
+
+        # Sync data
+        fit_service = GoogleFitService(creds)
+        fit_data = fit_service.sync_all_biometrics(days=30)
+
+        updates = {}
+        
+        # Extract latest weight
+        if fit_data.get("weight") and len(fit_data["weight"]) > 0:
+            latest_weight = fit_data["weight"][0]["weight_kg"]
+            current_user.weight_kg = latest_weight
+            updates["weight_kg"] = latest_weight
+
+        # Extract latest height
+        if fit_data.get("height"):
+            latest_height = fit_data["height"]
+            current_user.height_cm = latest_height
+            updates["height_cm"] = latest_height
+
+        # Infer activity level from average steps
+        avg_steps = fit_data.get("avg_steps", 0)
+        activity_level = "sedentary"
+        if avg_steps >= 12000:
+            activity_level = "active"
+        elif avg_steps >= 8000:
+            activity_level = "moderate"
+        elif avg_steps >= 5000:
+            activity_level = "light"
+        
+        current_user.activity_level = activity_level
+        updates["activity_level"] = activity_level
+
+        # Update profile
+        if updates:
+            db.add(current_user)
+            db.commit()
+
+        return {
+            "success": True,
+            "message": "Sincronizzazione completata",
+            "updates": updates,
+            "fit_summary": {
+                "weight_records": len(fit_data.get("weight", [])),
+                "height": fit_data.get("height"),
+                "avg_steps": avg_steps,
+                "activity_level": activity_level,
+                "steps_today": fit_data.get("steps", [{}])[0].get("steps", 0) if fit_data.get("steps") else 0
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Google Fit sync failed: {e}")
+        return {
+            "success": False,
+            "message": f"Sincronizzazione fallita: {str(e)}"
+        }
 
 
 # Dynamic user_id routes - these must come AFTER static routes like /me
