@@ -48,7 +48,8 @@ class MatchService:
                 analysis = await agent.analyze_match(tender_text, profile)
                 
                 score = analysis.get('score', 0)
-                if score >= 60: # Filtra solo match decenti
+                logger.info(f"Bando: {bando.title} - Score: {score}")
+                if score >= 40: # Soglia abbassata per dare più risultati in fase di test
                     return {
                         **bando.__dict__,
                         "match_score": score,
@@ -65,7 +66,8 @@ class MatchService:
         Trova i bandi 'perfetti' analizzando quelli attivi nel DB in parallelo.
         """
         # 1. Recupera bandi attivi e recenti
-        bandi = await bando_crud.get_recent_bandi(db, limit=15) # Ridotto leggermente per performance
+        # Ridotto a 5 per garantire risposta entro i timeout di Nginx (60s)
+        bandi = await bando_crud.get_recent_bandi(db, limit=5) 
         
         async with ai_bandi_agent as agent:
             # Crea task per analisi parallela
@@ -77,6 +79,8 @@ class MatchService:
         
         # Ordina per score decrescente
         matches.sort(key=lambda x: x['match_score'], reverse=True)
+        
+        logger.info(f"Match completati. Trovati {len(matches)} risultati validi.")
         
         return matches[:limit]
 
