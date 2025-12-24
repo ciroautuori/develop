@@ -3052,13 +3052,78 @@ Usa formattazione markdown quando appropriato."""
                 return content.strip()
 
             except Exception as e:
-                logger.warning(f"Custom model generation failed, falling back to GROQ: {e}")
-                # Fall through to GROQ fallback
+                logger.warning(f"Custom model generation failed, falling back to Ollama: {e}")
+                # Fall through to Ollama fallback
 
-        # Original GROQ implementation (fallback or when custom model disabled)
+        # === OLLAMA PRIMARY (FREE, LOCAL, NO RATE LIMITS) ===
+        try:
+            from app.core.llm.ollama_client import get_ollama_client
+
+            logger.info("Using Ollama (PRIMARY) for content generation")
+            client = get_ollama_client()
+            
+            # Check availability
+            if await client.is_available():
+                # Base system prompt with Brand DNA
+                base_system_prompt = f"""Sei l'AI Content Creator di {BRAND_DNA["identity"]["name"]}, software house italiana specializzata in AI per PMI.
+
+TONE OF VOICE:
+- {BRAND_DNA["voice"]["primary"]}
+- {BRAND_DNA["voice"]["style"]}
+- {BRAND_DNA["voice"]["approach"]}
+
+REGOLE FONDAMENTALI:
+1. Scrivi SEMPRE in italiano corretto
+2. Usa la struttura HOOK → BODY → CTA → HASHTAG
+3. Parla di benefici, non solo feature
+4. Usa numeri e dati concreti
+5. Evita: {", ".join(BRAND_DNA["avoid_words"])}
+6. Target: {BRAND_DNA["target"]["primary"]}
+
+Genera contenuti professionali, coinvolgenti e ottimizzati.
+Usa formattazione markdown quando appropriato."""
+
+                # Fetch RAG context if enabled
+                rag_context = ""
+                if use_rag:
+                    try:
+                        from app.domain.rag.service import rag_service
+                        rag_context = await rag_service.get_context(
+                            query=prompt[:500],
+                            max_tokens=1500
+                        )
+                        if rag_context:
+                            rag_context = f"\n\n## Knowledge Base Aziendale:\n{rag_context}"
+                    except Exception as rag_error:
+                        logger.warning(f"RAG context fetch failed: {rag_error}")
+
+                # Build system prompt with contexts
+                system_prompt = base_system_prompt
+                if brand_context:
+                    system_prompt = f"{base_system_prompt}\n\n## Brand Context Aggiuntivo:\n{brand_context}"
+                if rag_context:
+                    system_prompt = f"{system_prompt}{rag_context}"
+
+                content = await client.generate(
+                    prompt=prompt,
+                    system_prompt=system_prompt,
+                    temperature=0.8,
+                    max_tokens=2000
+                )
+
+                logger.info("✅ Content generated via Ollama (PRIMARY)")
+                return content.strip()
+            else:
+                logger.warning("Ollama not available, falling back to GROQ")
+
+        except Exception as ollama_e:
+            logger.warning(f"Ollama failed, trying GROQ fallback: {ollama_e}")
+
+        # === GROQ FALLBACK (CLOUD) ===
         try:
             from app.core.llm.groq_client import get_groq_client
 
+            logger.info("Using GROQ (FALLBACK) for content generation")
             client = get_groq_client(model="llama-3.3-70b")
 
             # Base system prompt with Brand DNA
@@ -3109,11 +3174,12 @@ Usa formattazione markdown quando appropriato."""
                 max_tokens=2000
             )
 
+            logger.info("✅ Content generated via GROQ (FALLBACK)")
             return content.strip()
 
         except Exception as e:
             import logging
-            logging.getLogger(__name__).error(f"Content generation error: {e}")
+            logging.getLogger(__name__).error(f"All LLM providers failed: {e}")
             return f"[Errore generazione contenuto. Riprova più tardi.]"
 
     async def _optimize_seo(

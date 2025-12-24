@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     openrouter_api_key: str
     google_api_key: str
     huggingface_api_key: Optional[str] = None
+    
+    # Tool API Keys
+    fatsecret_key: Optional[str] = None
+    fatsecret_secret: Optional[str] = None
 
     # Google OAuth (Calendar, YouTube)
     google_client_id: Optional[str] = None

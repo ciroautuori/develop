@@ -20,6 +20,7 @@ import {
 import { cn } from '../../../../../shared/lib/utils';
 import { Button } from '../../../../../shared/components/ui/button';
 import { toast } from 'sonner';
+import { SEOStrategyModal } from './SEOStrategyModal';
 
 // Centralizzati
 import { ITALIAN_REGIONS } from '../constants/locations';
@@ -248,6 +249,7 @@ export function LeadFinderInline({ onCreateEmailCampaign }: LeadFinderInlineProp
 
   // Navigation
   const [step, setStep] = useState<Step>('search');
+  const [isSEOModalOpen, setIsSEOModalOpen] = useState(false);
 
   // Search state - GEOLOCALIZZATO
   const [selectedSectors, setSelectedSectors] = useState<Set<string>>(new Set());
@@ -660,8 +662,19 @@ export function LeadFinderInline({ onCreateEmailCampaign }: LeadFinderInlineProp
 
   return (
     <div className="space-y-6">
-      {/* Step Indicator */}
-      <StepIndicator currentStep={step} onStepClick={setStep} />
+      {/* Header Actions */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <StepIndicator currentStep={step} onStepClick={setStep} />
+
+        <Button
+          onClick={() => setIsSEOModalOpen(true)}
+          variant="outline"
+          className="w-full sm:w-auto gap-2 border-primary/20 hover:border-primary hover:bg-primary/5 text-primary"
+        >
+          <Search className="w-4 h-4" />
+          Strategia SEO
+        </Button>
+      </div>
 
       {/* STEP 1: SEARCH */}
       {step === 'search' && (
@@ -1201,6 +1214,11 @@ export function LeadFinderInline({ onCreateEmailCampaign }: LeadFinderInlineProp
           </Button>
         </motion.div>
       )}
+      {/* SEO Modal */}
+      <SEOStrategyModal
+        isOpen={isSEOModalOpen}
+        onClose={() => setIsSEOModalOpen(false)}
+      />
     </div>
   );
 }

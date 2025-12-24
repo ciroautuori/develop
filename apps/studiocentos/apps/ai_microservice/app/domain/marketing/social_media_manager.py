@@ -35,6 +35,7 @@ from pydantic import BaseModel, Field
 from app.infrastructure.agents.base_agent import BaseAgent, AgentConfig, AgentCapability
 from app.infrastructure.agents.task import Task, TaskOutput
 from app.domain.marketing.content_creator import SocialPlatform
+from app.core.config import settings
 
 # Import real social media clients
 from app.infrastructure.social.twitter_client import TwitterClient
@@ -602,17 +603,43 @@ class SocialMediaManagerAgent(BaseAgent):
     # HELPER METHODS (Private)
     # ========================================================================
 
+    async def _get_llm_response(
+        self, prompt: str, temperature: float = 0.7, max_tokens: int = 500
+    ) -> str:
+        """Get response from LLM using Ollama (Primary) or Groq (Fallback)."""
+        try:
+            # 1. Try Ollama (Primary)
+            from app.core.llm.ollama_client import get_ollama_client
+            ollama = get_ollama_client()
+            if await ollama.is_available():
+                return await ollama.generate(
+                    prompt=prompt,
+                    temperature=temperature,
+                    max_tokens=max_tokens
+                )
+            
+            # 2. Try Groq (Fallback)
+            from app.core.llm.groq_client import get_groq_client
+            # Use llama-3.1-8b as safe fallback
+            groq = get_groq_client(model="llama-3.1-8b-instant")
+            return await groq.generate(
+                prompt=prompt,
+                temperature=temperature,
+                max_tokens=max_tokens
+            )
+            
+        except Exception as e:
+            logger.error(f"LLM generation failed: {e}")
+            raise e
+
     async def _optimize_for_platforms(
         self, content: str, platforms: List[SocialPlatform]
     ) -> str:
         """Optimize content for specific platforms using GROQ LLM."""
         try:
-            from app.core.llm.groq_client import get_groq_client
-
             # If single platform, optimize specifically
             if len(platforms) == 1:
                 platform = platforms[0]
-                client = get_groq_client(model="llama-3.1-8b")
 
                 platform_rules = {
                     SocialPlatform.TWITTER: "Max 280 caratteri, hashtag concisi, tono diretto",
@@ -630,7 +657,7 @@ Regole per {platform.value}: {platform_rules.get(platform, 'Tono professionale')
 
 Contenuto ottimizzato:"""
 
-                response = await client.generate(
+                response = await self._get_llm_response(
                     prompt=prompt,
                     temperature=0.7,
                     max_tokens=500
@@ -762,17 +789,13 @@ Contenuto ottimizzato:"""
     async def _analyze_sentiment(self, text: str) -> str:
         """Analyze text sentiment using GROQ LLM."""
         try:
-            from app.core.llm.groq_client import get_groq_client
-
-            client = get_groq_client(model="llama-3.1-8b")  # Fast model for sentiment
-
             prompt = f"""Analizza il sentiment del seguente testo e rispondi SOLO con una parola: 'positive', 'neutral', o 'negative'.
 
 Testo: {text}
 
 Sentiment:"""
 
-            response = await client.generate(
+            response = await self._get_llm_response(
                 prompt=prompt,
                 temperature=0.1,
                 max_tokens=10
@@ -833,10 +856,6 @@ Sentiment:"""
     ) -> str:
         """Generate appropriate response to comment using GROQ LLM."""
         try:
-            from app.core.llm.groq_client import get_groq_client
-
-            client = get_groq_client(model="llama-3.3-70b")
-
             tone_guide = {
                 "positive": "entusiasta e riconoscente",
                 "neutral": "professionale e cordiale",
@@ -857,7 +876,7 @@ Regole:
 
 Risposta:"""
 
-            response = await client.generate(
+            response = await self._get_llm_response(
                 prompt=prompt,
                 temperature=0.7,
                 max_tokens=150
@@ -1080,10 +1099,6 @@ Risposta:"""
     ) -> float:
         """Calculate trend relevance to brand using GROQ LLM."""
         try:
-            from app.core.llm.groq_client import get_groq_client
-
-            client = get_groq_client(model="llama-3.1-8b")
-
             prompt = f"""Valuta la rilevanza di questo trend per StudioCentOS, una software house italiana specializzata in:
 - Sviluppo web enterprise (React, FastAPI)
 - App mobile
@@ -1096,7 +1111,7 @@ Descrizione: {trend.get('description', '')}
 
 Rispondi SOLO con un numero da 0.0 a 1.0 che indica la rilevanza (1.0 = molto rilevante, 0.0 = non rilevante):"""
 
-            response = await client.generate(
+            response = await self._get_llm_response(
                 prompt=prompt,
                 temperature=0.1,
                 max_tokens=10

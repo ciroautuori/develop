@@ -26,8 +26,7 @@ export function LoginForm() {
       .then((token) => {
         login(token.access_token);
         hapticFeedback.notification("success");
-        window.history.replaceState({}, "", "/login");
-        navigate({ to: "/" });
+        window.location.href = "/";
       })
       .catch(() => {
         setError("Login Google non riuscito. Riprova.");
@@ -52,7 +51,7 @@ export function LoginForm() {
         });
         login(token.access_token);
         hapticFeedback.notification("success");
-        navigate({ to: "/" });
+        window.location.href = "/";
       } catch {
         setError("Login Google non riuscito. Riprova.");
         hapticFeedback.notification("error");

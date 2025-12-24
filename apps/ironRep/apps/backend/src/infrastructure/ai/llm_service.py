@@ -33,23 +33,36 @@ class LLMProvider(Enum):
     GOOGLE = "google"
 
 
+from src.infrastructure.ai.tools import FatSecretTool, get_medical_rag_tool, get_training_rag_tool
+
 class LLMService:
     """
-    LLM Service with Multi-Provider Fallback Chain.
-
-    FALLBACK CHAIN (in order):
-    1. OLLAMA (central-ollama:11434) - FREE, local, no rate limits
-    2. GROQ Llama 3.3 70B (6 keys rotation = 600k tokens/day)
-    3. Google Gemini Free (unlimited)
+    LLM Service with Multi-Provider Fallback Chain AND Agentic Capabilities.
+    
+    AGENTIC CAPABILITIES:
+    - FatSecret Tool: Verified nutrition data
+    - Medical RAG: Verified rehab protocols
+    - Training RAG: Verified CrossFit/Standards
     """
 
     def __init__(self):
         self.groq_api_keys = settings.get_groq_api_keys_list()
         self.openrouter_api_key = settings.openrouter_api_key
         self.google_api_key = settings.google_api_key
-
+        
         self.current_groq_key_index = 0
         self.fallback_models = settings.get_fallback_models_list()
+        
+        # Tools Initialization
+        logger.info("🛠️ Initializing AI Tools...")
+        self.tools = {}
+        try:
+            self.tools["nutrition"] = FatSecretTool()
+            self.tools["medical"] = get_medical_rag_tool()
+            self.tools["training"] = get_training_rag_tool()
+            logger.info("✅ Tools initialized: Nutrition, Medical, Training")
+        except Exception as e:
+            logger.error(f"Failed to initialize tools: {e}")
 
         # Initialize provider clients
         self._init_providers()
@@ -72,7 +85,7 @@ class LLMService:
         # Ollama config
         self.ollama_host = os.getenv("OLLAMA_HOST", "central-ollama")
         self.ollama_port = os.getenv("OLLAMA_PORT", "11434")
-        self.ollama_model = os.getenv("OLLAMA_MODEL", "llama3.2:latest")
+        self.ollama_model = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:7b-instruct")
         self.use_ollama = os.getenv("USE_OLLAMA", "true").lower() == "true"
 
         # =====================================================================
@@ -132,6 +145,82 @@ class LLMService:
         logger.info(f"✅ Initialized {len(self.fallback_chain)} LLM providers in fallback chain")
         for i, (provider, _, name, model) in enumerate(self.fallback_chain):
             logger.info(f"   {i+1}. {name} ({model})")
+
+    async def _route_query(self, query: str) -> str:
+        """
+        Determine intent of query to select tool.
+        Simple zero-shot classification via LLM.
+        """
+        system_prompt = """
+        Analyze the user query and classify it into one of these categories:
+        - NUTRITION: asking about calories, macros, ingredients, food values.
+        - MEDICAL: asking about injuries, rehab, pain, physical therapy.
+        - TRAINING: asking about exercises, WODs, form, standards.
+        - CHITCHAT: general conversation, greeting, philosophy.
+        
+        Return ONLY the category name.
+        """
+        
+        try:
+            # Use Ollama/Groq to classify
+            response = await self.generate(query, system_prompt=system_prompt)
+            category = response.strip().upper()
+            
+            # Basic cleanup
+            for cat in ["NUTRITION", "MEDICAL", "TRAINING", "CHITCHAT"]:
+                if cat in category:
+                    return cat
+            return "CHITCHAT"
+        except Exception:
+            return "CHITCHAT"
+
+    async def run_agent(self, query: str, user_context: Optional[str] = None) -> str:
+        """
+        Execute Agentic Loop:
+        1. Route query (Think)
+        2. Execute tool (Act)
+        3. Generate response (Observe & Answer)
+        """
+        category = await self._route_query(query)
+        logger.info(f"🧠 Agent routed query to: {category}")
+        
+        tool_result = None
+        tool_name = None
+        
+        if category == "NUTRITION" and "nutrition" in self.tools:
+            tool_name = "FatSecret API"
+            # Extract food name heuristic or just pass valid query part
+            # For simplicity in V1, pass full query
+            tool_result = await self.tools["nutrition"].execute(query)
+            
+        elif category == "MEDICAL" and "medical" in self.tools:
+            tool_name = "IronRep Medical Doc"
+            tool_result = await self.tools["medical"].execute(query)
+            
+        elif category == "TRAINING" and "training" in self.tools:
+            tool_name = "IronRep Training Doc"
+            tool_result = await self.tools["training"].execute(query)
+            
+        # Final Generation
+        if tool_result:
+            system_prompt = f"""
+            You are IronRep AI, an expert coach. 
+            Use the following VERIFIED DATA from {tool_name} to answer the user.
+            
+            VERIFIED DATA:
+            {tool_result}
+            
+            If the data contains calories/macros, cite it explicitly (e.g. "According to FatSecret...").
+            If it contains medical protocols, be precise and add a disclaimer.
+            Do not invent information outside the provided data.
+            """
+        else:
+            system_prompt = "You are IronRep AI, an expert coach. Answer helpful and motivating."
+            
+        if user_context:
+            system_prompt += f"\nUser Context: {user_context}"
+            
+        return await self.generate(query, system_prompt=system_prompt)
 
     async def _call_ollama(
         self,

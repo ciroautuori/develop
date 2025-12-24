@@ -1,7 +1,7 @@
 """Marketing Agents API Endpoints"""
 from fastapi import APIRouter, Depends, HTTPException, status, Form, File, UploadFile
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from enum import Enum
 import httpx
 import os
@@ -380,6 +380,93 @@ SECTOR CONTEXT: {sector_context}
 
     except Exception as e:
         logger.error("generate_content_pro_error", error=str(e), exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# SEO STRATEGY & ANALYSIS
+# ============================================================================
+
+from app.domain.marketing.seo_specialist import SEOAgent, Keyword, KeywordDifficulty
+
+class SEOStrategyRequest(BaseModel):
+    """Request for generating an SEO strategy."""
+    seed_topics: List[str] = Field(
+        default=["Web Agency AI", "Sviluppo Web Enterprise", "Consulenza SEO"],
+        description="Core topics to analyze"
+    )
+    website_url: Optional[str] = Field(None, description="Current website URL for analysis")
+
+class SEOStrategyResponse(BaseModel):
+    """SEO Strategy Plan."""
+    keywords: List[Keyword]
+    content_plan: List[Dict[str, Any]]
+    competitor_insights: List[str] = []
+
+@router.post("/seo/strategy", response_model=SEOStrategyResponse)
+async def generate_seo_strategy(request: SEOStrategyRequest):
+    """
+    Generate a Strategic SEO Plan based on keywords and competition.
+    Uses SEOSpecialistAgent to find opportunities and map content.
+    """
+    try:
+        logger.info("generate_seo_strategy", topics=request.seed_topics)
+
+        # 1. Initialize SEO Agent
+        from app.domain.marketing.content_creator import AgentConfig
+        
+        agent = SEOAgent(
+            config=AgentConfig(
+                id="seo_strategist_1",
+                agent_type="seo_specialist",
+                name="StudioCentOS SEO Strategist",
+                model="gpt-4o", # Using high intelligence model for strategy
+                temperature=0.3
+            )
+        )
+        await agent.on_start()
+
+        all_keywords = []
+
+        # 2. Research Keywords for each topic
+        for topic in request.seed_topics:
+            kws = await agent.keyword_research(
+                seed_keyword=topic,
+                limit=5,
+                min_volume=50, # Lower threshold to find niche opportunities
+                max_difficulty=KeywordDifficulty.HARD
+            )
+            all_keywords.extend(kws)
+
+        # Deduplicate matches
+        unique_keywords = {k.keyword: k for k in all_keywords}.values()
+        sorted_keywords = sorted(unique_keywords, key=lambda x: x.search_volume, reverse=True)
+
+        # 3. Generate Content Plan based on keywords
+        content_plan = []
+        for kw in sorted_keywords[:10]: # Top 10 opportunities
+            # Simple heuristic for content type
+            content_type = "Landing Page" if "agency" in kw.keyword or "servizi" in kw.keyword else "Blog Post"
+            if kw.intent == "transactional":
+                content_type = "Sales Page / Service"
+            
+            content_plan.append({
+                "target_keyword": kw.keyword,
+                "suggested_title": f"{kw.keyword.title()}: La Guida Completa per il 2025" if content_type == "Blog Post" else f"{kw.keyword.title()} | StudioCentOS",
+                "content_type": content_type,
+                "intent": kw.intent,
+                "difficulty": kw.difficulty,
+                "potential_traffic": kw.search_volume
+            })
+
+        return SEOStrategyResponse(
+            keywords=list(sorted_keywords),
+            content_plan=content_plan,
+            competitor_insights=["Competitor analysis simulated for strategy generation."]
+        )
+
+    except Exception as e:
+        logger.error("seo_strategy_error", error=str(e), exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

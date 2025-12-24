@@ -90,7 +90,7 @@ class OllamaClient:
                 }
             }
             
-            async with httpx.AsyncClient(timeout=60.0) as client:
+            async with httpx.AsyncClient(timeout=180.0) as client:
                 response = await client.post(
                     f"{self.base_url}/api/chat",
                     json=payload
@@ -140,7 +140,7 @@ class OllamaClient:
                 }
             }
             
-            async with httpx.AsyncClient(timeout=60.0) as client:
+            async with httpx.AsyncClient(timeout=180.0) as client:
                 async with client.stream(
                     "POST",
                     f"{self.base_url}/api/chat",
@@ -161,14 +161,15 @@ class OllamaClient:
             logger.error(f"Ollama streaming error: {e}")
             yield f"[Ollama error: {e}]"
 
-    async def embeddings(self, text: str) -> list:
+    async def embeddings(self, text: str, model: Optional[str] = None) -> list:
         """Generate embeddings using Ollama."""
         try:
+            target_model = model or os.getenv("OLLAMA_EMBED_MODEL", "all-minilm")
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
                     f"{self.base_url}/api/embeddings",
                     json={
-                        "model": os.getenv("OLLAMA_EMBED_MODEL", "all-minilm"),
+                        "model": target_model,
                         "prompt": text
                     }
                 )

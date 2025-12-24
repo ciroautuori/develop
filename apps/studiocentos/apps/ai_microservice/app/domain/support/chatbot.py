@@ -22,14 +22,14 @@ class AICustomerSupport:
 
     def __init__(self):
         self.providers = {
-            "groq": self._groq_response,  # PRIMARY - FREE and FAST!
+            "ollama": self._ollama_response,  # PRIMARY - FREE, local, no rate limits!
+            "groq": self._groq_response,
+            "huggingface": self._huggingface_response,
             "gemini": self._gemini_response,
             "openrouter": self._openrouter_response,
-            "huggingface": self._huggingface_response,
-            "ollama": self._ollama_response,
         }
-        # Priority: GROQ (FREE!) → HuggingFace (FREE) → Gemini → OpenRouter (paid) → Ollama (local)
-        self.fallback_order = ["groq", "huggingface", "gemini", "openrouter", "ollama"]
+        # Priority: Ollama (FREE, local) → GROQ → HuggingFace → Gemini → OpenRouter
+        self.fallback_order = ["ollama", "groq", "huggingface", "gemini", "openrouter"]
         self._groq_key_index = 0  # For rotating GROQ keys
 
         # StudioCentOS specific context
@@ -345,41 +345,40 @@ NON INVENTARE informazioni. Se non sei sicuro di qualcosa, dillo chiaramente e s
             raise
 
     async def _ollama_response(self, message: str, context: Optional[str]) -> Dict[str, Any]:
-        """Ollama local AI provider"""
+        """Ollama local AI provider - PRIMARY (FREE, no rate limits!)"""
         try:
-            ollama_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-
-            full_prompt = f"{self.system_context}\n\nUtente: {message}"
+            from app.core.llm.ollama_client import get_ollama_client
+            
+            # Use centralized Ollama client (defaults to central-ollama:11434)
+            client = get_ollama_client()
+            
+            # Check availability first
+            if not await client.is_available():
+                raise Exception("Ollama service not available")
+            
+            # Build prompt
+            full_prompt = message
             if context:
-                full_prompt = f"{self.system_context}\n\nContesto: {context}\n\nUtente: {message}"
-
-            payload = {
-                "model": "llama2",
-                "prompt": full_prompt,
-                "stream": False,
-                "options": {"temperature": 0.7, "num_predict": 500},
+                full_prompt = f"Contesto precedente:\n{context}\n\nUtente: {message}"
+            
+            # Generate response using centralized client
+            ai_response = await client.generate(
+                prompt=full_prompt,
+                system_prompt=self.system_context,
+                temperature=0.7,
+                max_tokens=500
+            )
+            
+            confidence = self._calculate_confidence(ai_response, message)
+            sentiment = self._analyze_sentiment(message)
+            
+            logger.info(f"✅ Ollama response generated successfully")
+            
+            return {
+                "response": ai_response.strip(),
+                "confidence": confidence,
+                "sentiment": sentiment,
             }
-
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(
-                    f"{ollama_url}/api/generate",
-                    json=payload
-                )
-
-                if response.status_code == 200:
-                    data = response.json()
-                    ai_response = data.get("response", "")
-
-                    confidence = self._calculate_confidence(ai_response, message)
-                    sentiment = self._analyze_sentiment(message)
-
-                    return {
-                        "response": ai_response.strip(),
-                        "confidence": confidence,
-                        "sentiment": sentiment,
-                    }
-
-                raise Exception(f"Ollama API error: {response.status_code}")
 
         except Exception as e:
             logger.error(f"Ollama provider error: {str(e)}")

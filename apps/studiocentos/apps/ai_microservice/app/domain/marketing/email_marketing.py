@@ -647,6 +647,38 @@ class EmailMarketingAgent(BaseAgent):
     # HELPER METHODS (Private) - PRODUCTION-READY with SendGrid
     # ========================================================================
 
+    async def _get_llm_response(
+        self,
+        prompt: str,
+        temperature: float = 0.7,
+        max_tokens: int = 1500
+    ) -> str:
+        """Get response from LLM using Ollama (Primary) or Groq (Fallback)."""
+        try:
+            # 1. Try Ollama (Primary)
+            from app.core.llm.ollama_client import get_ollama_client
+            ollama = get_ollama_client()
+            if await ollama.is_available():
+                return await ollama.generate(
+                    prompt=prompt,
+                    temperature=temperature,
+                    max_tokens=max_tokens
+                )
+            
+            # 2. Try Groq (Fallback)
+            from app.core.llm.groq_client import get_groq_client
+            # Use llama-3.1-8b as safe fallback
+            groq = get_groq_client(model="llama-3.1-8b-instant")
+            return await groq.generate(
+                prompt=prompt,
+                temperature=temperature,
+                max_tokens=max_tokens
+            )
+            
+        except Exception as e:
+            logger.error(f"LLM generation failed: {e}")
+            raise e
+
     async def _generate_preview_text(self, subject: str, goal: str) -> str:
         """Generate email preview text using LLM."""
         prompt = f"""Generate a compelling email preview text (40-90 chars) for:
@@ -657,8 +689,8 @@ Preview text should complement the subject and encourage opens.
 Return ONLY the preview text, no quotes or explanation."""
 
         try:
-            response = await self.run(prompt)
-            preview = response.data.strip().strip('"').strip("'")
+            response = await self._get_llm_response(prompt, max_tokens=100)
+            preview = response.strip().strip('"').strip("'")
             return preview[:90] if len(preview) > 90 else preview
         except Exception as e:
             logger.warning(f"LLM preview generation failed: {e}")
@@ -684,8 +716,8 @@ Requirements:
 Return ONLY valid HTML, no markdown or explanation."""
 
         try:
-            response = await self.run(prompt)
-            html = response.data.strip()
+            response = await self._get_llm_response(prompt, max_tokens=2000)
+            html = response.strip()
             # Ensure basic HTML structure
             if not html.startswith('<'):
                 html = f"<html><body>{html}</body></html>"
@@ -906,9 +938,9 @@ Return JSON array with format:
 [{{"name": "Product Name", "reason": "Why recommended", "priority": 1}}]"""
 
         try:
-            response = await self.run(prompt)
+            response = await self._get_llm_response(prompt, temperature=0.1)
             import json
-            recommendations = json.loads(response.data)
+            recommendations = json.loads(response)
             return recommendations[:3]
         except Exception:
             return []

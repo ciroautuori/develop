@@ -183,7 +183,10 @@ services:
       - LOG_LEVEL=info
 
       # Note: AI API keys (GROQ, GOOGLE, OPENAI, etc.) are loaded from .env.production
-      - OLLAMA_HOST=http://central-ollama:11434
+      - OLLAMA_HOST=central-ollama
+      - OLLAMA_PORT=11434
+      - OLLAMA_MODEL=llama3.2:3b
+      - USE_CUSTOM_MODEL=false
       - CHROMA_HOST=central-chromadb
       - CHROMA_PORT=8000
       - REDIS_HOST=central-redis

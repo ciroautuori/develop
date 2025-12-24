@@ -52,9 +52,21 @@ class Settings(BaseSettings):
         description="Custom model name on HuggingFace"
     )
 
+    OLLAMA_HOST: str = Field(
+        default="central-ollama",
+        description="Ollama host (PRIMARY LLM provider)"
+    )
+    OLLAMA_PORT: int = Field(
+        default=11434,
+        description="Ollama port"
+    )
+    OLLAMA_MODEL: str = Field(
+        default="llama3.2:latest",
+        description="Ollama model to use"
+    )
     OLLAMA_BASE_URL: str = Field(
-        default="http://localhost:11434",
-        description="Ollama base URL (Local fallback)"
+        default="http://central-ollama:11434",
+        description="Ollama base URL (constructed from host:port)"
     )
 
     # ChromaDB Configuration

@@ -14,7 +14,7 @@ import logging
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 
-from app.domain.rag.embeddings import OpenAIEmbeddings
+from app.domain.rag.embeddings import OpenAIEmbeddings, OllamaEmbeddings
 from app.domain.rag.stores import ChromaVectorStore
 from app.core.config import settings
 from app.infrastructure.leads import ApolloClient, ApolloError
@@ -66,18 +66,24 @@ class LeadIntelligenceAgent:
 
         # Initialize embeddings (reuse existing RAG embeddings)
         try:
-            # Try Google API key (GOOGLE_AI_API_KEY or GOOGLE_API_KEY)
-            api_key = settings.google_api_key_resolved
-
-            if api_key:
-                self.embeddings = OpenAIEmbeddings(
-                    model="text-embedding-3-small",
-                    api_key=api_key
-                )
-                self.logger.info("Lead Intelligence initialized with embeddings")
-            else:
-                self.logger.warning("No embedding API key configured, using fallback")
-                self.embeddings = None
+            # PRIORITY: Ollama Embeddings (Local/Free)
+            try:
+                self.embeddings = OllamaEmbeddings(model="all-minilm")
+                self.logger.info("Lead Intelligence initialized with Ollama embeddings")
+            except Exception as e:
+                self.logger.warning(f"Ollama embeddings init failed: {e}. Fallback to OpenAI/Google.")
+                
+                # Fallback: Google/OpenAI
+                api_key = getattr(settings, 'google_api_key_resolved', settings.GOOGLE_API_KEY)
+                if api_key:
+                    self.embeddings = OpenAIEmbeddings(
+                        model="text-embedding-3-small",
+                        api_key=api_key
+                    )
+                    self.logger.info("Lead Intelligence initialized with OpenAI/Google fallback")
+                else:
+                    self.logger.warning("No embedding API key configured, using fallback")
+                    self.embeddings = None
 
         except Exception as e:
             self.logger.error(f"Failed to initialize embeddings: {e}")

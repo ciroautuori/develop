@@ -362,3 +362,38 @@ class HuggingFaceEmbeddings(BaseEmbeddings):
         )
 
         return embedding.tolist()
+
+
+class OllamaEmbeddings(BaseEmbeddings):
+    """
+    Ollama embedding generation.
+    """
+
+    def __init__(self, model: str = None):
+        """
+        Initialize Ollama embeddings.
+        
+        Args:
+            model: Ollama embedding model name (optional)
+        """
+        # Determine model
+        target_model = model or os.getenv("OLLAMA_EMBED_MODEL", "all-minilm")
+        
+        # Approximate dimensions
+        dimensions = {
+            "all-minilm": 384,
+            "nomic-embed-text": 768,
+            "mxbai-embed-large": 1024,
+            "llama2": 4096,
+            "llama3": 4096,
+            "llama3.2": 3072, 
+        }
+        
+        super().__init__(model=target_model, dimension=dimensions.get(target_model, 384))
+        
+        from app.core.llm.ollama_client import get_ollama_client
+        self.client = get_ollama_client()
+
+    async def embed_text(self, text: str) -> List[float]:
+        """Generate Ollama embedding for text."""
+        return await self.client.embeddings(text, model=self.model)

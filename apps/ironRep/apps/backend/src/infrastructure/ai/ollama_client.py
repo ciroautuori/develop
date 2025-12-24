@@ -39,7 +39,7 @@ class OllamaClient:
         """
         self.host = host or os.getenv("OLLAMA_HOST", "central-ollama")
         self.port = int(port or os.getenv("OLLAMA_PORT", "11434"))
-        self.model = model or os.getenv("OLLAMA_MODEL", "llama3.2:latest")
+        self.model = model or os.getenv("OLLAMA_MODEL", "qwen2.5-coder:7b-instruct")
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.base_url = f"http://{self.host}:{self.port}"
