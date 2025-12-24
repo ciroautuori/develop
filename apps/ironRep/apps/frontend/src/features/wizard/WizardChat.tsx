@@ -91,13 +91,11 @@ export function WizardChat({ onComplete, initialBiometrics, initialContext }: Wi
       // Pass initial biometrics AND collected inline data to give context to RAG immediately
       const contextData = {
         ...initialBiometrics,
-        ...(initialContext?.trainingGoals || {}),
-        ...(initialContext?.lifestyle || {}),
-        ...(initialContext?.nutritionGoals || {}),
+        ...(initialContext || {}),
       };
       const response = await wizardApi.start(
         Object.keys(contextData).length > 0 ? contextData : undefined,
-        { googleSyncFields: initialContext?.googleSyncFields || [] }
+        { googleSyncFields: (initialContext as any)?.googleSyncFields || [] }
       );
 
       if (response.success) {

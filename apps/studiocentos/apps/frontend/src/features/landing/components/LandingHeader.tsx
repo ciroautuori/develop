@@ -106,55 +106,59 @@ export function LandingHeader() {
           </Button>
         </div>
         {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-4 lg:gap-6 text-sm">
+        <div className="hidden md:flex items-center gap-1.5 lg:gap-6 text-xs lg:text-sm tracking-tight text-nowrap">
           <a
             href="#chi-siamo"
-            className="text-muted-foreground hover:text-primary transition font-medium"
+            className="text-muted-foreground hover:text-primary transition font-medium px-1 lg:px-0"
             onClick={(e) => handleNavClick(e, '#chi-siamo')}
           >
             {t.nav.chiSiamo}
           </a>
           <a
             href="#servizi"
-            className="text-muted-foreground hover:text-primary transition font-medium"
+            className="text-muted-foreground hover:text-primary transition font-medium px-1 lg:px-0"
             onClick={(e) => handleNavClick(e, '#servizi')}
           >
             {t.nav.servizi}
           </a>
           <a
             href="#progetti"
-            className="text-muted-foreground hover:text-primary transition font-medium"
+            className="text-muted-foreground hover:text-primary transition font-medium px-1 lg:px-0"
             onClick={(e) => handleNavClick(e, '#progetti')}
           >
             {t.nav.progetti}
           </a>
           <a
             href="#corsi"
-            className="text-muted-foreground hover:text-primary transition font-medium"
+            className="text-muted-foreground hover:text-primary transition font-medium px-1 lg:px-0"
             onClick={(e) => handleNavClick(e, '#corsi')}
           >
             {t.nav.academy}
           </a>
           <a
             href="#toolai"
-            className="text-muted-foreground hover:text-primary transition font-medium"
+            className="text-muted-foreground hover:text-primary transition font-medium px-1 lg:px-0"
             onClick={(e) => handleNavClick(e, '#toolai')}
           >
             {t.nav.toolai}
           </a>
           <a
             href="#contatti"
-            className="text-muted-foreground hover:text-primary transition font-medium"
+            className="text-muted-foreground hover:text-primary transition font-medium px-1 lg:px-0"
             onClick={(e) => handleNavClick(e, '#contatti')}
           >
             {t.nav.contatti}
           </a>
 
           {/* Language Selector */}
-          <LanguageSelector />
+          <div className="scale-90 lg:scale-100">
+            <LanguageSelector />
+          </div>
 
-          {/* Buy Me a Coffee */}
-          <BuyMeCoffeeButton variant="compact" />
+          {/* Buy Me a Coffee - Visible on MD and LG */}
+          <div className="scale-90 lg:scale-100">
+            <BuyMeCoffeeButton variant="compact" />
+          </div>
 
           {/* Theme Toggle */}
           <Button

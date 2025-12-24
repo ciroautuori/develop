@@ -1,42 +1,249 @@
 /**
- * Enhanced Wizard Orchestrator with Complete Inline Data Collection
- *
- * Flow (MARKET-READY):
- * 1. BiometricsStep (sempre) - peso, altezza, età, sesso
- * 2. TrainingGoalsStep (sempre) - obiettivi, esperienza, equipment
- * 3. LifestyleStep (sempre) - attività, lavoro, sonno, stress
- * 4. NutritionGoalsStep (se nutrition) - dieta, macro, allergie
- * 5. Chat RAG (interazione AI personalizzata)
- * 6. FoodPreferencesStep (se nutrition) - cibi FatSecret API
- * 7. InjuryDetailsStep (se injury)
- * 8. BaselineStrengthStep (se coach)
- * 9. Completion
- *
- * @production-ready Complete user profiling for all agents
+ * Enhanced Wizard Orchestrator (Refactored v3)
+ * 
+ * Simplified 2-Step Flow:
+ * 1. Unified Intake (IntakeStep) -> Collects Biometrics, Goals, Injury Check
+ * 2. Smart Chat (WizardChat) -> Refines plan, skips redundancy
+ * 3. Completion -> Generates plans
  */
 
 import { useState, useCallback, useEffect } from "react";
 import { WizardChat } from "./WizardChat";
-import {
-  BiometricsStep,
-  InjuryDetailsStep,
-  BaselineStrengthStep,
-  FoodPreferencesStep,
-  type BiometricsData,
-  type InjuryDetails,
-  type BaselineStrength,
-} from "./steps";
-import { TrainingGoalsStep, type TrainingGoalsData } from "./steps/TrainingGoalsStep";
-import { LifestyleStep, type LifestyleData } from "./steps/LifestyleStep";
-import { NutritionGoalsStep, type NutritionGoalsData } from "./steps/NutritionGoalsStep";
-import { onboardingApi, biometricsApi, usersApi, type UserProfile } from "../../lib/api";
+import { IntakeStep, type IntakeData } from "./steps/IntakeStep";
+import { onboardingApi, usersApi, type UserProfile } from "../../lib/api";
 import { plansApi as weeklyPlansApi } from "../../lib/api/plans";
 import { logger } from "../../lib/logger";
 import { useNavigate } from "@tanstack/react-router";
-import { Loader2, RefreshCw, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { toast } from "../../components/ui/Toast";
-import { cn } from "../../lib/utils";
-import { WizardProgressHeader } from "./components/WizardProgressHeader";
+
+type WizardStep = "intake" | "chat" | "completing" | "error";
+
+interface OnboardingError {
+  message: string;
+  retryData: any;
+}
+
+export function WizardOrchestrator({ onComplete }: { onComplete?: () => void }) {
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState<WizardStep>("intake");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(true);
+
+  // Data State
+  const [intakeData, setIntakeData] = useState<IntakeData | null>(null);
+  const [chatData, setChatData] = useState<Record<string, unknown> | null>(null);
+  const [error, setError] = useState<OnboardingError | null>(null);
+
+  // Restore Logic
+  useEffect(() => {
+    const restoreProgress = async () => {
+      try {
+        const user = await usersApi.getMe();
+        if (user) {
+          // Attempt to reconstruct intake data if exists
+          if (user.age && user.weight_kg && user.primary_goal) {
+            const restoredIntake: IntakeData = {
+              age: user.age,
+              weight_kg: user.weight_kg,
+              height_cm: user.height_cm || 0,
+              sex: (user.sex as any) || "male",
+              primaryGoal: user.primary_goal,
+              experience: (user.training_experience as any) || "beginner",
+              daysPerWeek: user.available_days || 3,
+              hasInjury: user.has_injury || false,
+              injuryDetails: user.has_injury ? {
+                diagnosis: user.injury_diagnosis || "",
+                painLevel: 5, // Default if missing
+                location: user.injury_description || "" // Mapping description to location loosely
+              } : undefined
+            };
+            setIntakeData(restoredIntake);
+            // If we have basic data, we could theoretically jump to chat, 
+            // but let's keep them on intake to confirm details unless fully onboarded.
+          }
+        }
+      } catch (err) {
+        logger.warn("Failed to restore wizard state", err);
+      } finally {
+        setIsRestoring(false);
+      }
+    };
+    restoreProgress();
+  }, []);
+
+  // HANDLER: Intake Complete
+  const handleIntakeComplete = async (data: IntakeData) => {
+    logger.info("✅ Intake collected", { data });
+    setIntakeData(data);
+
+    // 1. Persist partial data immediately
+    try {
+      const me = await usersApi.getMe();
+      await usersApi.update(me.id, {
+        age: data.age,
+        weight_kg: data.weight_kg,
+        height_cm: data.height_cm,
+        sex: data.sex,
+        primary_goal: data.primaryGoal,
+        training_experience: data.experience,
+        available_days: data.daysPerWeek,
+        has_injury: data.hasInjury,
+        // Map injury details if present
+        ...(data.hasInjury && data.injuryDetails ? {
+          injury_diagnosis: data.injuryDetails.diagnosis,
+          injury_description: `${data.injuryDetails.location} - Pain Level: ${data.injuryDetails.painLevel}`,
+          // Note: Backend might need specific fields, utilizing description for extra context
+        } : {})
+      });
+    } catch (e) {
+      logger.error("Failed to persist intake data", { error: e });
+      // Proceed anyway, we have it in state
+    }
+
+    setCurrentStep("chat");
+  };
+
+  // HANDLER: Chat Complete -> Finish
+  const handleChatComplete = (finalData: Record<string, unknown>) => {
+    logger.info("✅ Chat completed", { finalData });
+    setChatData(finalData);
+    if (intakeData) {
+      completeOnboarding(intakeData, finalData);
+    }
+  };
+
+  // FINALIZATION
+  const completeOnboarding = useCallback(async (intake: IntakeData, chatResult: Record<string, unknown>) => {
+    setCurrentStep("completing");
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      logger.info("Finalizing onboarding...");
+
+      // 1. Merge all data for final profile update
+      const completeProfile: Partial<UserProfile> = {
+        age: intake.age,
+        weight_kg: intake.weight_kg,
+        height_cm: intake.height_cm,
+        sex: intake.sex,
+        primary_goal: intake.primaryGoal,
+        training_experience: intake.experience,
+        available_days: intake.daysPerWeek,
+        has_injury: intake.hasInjury,
+        ...(intake.hasInjury && intake.injuryDetails ? {
+          injury_diagnosis: intake.injuryDetails.diagnosis,
+          injury_description: `${intake.injuryDetails.location} (Pain: ${intake.injuryDetails.painLevel}/10)`
+        } : {}),
+        ...chatResult // Merge any extra fields extracted by chat
+      };
+
+      // 2. Call Complete API
+      await onboardingApi.complete(completeProfile as any);
+
+      // 3. Generate Plans (Fire and Forget)
+      const planPromises: Promise<any>[] = [];
+
+      // Coach Plan
+      if (intake.primaryGoal !== "injury_recovery") {
+        planPromises.push(weeklyPlansApi.generateCoachPlan({
+          focus: intake.primaryGoal,
+          days_available: intake.daysPerWeek
+        }));
+      }
+
+      // Medical Plan (if injury)
+      if (intake.hasInjury && intake.injuryDetails) {
+        planPromises.push(weeklyPlansApi.generateMedicalProtocol({
+          target_areas: [intake.injuryDetails.location || "General"],
+          current_pain_level: intake.injuryDetails.painLevel
+        }));
+      }
+
+      Promise.allSettled(planPromises);
+
+      // 4. Navigate
+      toast.success({ title: "Tutto pronto!", description: "Il tuo piano è in fase di generazione." });
+      if (onComplete) onComplete();
+      else navigate({ to: "/" });
+
+    } catch (err: any) {
+      logger.error("Onboarding failed", err);
+      setError({ message: err.message || "Errore sconosciuto", retryData: { intake, chatResult } });
+      setCurrentStep("error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [navigate, onComplete]);
+
+  // RENDER
+
+  if (isRestoring) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[100dvh] bg-background">
+        <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Caricamento...</p>
+      </div>
+    );
+  }
+
+  if (currentStep === "intake") {
+    return <IntakeStep onComplete={handleIntakeComplete} initialData={intakeData || undefined} />;
+  }
+
+  if (currentStep === "chat") {
+    return (
+      <WizardChat
+        onComplete={handleChatComplete}
+        initialBiometrics={{
+          age: intakeData?.age || 0,
+          weight_kg: intakeData?.weight_kg || 0,
+          height_cm: intakeData?.height_cm || 0,
+          sex: intakeData?.sex || "other"
+        }}
+        initialContext={{
+          intake: intakeData, // Pass full rich object for Agent
+          injury: intakeData?.hasInjury ? intakeData.injuryDetails : undefined,
+          goals: {
+            primary: intakeData?.primaryGoal,
+            experience: intakeData?.experience
+          }
+        }}
+      />
+    );
+  }
+
+  if (currentStep === "completing") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[100dvh] bg-background">
+        <Loader2 className="w-12 h-12 animate-spin text-primary mb-6" />
+        <h2 className="text-xl font-bold">Creazione Profilo...</h2>
+        <p className="text-muted-foreground mt-2">L'AI sta analizzando i tuoi dati.</p>
+      </div>
+    );
+  }
+
+  if (currentStep === "error") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[100dvh] bg-background px-4 text-center">
+        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+          <AlertCircle className="w-8 h-8 text-red-600" />
+        </div>
+        <h2 className="text-xl font-bold">Qualcosa è andato storto</h2>
+        <p className="text-muted-foreground mt-2 mb-6">{error?.message}</p>
+        <button
+          onClick={() => error && completeOnboarding(error.retryData.intake, error.retryData.chatResult)}
+          className="px-6 py-3 bg-primary text-white rounded-xl font-semibold"
+        >
+          Riprova
+        </button>
+      </div>
+    );
+  }
+
+  return null;
+}
 
 type WizardStep =
   | "biometrics"

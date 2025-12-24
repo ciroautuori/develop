@@ -398,7 +398,8 @@ Wizard: "No glutine. Riepilogo: Bodybuilding 5x/sett 75min, palestra completa, s
                 "lifestyle": "lifestyle",
                 "nutritionGoals": "nutrition_goals",
                 "foodPreferences": "food_preferences",
-                "injury": "injury_details"
+                "injury": "injury_details",
+                "intake": "intake_data"
             }
             
             for fe_key, be_key in mappings.items():
@@ -409,6 +410,32 @@ Wizard: "No glutine. Riepilogo: Bodybuilding 5x/sett 75min, palestra completa, s
                     if isinstance(data, dict):
                         for k, v in data.items():
                             session["collected_data"][k] = v
+            
+            # Explicitly map flattened keys from IntakeStep (camelCase -> snake_case)
+            # IntakeStep sends: diagnosis, painLevel, location, hasInjury, primaryGoal
+            intake = initial_context.get("intake") or {}
+            
+            if "primaryGoal" in intake:
+                session["collected_data"]["primary_goal"] = intake["primaryGoal"]
+                session["collected_data"]["goals"] = intake["primaryGoal"]
+                
+            if "hasInjury" in intake:
+                session["agent_config"]["has_injury"] = intake["hasInjury"]
+                if intake["hasInjury"]:
+                    session["agent_config"]["medical_mode"] = MedicalMode.INJURY_RECOVERY
+                else:
+                    session["agent_config"]["medical_mode"] = MedicalMode.WELLNESS_TIPS
+
+            # Map injury details if passed separately or inside intake
+            injury = initial_context.get("injury") or (intake.get("injuryDetails") if intake.get("hasInjury") else None)
+            
+            if injury:
+                if "diagnosis" in injury:
+                    session["collected_data"]["injury_diagnosis"] = injury["diagnosis"] # Key expected by _determine_next_phase
+                if "painLevel" in injury:
+                    session["collected_data"]["pain_level"] = injury["painLevel"]
+                if "location" in injury:
+                    session["collected_data"]["pain_locations"] = [injury["location"]]
 
         # CRITICAL: Trigger config update to detect modes from initial data
         self._update_agent_config(session, "", {})
@@ -417,22 +444,23 @@ Wizard: "No glutine. Riepilogo: Bodybuilding 5x/sett 75min, palestra completa, s
         prompt = f"""
 {self.SYSTEM_PROMPT}
 
-L'utente si è già registrato con email: {user_email or 'sconosciuta'}
-{f'Si chiama: {user_name}' if user_name else ''}
-{f'Dati biometrici noti: {biometrics}' if biometrics else ''}
-{f'Contesto iniziale: {initial_context}' if initial_context else ''}
+L'utente è qui per {session["collected_data"].get("primary_goal", "allenarsi")}.
+Dati raccolti (Intake):
+- Obiettivo: {session["collected_data"].get("primary_goal")}
+- Infortunio: {'SÌ' if session['agent_config'].get('has_injury') else 'NO'}
+- Dettagli Infortunio: {session["collected_data"].get("injury_diagnosis", "N/A")}
 
 ISTRUZIONI PER IL SALUTO:
 1. Sii breve e diretto.
 2. Salutalo per nome se lo conosci.
-3. Se vedi dati importati da Google Fit (googleSyncFields nel contesto), faglielo sapere in modo magico ("Ho già importato il tuo peso da Google Fit!").
-4. Non chiedere cose che già vedi qui sopra.
+3. Se ha un infortunio, ACKNOWLEDGE subito ("Vedo che hai un problema alla schiena...").
+4. Se NO infortunio, vai dritto al punto ("Ottimo che stai bene! Parliamo del piano...").
+5. Non chiedere cose che già vedi qui sopra.
 
 Fase attuale: SALUTO INIZIALE
 {self.PHASE_PROMPTS[InterviewPhase.GREETING]}
 
-Genera un saluto BREVE (max 2 frasi) che chiede subito cosa lo porta su IronRep.
-NON chiedere email o nome, li hai già!
+Genera un saluto BREVE (max 2 frasi). Non chiedere email o nome.
 """
 
         response = await self.llm.generate(prompt)
