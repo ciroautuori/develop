@@ -8,36 +8,7 @@ from typing import Optional, List
 from enum import Enum
 
 
-class PartnerTipo(str, Enum):
-    ISTITUZIONE_ACCADEMICA = "istituzione_accademica"
-    ENTE_PUBBLICO = "ente_pubblico"
-    AZIENDA_PRIVATA = "azienda_privata"
-    ONG = "ong"
-    FONDAZIONE = "fondazione"
-    ASSOCIAZIONE = "associazione"
-
-
-class PartnerLivello(str, Enum):
-    STRATEGICO = "strategico"
-    ISTITUZIONALE = "istituzionale"
-    OPERATIVO = "operativo"
-    OCCASIONALE = "occasionale"
-
-
-class PartnerStato(str, Enum):
-    ATTIVA = "attiva"
-    SOSPESA = "sospesa"
-    CONCLUSA = "conclusa"
-
-
-class PartnerSettore(str, Enum):
-    EDUCAZIONE = "educazione"
-    TECNOLOGIA = "tecnologia"
-    SOCIALE = "sociale"
-    SANITARIO = "sanitario"
-    AMBIENTALE = "ambientale"
-    CULTURALE = "culturale"
-    PUBBLICA_AMMINISTRAZIONE = "pubblica_amministrazione"
+from app.models.partner import PartnerTipo, PartnerLivello, PartnerStato, PartnerSettore, PartnerCategoria
 
 
 class PartnerBase(BaseModel):

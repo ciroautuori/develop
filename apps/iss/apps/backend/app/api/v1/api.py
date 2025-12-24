@@ -14,9 +14,9 @@ api_router.include_router(users.router, prefix="/users", tags=["users"])
 
 # ISS Platform Endpoints (NEW - Frontend Integration) - ORA ATTIVI! 🚀
 api_router.include_router(corsi.router, prefix="/corsi", tags=["corsi"])
-api_router.include_router(eventi.router, prefix="/eventi", tags=["eventi"])
+api_router.include_router(events.router, prefix="/eventi", tags=["eventi"])
 api_router.include_router(progetti.router, prefix="/progetti", tags=["progetti"])
-api_router.include_router(volontariato.router, prefix="/volontariato", tags=["volontariato"])
+api_router.include_router(volunteer.router, prefix="/volontariato", tags=["volontariato"])
 api_router.include_router(newspost.router, prefix="/newspost", tags=["newspost"])
 api_router.include_router(testimonials.router, prefix="/testimonials", tags=["testimonials"])
 api_router.include_router(partners.router, prefix="/partners", tags=["partners"])

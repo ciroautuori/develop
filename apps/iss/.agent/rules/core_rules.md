@@ -11,3 +11,4 @@ description: "Regole d'oro non negoziabili per l'operatività dell'agente"
 5. **Memoria Storica**: Consulta sempre `.agent/memories` e `.agent/workflows` per vedere come sono stati risolti problemi simili in passato.
 6. **Docker Pulito**: Quando si ricostruisce, usare `--no-cache` se ci sono modifiche a dipendenze o asset statici, per evitare versioni vecchie.
 7. **No Hardcoded Credentials**: Mai lasciare password o chiavi API nel codice.
+8. **Infrastruttura Centralizzata**: Tutti i servizi di rete condivisi (Redis, DB esterni, ecc.) devono essere accessibili tramite endpoint centralizzati e NON gestiti localmente nei file compose di progetto.

@@ -463,27 +463,100 @@ class ISSService {
     }
   }
 
-  async getPartners(): Promise<any[]> {
+  async getPartners(params?: any): Promise<{ partners: any[], total: number }> {
     try {
-      const response = await this.client.get('/partners/');
-      return response.data.items || [];
+      const response = await this.client.get('/partners/', { params });
+      return response.data;
     } catch (error) {
       console.warn('Error fetching partners:', error);
-      return [];
+      return { partners: [], total: 0 };
     }
   }
 
-  async getStats(): Promise<any> {
-    try {
-      const response = await this.client.get('/bandi/stats');
-      return response.data;
-    } catch (error) {
-      console.warn('Error fetching stats:', error);
-      return null;
-    }
+  async getPartnerById(id: number): Promise<any> {
+    const response = await this.client.get(`/partners/${id}`);
+    return response.data;
+  }
+
+  async createPartner(data: any): Promise<any> {
+    const response = await this.client.post('/partners/', data);
+    return response.data;
+  }
+
+  async updatePartner(id: number, data: any): Promise<any> {
+    const response = await this.client.put(`/partners/${id}`, data);
+    return response.data;
+  }
+
+  async deletePartner(id: number): Promise<any> {
+    const response = await this.client.delete(`/partners/${id}`);
+    return response.data;
+  }
+
+  // Events CRUD
+  async getEvents(params?: any): Promise<{ items: any[], total: number }> {
+    const response = await this.client.get('/eventi/', { params });
+    return response.data;
+  }
+
+  async createEvent(data: any): Promise<any> {
+    const response = await this.client.post('/eventi/', data);
+    return response.data;
+  }
+
+  async updateEvent(id: number, data: any): Promise<any> {
+    const response = await this.client.put(`/eventi/${id}`, data);
+    return response.data;
+  }
+
+  async deleteEvent(id: number): Promise<any> {
+    const response = await this.client.delete(`/eventi/${id}`);
+    return response.data;
+  }
+
+  // Volunteers CRUD
+  async getVolunteerApplications(params?: any): Promise<any[]> {
+    const response = await this.client.get('/volontariato/', { params });
+    return response.data;
+  }
+
+  async updateVolunteerApplication(id: number, data: any): Promise<any> {
+    const response = await this.client.put(`/volontariato/${id}`, data);
+    return response.data;
+  }
+
+  // Stats
+  async getAnalyticsKpi(): Promise<any> {
+    const response = await this.client.get('/analytics/kpi');
+    return response.data;
+  }
+
+  async getAnalyticsTrends(days?: number): Promise<any> {
+    const response = await this.client.get('/analytics/trends', { params: { days } });
+    return response.data;
   }
 }
 
 export const issService = new ISSService();
+
+export const eventsAPI = {
+  list: (params?: any) => issService.getEvents(params),
+  create: (data: any) => issService.createEvent(data),
+  update: (id: number, data: any) => issService.updateEvent(id, data),
+  delete: (id: number) => issService.deleteEvent(id),
+};
+
+export const volunteerAPI = {
+  list: (params?: any) => issService.getVolunteerApplications(params),
+  update: (id: number, data: any) => issService.updateVolunteerApplication(id, data),
+};
+
+export const partnerAPI = {
+  list: (params?: any) => issService.getPartners(params),
+  get: (id: number) => issService.getPartnerById(id),
+  create: (data: any) => issService.createPartner(data),
+  update: (id: number, data: any) => issService.updatePartner(id, data),
+  delete: (id: number) => issService.deletePartner(id),
+};
 
 export default apiClient;
