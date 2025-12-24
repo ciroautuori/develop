@@ -1,8 +1,12 @@
+import asyncio
+import logging
 from typing import List, Dict, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.ai_bandi_agent import ai_bandi_agent
 from app.crud.bando import bando_crud
 from app.schemas.bando import BandoRead
+
+logger = logging.getLogger(__name__)
 
 # Profilo statico ISS estratto dai documenti operativi
 ISS_PROFILE = """
@@ -23,17 +27,13 @@ class MatchService:
     Servizio per analizzare la compatibilità tra bandi e profilo associazione.
     """
     
-    async def get_perfect_matches(self, db: AsyncSession, limit: int = 5) -> List[Dict]:
-        """
-        Trova i bandi 'perfetti' analizzando quelli attivi nel DB.
-        """
-        # 1. Recupera bandi attivi e recenti
-        bandi = await bando_crud.get_recent_bandi(db, limit=20) # Analizza gli ultimi 20
-        
-        matches = []
-        
-        async with ai_bandi_agent as agent:
-            for bando in bandi:
+    def __init__(self):
+        self._semaphore = asyncio.Semaphore(3) # Limita la concorrenza per non sovraccaricare Ollama
+
+    async def _analyze_single_bando(self, agent, bando, profile: str) -> Optional[Dict]:
+        """Analizza un singolo bando con gestione errori e semaphore."""
+        async with self._semaphore:
+            try:
                 # Costruisci testo per analisi
                 tender_text = f"""
                 TITOLO: {bando.title}
@@ -45,16 +45,35 @@ class MatchService:
                 """
                 
                 # Esegui analisi AI
-                analysis = await agent.analyze_match(tender_text, ISS_PROFILE)
+                analysis = await agent.analyze_match(tender_text, profile)
                 
-                if analysis.get('score', 0) >= 60: # Filtra solo match decenti
-                    matches.append({
+                score = analysis.get('score', 0)
+                if score >= 60: # Filtra solo match decenti
+                    return {
                         **bando.__dict__,
-                        "match_score": analysis.get('score'),
+                        "match_score": score,
                         "match_reasoning": analysis.get('reasoning'),
                         "match_strengths": analysis.get('strengths', []),
                         "match_weaknesses": analysis.get('weaknesses', [])
-                    })
+                    }
+            except Exception as e:
+                logger.error(f"Errore analisi bando {bando.id}: {e}")
+            return None
+
+    async def get_perfect_matches(self, db: AsyncSession, limit: int = 5) -> List[Dict]:
+        """
+        Trova i bandi 'perfetti' analizzando quelli attivi nel DB in parallelo.
+        """
+        # 1. Recupera bandi attivi e recenti
+        bandi = await bando_crud.get_recent_bandi(db, limit=15) # Ridotto leggermente per performance
+        
+        async with ai_bandi_agent as agent:
+            # Crea task per analisi parallela
+            tasks = [self._analyze_single_bando(agent, bando, ISS_PROFILE) for bando in bandi]
+            results = await asyncio.gather(*tasks)
+            
+            # Filtra i None (errori o score basso)
+            matches = [r for r in results if r is not None]
         
         # Ordina per score decrescente
         matches.sort(key=lambda x: x['match_score'], reverse=True)

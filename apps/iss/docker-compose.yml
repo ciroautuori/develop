@@ -69,7 +69,7 @@ services:
       # Ollama (Primary LLM)
       - OLLAMA_HOST=central-ollama
       - OLLAMA_PORT=11434
-      - OLLAMA_MODEL=llama3.2:latest
+      - OLLAMA_MODEL=llama3.2:3b
       - USE_OLLAMA=true
       - LLM_PROVIDER=ollama
 
@@ -102,38 +102,23 @@ services:
         reservations:
           memory: 1G
           cpus: '1.0'
+      # PgAdmin for database management (disabled - causing restart issues)
+      # pgadmin:
+      #   image: dpage/pgadmin4:latest
+      #   container_name: iss-pgadmin
+      #   environment:
+      #     PGADMIN_DEFAULT_EMAIL: admin@iss.local
+      #     PGADMIN_DEFAULT_PASSWORD: admin123
+      #     PGADMIN_CONFIG_SERVER_MODE: 'False'
+      #   volumes:
+      #     - pgadmin_data:/var/lib/pgadmin
+      #   ports:
+      #     - "5050:80"
+      #   networks:
+      #     - iss-network
+      #   depends_on:
+      #     - postgres
 
-  # PgAdmin for database management (disabled - causing restart issues)
-  # pgadmin:
-  #   image: dpage/pgadmin4:latest
-  #   container_name: iss-pgadmin
-  #   environment:
-  #     PGADMIN_DEFAULT_EMAIL: admin@iss.local
-  #     PGADMIN_DEFAULT_PASSWORD: admin123
-  #     PGADMIN_CONFIG_SERVER_MODE: 'False'
-  #   volumes:
-  #     - pgadmin_data:/var/lib/pgadmin
-  #   ports:
-  #     - "5050:80"
-  #   networks:
-  #     - iss-network
-  #   depends_on:
-  #     - postgres
-
-  # Redis Commander for Redis management
-  redis-commander:
-    image: rediscommander/redis-commander:latest
-    container_name: iss-redis-commander
-    environment:
-      REDIS_HOSTS: redis:redis:6379
-      HTTP_USER: admin
-      HTTP_PASSWORD: admin123
-    ports:
-      - "8082:8081"
-    networks:
-      - iss-network
-      # depends_on:
-      #   - redis
 
       # ISS Frontend - React + Nginx ottimizzato
   frontend:
