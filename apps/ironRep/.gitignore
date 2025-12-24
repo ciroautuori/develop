@@ -113,4 +113,5 @@ docker-compose.override.yml
 # ================================
 # Agent Knowledge Base
 # ================================
+!.agent/
 

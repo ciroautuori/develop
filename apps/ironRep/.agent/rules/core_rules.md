@@ -24,3 +24,14 @@
 2. **Pianificazione**: Definisci la modifica atomica.
 3. **Esecuzione**: Applica la modifica.
 4. **Verifica**: Esegui SEMPRE un test (unitario o end-to-end via script) prima di dichiarare il successo.
+
+## 4. Vincoli di Dominio (CRITICAL)
+### Nutrizione
+- **ONLY FatSecret**: La ricerca alimenti e i valori nutrizionali devono provenire ESCLUSIVAMENTE dalle API FatSecret Geolocalizzate (es. `region=IT`).
+- **NO Generic DB**: Non usare database locali RAG per cercare calorie o macro di alimenti generici. La precisione di FatSecret è l'unica accettata.
+
+### Wizard & Onboarding
+- **Smart Hybrid Model**:
+    - **Dati Strutturati** (Infortuni, Preferenze Cibo) -> Raccolti via **UI Visuale** (Form, Pulsanti).
+    - **Conversazione** -> Gestita da **Agente AI** che riceve il contesto visuale come "verità".
+- **Zero Redundancy**: L'agente non deve MAI chiedere informazioni già fornite nei passaggi visuali.
