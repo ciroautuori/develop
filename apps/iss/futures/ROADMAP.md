@@ -10,7 +10,7 @@
 ## 🛤️ Roadmap Overview
 
 ### Q1 2026 - Intelligence & Automation
-- [x] **Personal RAG**: Centralized vector database for agent context.
+- [x] **Personal RAG**: Centralized vector database for agent context. (Implemented via lightweight HTTP architecture to optimize resources).
 - [ ] **Agent "Analyst"**: Specialized agent for deep tender analysis.
 - [ ] **Automated Grant Writing**: Draft generation based on stored templates.
 
