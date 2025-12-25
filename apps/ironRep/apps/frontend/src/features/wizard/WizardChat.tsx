@@ -46,6 +46,7 @@ interface WizardChatProps {
     lifestyle?: Record<string, unknown> | null;
     nutritionGoals?: Record<string, unknown> | null;
   };
+  mode?: "chat" | "summary"; // NEW: Support summary mode
 }
 
 interface BiometricsData {
@@ -58,7 +59,7 @@ interface BiometricsData {
 // Quick replies now come from backend based on current phase
 const WIZARD_VERSION = "2.0.1";
 
-export function WizardChat({ onComplete, initialBiometrics, initialContext }: WizardChatProps) {
+export function WizardChat({ onComplete, initialBiometrics, initialContext, mode = "chat" }: WizardChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -252,6 +253,54 @@ export function WizardChat({ onComplete, initialBiometrics, initialContext }: Wi
     return agentConfig.has_injury ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700';
   };
 
+  // === RENDER for SUMMARY MODE ===
+  if (mode === "summary") {
+    const summaryMessage = messages.find(m => m.role === "assistant")?.content || "Generazione riepilogo...";
+
+    return (
+      <div className="flex flex-col h-[100dvh] min-h-[100dvh] bg-background p-4 sm:p-6">
+        <div className="flex-1 flex flex-col items-center justify-center max-w-lg mx-auto w-full">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+            <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+          </div>
+
+          <h2 className="text-2xl font-bold mb-2 text-center">Riepilogo Profilo</h2>
+          <p className="text-muted-foreground text-center mb-8">Ecco cosa abbiamo raccolto. Confermi?</p>
+
+          <div className="bg-card border rounded-2xl p-6 w-full shadow-sm mb-8">
+            {isLoading && messages.length === 0 ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Analisi contesto...</span>
+              </div>
+            ) : (
+              <p className="whitespace-pre-wrap text-base leading-relaxed">{summaryMessage}</p>
+            )}
+          </div>
+
+          <div className="w-full space-y-3">
+            <button
+              onClick={() => sendMessage("Tutto corretto, procedi pure.")}
+              disabled={isLoading}
+              className="w-full bg-primary text-primary-foreground h-14 rounded-xl font-bold text-lg hover:bg-primary/90 transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-primary/25"
+            >
+              {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <CheckCircle2 className="w-6 h-6" />}
+              Conferma e Genera Piano
+            </button>
+
+            <button
+              onClick={() => alert("Funzione modifica in arrivo! Per ora usa la chat completa.")}
+              className="w-full bg-secondary/50 text-foreground h-12 rounded-xl font-medium hover:bg-secondary transition-colors"
+            >
+              Modifica dettagli
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // === RENDER for CHAT MODE (Classic) ===
   return (
     <div className="flex flex-col h-[100dvh] min-h-[100dvh] bg-gradient-to-b from-background to-secondary/10 overflow-y-auto">
       {/* Header with selections */}

@@ -7,6 +7,8 @@ Focus su: periodizzazione, progressione, tecnica, esercizi sicuri.
 from typing import List, Dict, Any
 try:
     from langchain.agents import AgentExecutor, create_tool_calling_agent
+    from langchain.agents.format_scratchpad.tools import format_to_tool_messages
+    from langchain.agents.output_parsers.tools import ToolsAgentOutputParser
 except ImportError:
     # Fallback for broken langchain installation
     class AgentExecutor:
@@ -186,10 +188,23 @@ ESEMPI DOMANDE DA REDIRIGERE:
         ])
 
         # Create agent
-        self.agent = create_tool_calling_agent(
-            llm=self.llm,
-            tools=self.tools,
-            prompt=self.prompt
+        # Manually create the tool calling agent to avoid introspection bugs
+        try:
+            self.llm_with_tools = self.llm.bind_tools(self.tools)
+        except (NotImplementedError, AttributeError):
+            from src.infrastructure.logging import get_logger
+            logger = get_logger(__name__)
+            logger.warning(f"LLM {type(self.llm).__name__} does not support bind_tools. Tools disabled.")
+            self.llm_with_tools = self.llm
+        
+        self.agent = (
+            {
+                "input": lambda x: x["input"],
+                "agent_scratchpad": lambda x: format_to_tool_messages(x["intermediate_steps"]),
+            }
+            | self.prompt
+            | self.llm_with_tools
+            | ToolsAgentOutputParser()
         )
 
         # Create executor

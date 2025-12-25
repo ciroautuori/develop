@@ -1,28 +1,30 @@
 /**
- * Enhanced Wizard Orchestrator (Visual Smart Hybrid)
+ * Enhanced Wizard Orchestrator (Visual Smart Hybrid - UX POLISHED)
  * 
  * Flow:
  * 1. IntakeStep (Unified) -> Collects Biometrics, Goals, Module Flags
  * 2. Conditional Steps (Visual):
  *    - InjuryDetailsStep (if hasInjury)
  *    - FoodPreferencesStep (if wantNutrition)
- * 3. Smart Chat (WizardChat) -> Refines plan with full context
- * 4. Completion
+ * 3. Silent Completion -> Background AI Profile Build -> Plans
  */
 
 import { useState, useCallback, useEffect } from "react";
-import { WizardChat } from "./WizardChat";
+// WizardChat REMOVED - Silent Flow
 import { IntakeStep, type IntakeData } from "./steps/IntakeStep";
 import { InjuryDetailsStep, type InjuryDetails } from "./steps/InjuryDetailsStep";
 import { FoodPreferencesStep } from "./steps/FoodPreferencesStep";
-import { onboardingApi, usersApi, type UserProfile } from "../../lib/api";
+import { onboardingApi, usersApi, wizardApi, type UserProfile } from "../../lib/api";
 import { plansApi as weeklyPlansApi } from "../../lib/api/plans";
 import { logger } from "../../lib/logger";
 import { useNavigate } from "@tanstack/react-router";
 import { Loader2, AlertCircle } from "lucide-react";
 import { toast } from "../../components/ui/Toast";
+// UX Polish Imports
+import { useWizardDraft, type WizardDraft } from "./hooks/useWizardDraft";
+import { SmartLoader } from "./components/SmartLoader";
 
-type WizardStep = "intake" | "injury-details" | "food-prefs" | "chat" | "completing" | "error";
+type WizardStep = "intake" | "injury-details" | "food-prefs" | "completing-silent" | "completing" | "error";
 
 interface OnboardingError {
   message: string;
@@ -39,13 +41,35 @@ export function WizardOrchestrator({ onComplete }: { onComplete?: () => void }) 
   const [intakeData, setIntakeData] = useState<IntakeData | null>(null);
   const [injuryData, setInjuryData] = useState<InjuryDetails | null>(null);
   const [foodPrefs, setFoodPrefs] = useState<{ liked: string[], disliked: string[] } | null>(null);
-  const [chatData, setChatData] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState<OnboardingError | null>(null);
 
-  // Restore Logic
+  // UX Hooks
+  const { draft, hasLoaded, saveDraft, clearDraft } = useWizardDraft();
+
+  // Restore Logic (Draft > Server User Data)
   useEffect(() => {
+    if (!hasLoaded) return; // Wait for hooks
+
     const restoreProgress = async () => {
       try {
+        // Priority 1: Local Draft (if valid and recent)
+        if (draft && draft.intakeData) {
+          logger.info("Found local draft, restoring...", draft);
+          setIntakeData(draft.intakeData);
+          if (draft.injuryData) setInjuryData(draft.injuryData);
+          if (draft.foodPrefs) setFoodPrefs(draft.foodPrefs);
+
+          // Only restore step if valid
+          if (draft.step && ["intake", "injury-details", "food-prefs"].includes(draft.step)) {
+            setCurrentStep(draft.step as WizardStep);
+          }
+
+          toast.success({ title: "Bentornato!", description: "Abbiamo recuperato i tuoi progressi." });
+          setIsRestoring(false);
+          return;
+        }
+
+        // Priority 2: Server User Data
         const user = await usersApi.getMe();
         if (user) {
           // Simplistic restore logic: if we have basic data, stay on intake or move if fully done.
@@ -72,29 +96,19 @@ export function WizardOrchestrator({ onComplete }: { onComplete?: () => void }) 
       }
     };
     restoreProgress();
-  }, []);
+  }, [hasLoaded]); // Run once when hook is ready
+
+  // Auto-Save Effect
+  useEffect(() => {
+    if (!isRestoring && !isSubmitting && currentStep !== "completing" && currentStep !== "completing-silent") {
+      saveDraft(currentStep, intakeData, injuryData, foodPrefs);
+    }
+  }, [currentStep, intakeData, injuryData, foodPrefs, saveDraft, isRestoring, isSubmitting]);
 
   // STEP 1: Intake Complete
   const handleIntakeComplete = async (data: IntakeData) => {
     logger.info("✅ Intake collected", { data });
     setIntakeData(data);
-
-    // Persist immediately
-    try {
-      const me = await usersApi.getMe();
-      await usersApi.update(me.id, {
-        age: data.age,
-        weight_kg: data.weight,
-        height_cm: data.height,
-        sex: data.sex,
-        primary_goal: data.primaryGoal,
-        training_experience: data.experience,
-        available_days: data.daysPerWeek,
-        has_injury: data.hasInjury
-      });
-    } catch (e) {
-      logger.error("Failed to persist intake data", { error: e });
-    }
 
     // Determine Next Step
     if (data.hasInjury) {
@@ -102,7 +116,8 @@ export function WizardOrchestrator({ onComplete }: { onComplete?: () => void }) 
     } else if (data.wantNutrition) {
       setCurrentStep("food-prefs");
     } else {
-      setCurrentStep("chat");
+      // Direct finish
+      triggerSilentCompletion(data, null, null);
     }
   };
 
@@ -115,7 +130,7 @@ export function WizardOrchestrator({ onComplete }: { onComplete?: () => void }) 
     if (intakeData?.wantNutrition) {
       setCurrentStep("food-prefs");
     } else {
-      setCurrentStep("chat");
+      triggerSilentCompletion(intakeData!, data, null);
     }
   };
 
@@ -123,43 +138,60 @@ export function WizardOrchestrator({ onComplete }: { onComplete?: () => void }) 
   const handleFoodComplete = (prefs: { liked: string[], disliked: string[] }) => {
     logger.info("✅ Food prefs collected", prefs);
     setFoodPrefs(prefs);
-    setCurrentStep("chat");
+    triggerSilentCompletion(intakeData!, injuryData, prefs);
   };
 
   // Skip handlers to keep flow moving
   const handleSkipInjury = () => {
-    // If skipped, we assume they'll discuss it in chat
+    // If skipped, move on
     if (intakeData?.wantNutrition) setCurrentStep("food-prefs");
-    else setCurrentStep("chat");
+    else triggerSilentCompletion(intakeData!, null, null);
   };
 
-  const handleSkipFood = () => setCurrentStep("chat");
+  const handleSkipFood = () => triggerSilentCompletion(intakeData!, injuryData, null);
 
 
-  // STEP 3: Chat Complete -> Finish
-  const handleChatComplete = (finalData: Record<string, unknown>) => {
-    logger.info("✅ Chat completed", { finalData });
-    setChatData(finalData);
-    if (intakeData) {
-      completeOnboarding(intakeData, injuryData, foodPrefs, finalData);
+  // TRIGGER SILENT COMPLETION
+  const triggerSilentCompletion = useCallback(async (
+    intake: IntakeData,
+    injury: InjuryDetails | null,
+    food: { liked: string[], disliked: string[] } | null
+  ) => {
+    setCurrentStep("completing-silent");
+    setIsSubmitting(true);
+
+    try {
+      // 1. Wizard Agent Silent Build (Context, RAG, Agent Config)
+      await wizardApi.completeSilent({
+        intake,
+        injuryDetails: injury,
+        foodPreferences: food
+      });
+
+      // 2. Standard Finalization (Plans generation)
+      await completeOnboarding(intake, injury, food);
+
+    } catch (err: any) {
+      logger.error("Silent completion failed", err);
+      setError({ message: err.message || "Errore durante la creazione del profilo AI", retryData: { intake, injury, food } });
+      setCurrentStep("error");
     }
-  };
+  }, []);
 
-  // FINALIZATION
+  // FINALIZATION (Plans)
   const completeOnboarding = useCallback(async (
     intake: IntakeData,
     injury: InjuryDetails | null,
-    food: { liked: string[], disliked: string[] } | null,
-    chatResult: Record<string, unknown>
+    food: { liked: string[], disliked: string[] } | null
   ) => {
-    setCurrentStep("completing");
+    setCurrentStep("completing"); // Just visual change
     setIsSubmitting(true);
     setError(null);
 
     try {
       logger.info("Finalizing onboarding...");
 
-      // 1. Merge all data
+      // 1. Merge all data for User Profile
       const completeProfile: Partial<UserProfile> = {
         age: intake.age,
         weight_kg: intake.weight,
@@ -173,14 +205,9 @@ export function WizardOrchestrator({ onComplete }: { onComplete?: () => void }) 
         // Injury Details
         ...(injury ? {
           injury_diagnosis: injury.diagnosis,
-          injury_date: injury.injury_date,
+          injury_date: injury?.injury_date, // Allow undefined
           injury_description: injury.injury_description
         } : {}),
-
-        // Food Prefs are handled via specialized APIs or Agent Context usually.
-        // For now, we rely on the agent having received them in context to generate the Plan.
-
-        ...chatResult // Merge any extra fields extracted by chat
       };
 
       // 2. Call Complete API
@@ -207,27 +234,42 @@ export function WizardOrchestrator({ onComplete }: { onComplete?: () => void }) 
 
       Promise.allSettled(planPromises);
 
+      // CLEAR DRAFT ON SUCCESS
+      clearDraft();
+
       // 4. Navigate
-      toast.success({ title: "Tutto pronto!", description: "Il tuo piano è in fase di generazione." });
-      if (onComplete) onComplete();
-      else navigate({ to: "/" });
+      toast.success({ title: "Profilo creato!", description: "Generazione piano in corso..." });
+
+      // Delay slightly for UX
+      setTimeout(() => {
+        if (onComplete) onComplete();
+        else navigate({ to: "/" });
+      }, 1500);
 
     } catch (err: any) {
       logger.error("Onboarding failed", err);
-      setError({ message: err.message || "Errore sconosciuto", retryData: { intake, chatResult } });
+      setError({ message: err.message || "Errore sconosciuto", retryData: { intake, injury, food } });
       setCurrentStep("error");
     } finally {
       setIsSubmitting(false);
     }
-  }, [navigate, onComplete]);
+  }, [navigate, onComplete, clearDraft]); // Added clearDraft dependency
 
   // RENDER
 
-  if (isRestoring) {
+  if (isRestoring || currentStep === "completing-silent" || currentStep === "completing") {
+    // USE SMART LOADER HERE
+    if (currentStep === "completing-silent" || currentStep === "completing") {
+      return <SmartLoader />;
+    }
+
+    // Initial Restore Loader
     return (
-      <div className="flex flex-col items-center justify-center min-h-[100dvh] bg-background">
+      <div className="flex flex-col items-center justify-center min-h-[100dvh] bg-background text-center px-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Caricamento...</p>
+        <h2 className="text-xl font-bold">
+          Caricamento...
+        </h2>
       </div>
     );
   }
@@ -244,40 +286,6 @@ export function WizardOrchestrator({ onComplete }: { onComplete?: () => void }) 
     return <FoodPreferencesStep onComplete={handleFoodComplete} onSkip={handleSkipFood} />;
   }
 
-  if (currentStep === "chat") {
-    return (
-      <WizardChat
-        onComplete={handleChatComplete}
-        initialBiometrics={{
-          age: intakeData?.age || 0,
-          weight_kg: intakeData?.weight || 0,
-          height_cm: intakeData?.height || 0,
-          sex: intakeData?.sex || "other"
-        }}
-        initialContext={{
-          intake: intakeData,
-          // Pass collected visual data to agent context so it knows it exists!
-          injuryDetails: injuryData,
-          foodPreferences: foodPrefs,
-          goals: {
-            primary: intakeData?.primaryGoal,
-            experience: intakeData?.experience
-          }
-        }}
-      />
-    );
-  }
-
-  if (currentStep === "completing") {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[100dvh] bg-background">
-        <Loader2 className="w-12 h-12 animate-spin text-primary mb-6" />
-        <h2 className="text-xl font-bold">Creazione Profilo...</h2>
-        <p className="text-muted-foreground mt-2">L'AI sta analizzando i tuoi dati.</p>
-      </div>
-    );
-  }
-
   if (currentStep === "error") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[100dvh] bg-background px-4 text-center">
@@ -287,8 +295,8 @@ export function WizardOrchestrator({ onComplete }: { onComplete?: () => void }) 
         <h2 className="text-xl font-bold">Qualcosa è andato storto</h2>
         <p className="text-muted-foreground mt-2 mb-6">{error?.message}</p>
         <button
-          onClick={() => error && completeOnboarding(intakeData!, injuryData, foodPrefs, error.retryData.chatResult)}
-          className="px-6 py-3 bg-primary text-white rounded-xl font-semibold"
+          onClick={() => error && triggerSilentCompletion(intakeData!, injuryData, foodPrefs)}
+          className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-colors"
         >
           Riprova
         </button>

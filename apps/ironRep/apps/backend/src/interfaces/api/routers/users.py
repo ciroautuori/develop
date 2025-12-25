@@ -10,7 +10,13 @@ from typing import Dict, Any
 from datetime import datetime
 from src.infrastructure.persistence.database import get_db
 from src.infrastructure.config.dependencies import get_user_repository, get_onboarding_use_case
-from src.application.dtos.dtos import UserDTO, OnboardingRequestDTO
+from src.application.dtos.dtos import (
+    UserDTO, 
+    OnboardingRequestDTO,
+    BiometricsUpdateDTO,
+    MedicalUpdateDTO,
+    GoalsUpdateDTO
+)
 from src.infrastructure.security.security import CurrentUser
 from src.infrastructure.ai.user_context_rag import get_user_context_rag
 from src.infrastructure.external.google_fit_service import GoogleFitService
@@ -79,95 +85,118 @@ async def get_current_user_profile(
     return {"success": True, "user": user_entity.to_dict() if user_entity else {"id": str(current_user.id)}}
 
 
-@router.put("/me", response_model=Dict[str, Any])
-async def update_user_profile(
-    updates: Dict[str, Any],
+@router.patch("/me/biometrics", response_model=Dict[str, Any])
+async def update_biometrics(
+    request: BiometricsUpdateDTO,
     current_user: CurrentUser,
     db: Session = Depends(get_db)
 ):
     """
-    Update current user profile.
-
-    Allows updating personal info, goals, equipment, and preferences.
+    Update biometric data (age, weight, height, sex).
     """
     try:
-        # Update allowed fields - comprehensive list for all wizard data
-        allowed_fields = [
-            # Basic info
-            'name', 'age', 'weight_kg', 'height_cm', 'sex',
-            # Goals
-            'target_return_date', 'primary_goal', 'goals_description',
-            # Equipment & Preferences
-            'equipment_available', 'preferred_training_time', 'session_duration_minutes',
-            # Training Goals (from TrainingGoalsStep)
-            'training_experience', 'training_years', 'secondary_goals',
-            'available_days', 'preferred_time', 'intensity_preference',
-            # Lifestyle (from LifestyleStep)
-            'activity_level', 'work_type', 'work_hours_per_day', 'commute_active',
-            'stress_level', 'stress_sources', 'sleep_hours', 'sleep_quality',
-            'sleep_schedule', 'recovery_capacity', 'health_conditions', 'supplements_used',
-            # Nutrition Goals (from NutritionGoalsStep)
-            'nutrition_goal', 'diet_type', 'calorie_preference', 'custom_calories',
-            'manual_target_calories', 'manual_target_protein_g', 'manual_target_carbs_g', 'manual_target_fat_g',
-            'protein_priority', 'macro_preference', 'meal_frequency', 'meal_timing',
-            'intermittent_window', 'budget_preference', 'cooking_skill', 'meal_prep_available',
-            'supplements_interest',
-            # Allergies & Restrictions
-            'allergies', 'intolerances', 'dietary_restrictions',
-            # Food Preferences
-            'favorite_foods', 'disliked_foods',
-            # Injury details
-            'injury_date', 'diagnosis', 'injury_description', 'pain_locations',
-            # Baseline strength
-            'baseline_deadlift_1rm', 'baseline_squat_1rm', 'baseline_front_squat_1rm',
-            'baseline_bench_press_1rm', 'baseline_shoulder_press_1rm',
-            'baseline_snatch_1rm', 'baseline_clean_jerk_1rm', 'baseline_pullups_max',
-        ]
+        user_repo = get_user_repository(db)
+        updates = request.dict(exclude_unset=True)
+        
+        if not updates:
+             return {"success": True, "message": "No changes provided"}
 
-        for field, value in updates.items():
-            if field in allowed_fields and hasattr(current_user, field):
-                setattr(current_user, field, value)
-
-        # Persist updates (CurrentUser is an ORM model bound to the session)
+        for key, value in updates.items():
+            setattr(current_user, key, value)
+            
         db.add(current_user)
         db.commit()
         db.refresh(current_user)
+        
+        # Update RAG
+        rag = get_user_context_rag()
+        rag.store_context(
+            user_id=current_user.id,
+            text=f"Updated Biometrics: {updates}",
+            category="history",
+            metadata={"source": "patch_biometrics"}
+        )
 
-        user_repo = get_user_repository(db)
-        updated_entity = user_repo.get_by_id(str(current_user.id))
-
-        # Update RAG context with new profile data
-        try:
-            rag = get_user_context_rag()
-
-            # Create context text based on updates
-            context_text = "Aggiornamento profilo utente:\n"
-            for k, v in updates.items():
-                context_text += f"- {k}: {v}\n"
-
-            # Store in 'preference' category (general profile info)
-            rag.store_context(
-                user_id=current_user.id,
-                text=context_text,
-                category="preference",
-                metadata={
-                    "type": "profile_update",
-                    "timestamp": datetime.now().isoformat(),
-                    "updates": updates
-                }
-            )
-        except Exception as e:
-            print(f"⚠️ Failed to update RAG context: {e}")
-
-        return {
-            "success": True,
-            "user": updated_entity.to_dict() if updated_entity else {"id": str(current_user.id)}
-        }
+        return {"success": True, "user": user_repo.get_by_id(str(current_user.id)).to_dict()}
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Errore aggiornamento profilo: {str(e)}"
+            detail=f"Error updating biometrics: {str(e)}"
+        )
+
+@router.patch("/me/medical", response_model=Dict[str, Any])
+async def update_medical(
+    request: MedicalUpdateDTO,
+    current_user: CurrentUser,
+    db: Session = Depends(get_db)
+):
+    """
+    Update medical/injury status.
+    """
+    try:
+        user_repo = get_user_repository(db)
+        updates = request.dict(exclude_unset=True)
+        
+        for key, value in updates.items():
+            setattr(current_user, key, value)
+            
+        db.add(current_user)
+        db.commit()
+        db.refresh(current_user)
+        
+        # Update RAG (Essential for Medical Agent)
+        rag = get_user_context_rag()
+        rag.store_context(
+            user_id=current_user.id,
+            text=f"Updated Medical Status: {updates}",
+            category="medical", # Categorize strictly as medical
+            metadata={"source": "patch_medical", "has_injury": request.has_injury}
+        )
+
+        return {"success": True, "user": user_repo.get_by_id(str(current_user.id)).to_dict()}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating medical data: {str(e)}"
+        )
+
+@router.patch("/me/goals", response_model=Dict[str, Any])
+async def update_goals(
+    request: GoalsUpdateDTO,
+    current_user: CurrentUser,
+    db: Session = Depends(get_db)
+):
+    """
+    Update training goals and preferences.
+    """
+    try:
+        user_repo = get_user_repository(db)
+        updates = request.dict(exclude_unset=True)
+        
+        for key, value in updates.items():
+            setattr(current_user, key, value)
+            
+        db.add(current_user)
+        db.commit()
+        db.refresh(current_user)
+        
+        # Update RAG
+        rag = get_user_context_rag()
+        rag.store_context(
+            user_id=current_user.id,
+            text=f"Updated Goals: {updates}",
+            category="goal",
+            metadata={"source": "patch_goals"}
+        )
+
+        return {"success": True, "user": user_repo.get_by_id(str(current_user.id)).to_dict()}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating goals: {str(e)}"
         )
 
 

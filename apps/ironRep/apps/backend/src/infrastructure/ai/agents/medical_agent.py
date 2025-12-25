@@ -239,7 +239,14 @@ ESEMPI DOMANDE DA REDIRIGERE:
         # self.agent = create_tool_calling_agent(llm=self.llm, tools=self.tools, prompt=self.prompt)
         
         # Manually create the tool calling agent to avoid introspection bugs in create_tool_calling_agent
-        self.llm_with_tools = self.llm.bind_tools(self.tools)
+        try:
+            self.llm_with_tools = self.llm.bind_tools(self.tools)
+        except (NotImplementedError, AttributeError):
+            # Fallback for models without bind_tools support
+            from src.infrastructure.logging import get_logger
+            logger = get_logger(__name__)
+            logger.warning(f"LLM {type(self.llm).__name__} does not support bind_tools. Tools disabled.")
+            self.llm_with_tools = self.llm
         self.agent = (
             {
                 "input": lambda x: x["input"],

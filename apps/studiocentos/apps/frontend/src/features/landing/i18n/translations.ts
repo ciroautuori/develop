@@ -120,9 +120,9 @@ export const translations = {
       freeConsult: 'Consulenza gratuita 30min',
       officeAI: {
         title: 'Office AI & Digital Workspace',
-        subtitle: 'Consulenza a 360° per il tuo ecosistema AI.',
-        description: 'Dal potenziamento di Google Workspace al setup di NotebookLM e Colab. Integriamo Gemini, AI Studio, Claude, GPT e Manus nei tuoi processi. Rimani sempre aggiornato e massimizza la produttività con un Office su misura.',
-        cta: 'Richiedi Consulenza Office AI',
+        subtitle: 'Strumenti da sviluppatore, adattati alla tua professione.',
+        description: 'Hai mai pensato di usare un IDE per analizzare contratti legali? Noi sì. Configuriamo strumenti avanzati (NotebookLM, Cursor, Gemini, GPT) per trasformarli nei tuoi migliori alleati. Non solo setup, ma formazione strategica: lavorerai con l\'AI come noi lavoriamo col codice.',
+        cta: 'Scopri il Tuo Nuovo Office',
       },
     },
     // ToolAI Section
@@ -434,9 +434,9 @@ export const translations = {
       freeConsult: 'Free 30min consultation',
       officeAI: {
         title: 'Office AI & Digital Workspace',
-        subtitle: '360° Consultation for your AI ecosystem.',
-        description: 'From Google Workspace optimization to NotebookLM and Colab setup. We integrate Gemini, AI Studio, Claude, GPT, and Manus into your workflows. Stay updated and maximize productivity with a custom-tailored Office.',
-        cta: 'Request Office AI Consultation',
+        subtitle: 'Developer-grade tools, adapted to your profession.',
+        description: 'Have you ever thought about using an IDE to analyze legal contracts? We have. We configure advanced tools (NotebookLM, Cursor, Gemini, GPT) to become your best allies. Not just setup, but strategic training: you will work with AI like we work with code.',
+        cta: 'Discover Your New Office',
       },
     },
     // ToolAI Section
@@ -746,9 +746,9 @@ export const translations = {
       freeConsult: 'Consulta gratuita 30min',
       officeAI: {
         title: 'Office IA & Digital Workspace',
-        subtitle: 'Consultoría 360° para tu ecosistema IA.',
-        description: 'Desde la optimización de Google Workspace hasta el setup de NotebookLM y Colab. Integramos Gemini, AI Studio, Claude, GPT y Manus en tus procesos. Mantente actualizado y maximiza la productividad con una Office a medida.',
-        cta: 'Solicitar Consultoría Office IA',
+        subtitle: 'Herramientas de desarrollador, adaptadas a tu profesión.',
+        description: '¿Alguna vez pensaste en usar un IDE para analizar contratos legales? Nosotros sí. Configuramos herramientas avanzadas (NotebookLM, Cursor, Gemini, GPT) para transformarlas en tus mejores aliados. No solo setup, sino formación estratégica: trabajarás con la IA como nosotros trabajamos con código.',
+        cta: 'Descubre Tu Nuevo Office',
       },
     },
     // ToolAI Section

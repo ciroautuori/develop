@@ -178,7 +178,7 @@ class LLMService:
         # =====================================================================
         # GOOGLE GEMINI - Last resort fallback
         # =====================================================================
-        if self.google_api_key:
+        if self.google_api_key and "placeholder" not in self.google_api_key:
             try:
                 google_client = ChatGoogleGenerativeAI(
                     model=settings.gemini_model,

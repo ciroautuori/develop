@@ -139,3 +139,28 @@ class OnboardingRequestDTO(BaseModel):
     coach_mode: Optional[str] = Field("general_fitness", description="crossfit, bodybuilding, powerlifting, running, functional, general_fitness, rehab_focused")
     nutrition_mode: Optional[str] = Field("tips_tracking", description="full_diet_plan, recipes_only, tips_tracking, disabled")
     sport_type: Optional[str] = Field(None, description="Specific sport type if selected")
+
+
+class BiometricsUpdateDTO(BaseModel):
+    """DTO for updating biometric data specifically."""
+    age: Optional[int] = Field(None, ge=18, le=100)
+    weight_kg: Optional[float] = Field(None, ge=30, le=300)
+    height_cm: Optional[float] = Field(None, ge=100, le=250)
+    sex: Optional[str] = Field(None, pattern="^(M|F|O)$")
+
+class MedicalUpdateDTO(BaseModel):
+    """DTO for updating medical/injury status."""
+    has_injury: bool
+    injury_date: Optional[str] = None
+    diagnosis: Optional[str] = None
+    pain_locations: List[str] = Field(default_factory=list)
+    injury_description: Optional[str] = None
+    medical_mode: Optional[str] = Field(None, description="injury_recovery, wellness_tips")
+
+class GoalsUpdateDTO(BaseModel):
+    """DTO for updating training goals."""
+    primary_goal: Optional[str] = None
+    training_experience: Optional[str] = None
+    available_days: Optional[int] = Field(None, ge=1, le=7)
+    coach_mode: Optional[str] = None
+    nutrition_mode: Optional[str] = None

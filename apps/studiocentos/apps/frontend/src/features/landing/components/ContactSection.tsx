@@ -58,7 +58,7 @@ export function ContactSection() {
               </p>
 
               <Button asChild size="lg" variant="secondary" className="w-full sm:w-auto h-12 px-8">
-                <a href="mailto:consulting@studiocentos.it?subject=Richiesta%20Office%20AI%20Consulting">
+                <a href="#prenota">
                   {t.contact.officeAI.cta}
                 </a>
               </Button>

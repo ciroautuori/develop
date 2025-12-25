@@ -390,7 +390,9 @@ Wizard: "No glutine. Riepilogo: Bodybuilding 5x/sett 75min, palestra completa, s
                 session["collected_data"][k] = v
 
         # Store initial context (from Wizard UI steps)
+        has_rich_context = False
         if initial_context:
+            has_rich_context = True
             session["initial_context"] = initial_context
             # Map frontend names to backend names for better consistency
             mappings = {
@@ -460,27 +462,67 @@ Wizard: "No glutine. Riepilogo: Bodybuilding 5x/sett 75min, palestra completa, s
         # CRITICAL: Trigger config update to detect modes from initial data
         self._update_agent_config(session, "", {})
 
-        # Generate greeting - short and direct
+        # === SMART PHASE JUMPING ===
+        # Determine where to start based on how much data we already have
+        start_phase = InterviewPhase.GREETING
+        
+        has_injury = session["agent_config"].get("has_injury", False)
+        has_injury_details = session["collected_data"].get("has_injury_details_from_ui", False)
+        has_goal = bool(session["collected_data"].get("primary_goal"))
+        has_food = session["collected_data"].get("has_food_prefs_from_ui", False)
+
+        # Logic to skip phases
+        if has_rich_context:
+            if has_injury and not has_injury_details:
+                # We know they have injury but missed details -> Ask Injury Details
+                start_phase = InterviewPhase.PAIN_ASSESSMENT
+            elif has_injury and has_injury_details and not has_goal:
+                 # Should not happen if Intake is done properly, but fallback
+                start_phase = InterviewPhase.SPORT_SELECTION
+            elif has_injury and has_injury_details and has_goal and not has_food:
+                # Have medical + sport info -> Ask Equipment or Nutrition
+                start_phase = InterviewPhase.EQUIPMENT
+            elif not has_injury and has_goal and not has_food:
+                 # Healthy user, has goal -> Ask Equipment or Nutrition
+                start_phase = InterviewPhase.EQUIPMENT
+            elif has_goal and has_food:
+                 # Have EVERYTHING -> Go straight to Summary/Final confirmation
+                 # Or maybe ask about Equipment if we missed it?
+                 if not session["collected_data"].get("equipment"):
+                     start_phase = InterviewPhase.EQUIPMENT
+                 else:
+                     start_phase = InterviewPhase.SUMMARY
+            else:
+                # Default if partial data but enough to skip greeting
+                start_phase = InterviewPhase.SPORT_SELECTION
+
+        session["phase"] = start_phase
+
+        # Generate greeting/first question
+        # We explicitly dump ALL collected data so the LLM knows what NOT to ask.
         prompt = f"""
 {self.SYSTEM_PROMPT}
 
-L'utente è qui per {session["collected_data"].get("primary_goal", "allenarsi")}.
-Dati raccolti (Intake):
-- Obiettivo: {session["collected_data"].get("primary_goal")}
-- Infortunio: {'SÌ' if session['agent_config'].get('has_injury') else 'NO'}
-- Dettagli Infortunio: {session["collected_data"].get("injury_diagnosis", "N/A")}
+L'utente sta iniziando il wizard. 
+Abbiamo già raccolto questi dati tramite UI (NON chiedere di nuovo):
+- Nome: {session["collected_data"].get("name", "N/A")}
+- Obiettivo: {session["collected_data"].get("primary_goal", "N/A")}
+- Livello: {session["collected_data"].get("experience", "N/A")}
+- Giorni/Sett: {session["collected_data"].get("daysPerWeek", "N/A")}
+- Infortunio (Y/N): {'SÌ' if has_injury else 'NO'}
+- Dettagli Infortunio: {session["collected_data"].get("injury_diagnosis", "N/A")} (Dolore: {session["collected_data"].get("pain_level", "N/A")}/10)
+- Nutrizione (Y/N): {'SÌ' if has_food else 'NO'}
+- Cibi Preferiti: {session["collected_data"].get("favorite_foods", [])}
+- Cibi Evitati: {session["collected_data"].get("disliked_foods", [])}
 
-ISTRUZIONI PER IL SALUTO:
-1. Sii breve e diretto.
-2. Salutalo per nome se lo conosci.
-3. Se ha un infortunio, ACKNOWLEDGE subito ("Vedo che hai un problema alla schiena...").
-4. Se NO infortunio, vai dritto al punto ("Ottimo che stai bene! Parliamo del piano...").
-5. Non chiedere cose che già vedi qui sopra.
+ISTRUZIONI SPECIFICHE:
+1. Sii breve e diretto (Max 2 frasi).
+2. Fai un brevissimo riepilogo di ciò che sai ("Ciao [Nome], vedo che vuoi fare [Obiettivo] e hai un problema a [Infortunio]...").
+3. Passa SUBITO alla prossima domanda logica per la fase: {start_phase.value.upper()}.
+4. Se la fase è SUMMARY, chiedi solo conferma per procedere.
+5. Se la fase è EQUIPMENT, chiedi dove si allena.
 
-Fase attuale: SALUTO INIZIALE
-{self.PHASE_PROMPTS[InterviewPhase.GREETING]}
-
-Genera un saluto BREVE (max 2 frasi). Non chiedere email o nome.
+Genera il primo messaggio:
 """
 
         response = await self.llm.generate(prompt)
@@ -489,12 +531,12 @@ Genera un saluto BREVE (max 2 frasi). Non chiedere email o nome.
         session["conversation_history"].append({
             "role": "assistant",
             "content": response,
-            "phase": InterviewPhase.GREETING,
+            "phase": start_phase,
             "timestamp": datetime.now().isoformat()
         })
 
-        # Get suggested replies for greeting phase
-        suggested_replies = self._get_suggested_replies(InterviewPhase.GREETING, session)
+        # Get suggested replies for phase
+        suggested_replies = self._get_suggested_replies(start_phase, session)
 
         # Persist session state
         self._save_session(session_id, session)
@@ -503,7 +545,7 @@ Genera un saluto BREVE (max 2 frasi). Non chiedere email o nome.
             "success": True,
             "session_id": session_id,
             "message": response,
-            "phase": InterviewPhase.GREETING,
+            "phase": start_phase,
             "suggested_replies": suggested_replies,
             "completed": False
         }
@@ -572,6 +614,177 @@ Genera un saluto BREVE (max 2 frasi). Non chiedere email o nome.
             "suggested_replies": suggested_replies,
             "completed": False
         }
+
+    async def build_profile_silently(
+        self,
+        user_id: str,
+        session_id: str,
+        initial_context: Dict[str, Any],
+        user_email: str = None
+    ) -> Dict[str, Any]:
+        """
+        Builds the user profile SILENTLY (No Chat).
+        Takes structured data, updates RAG, and configures agents.
+        
+        Args:
+            user_id: User identifier
+            session_id: Session identifier
+            initial_context: Full dict of collected data (intake, injury, food)
+            user_email: Optional email
+            
+        Returns:
+            Dict with final configuration
+        """
+        # 1. Initialize Session
+        session = self._get_session(session_id)
+        session["user_id"] = user_id
+        session["email"] = user_email
+        session["phase"] = InterviewPhase.COMPLETE # Skips straight to complete
+        
+        # 2. Flatten and Store Context
+        # Reuse logic from start_interview but be more aggressive
+        session["initial_context"] = initial_context
+        
+        # Basic mapping
+        if "intake" in initial_context:
+            intake = initial_context["intake"]
+            session["collected_data"].update({
+                "biometrics": {
+                    "age": intake.get("age"),
+                    "weight": intake.get("weight"),
+                    "height": intake.get("height"),
+                    "sex": intake.get("sex")
+                },
+                "primary_goal": intake.get("primaryGoal"),
+                "experience": intake.get("experience"),
+                "days_per_week": intake.get("daysPerWeek"),
+                # Flattened for RAG
+                "age": intake.get("age"),
+                "weight": intake.get("weight"),
+                "height": intake.get("height"),
+                "sex": intake.get("sex"),
+                "goals": intake.get("primaryGoal")
+            })
+            
+            # Agent Config flags
+            session["agent_config"]["has_injury"] = intake.get("hasInjury", False)
+            if intake.get("hasInjury"):
+                session["agent_config"]["medical_mode"] = MedicalMode.INJURY_RECOVERY
+            
+        # Injury Details
+        injury = initial_context.get("injuryDetails")
+        if injury:
+             session["collected_data"].update({
+                 "injury_diagnosis": injury.get("diagnosis"),
+                 "injury_description": injury.get("injury_description"),
+                 "pain_level": injury.get("painLevel"),
+                 "pain_locations": [injury.get("location")] if injury.get("location") else [],
+                 "injury_date": injury.get("injury_date")
+             })
+             
+        # Food Prefs
+        food = initial_context.get("foodPreferences")
+        if food:
+            session["collected_data"].update({
+                "favorite_foods": food.get("liked", []),
+                "disliked_foods": food.get("disliked", [])
+            })
+            session["agent_config"]["nutrition_mode"] = NutritionMode.FULL_DIET_PLAN
+
+        # 3. Store in RAG (Silently) - WITH SEMANTIC ENRICHMENT
+        from src.infrastructure.ai.rag_service import get_rag_service
+        rag_service = get_rag_service()
+        
+        # Helper to generate tags
+        all_text = f"{session['collected_data'].get('primary_goal')} {session['collected_data'].get('injury_diagnosis')} {session['collected_data'].get('injury_description')}"
+        semantic_tags = self._extract_semantic_tags(all_text)
+        
+        # Store Intake Data
+        rag_service.store_context(
+            user_id=user_id,
+            text=f"User Profile: {session['collected_data'].get('age')}y, {session['collected_data'].get('sex')}, {session['collected_data'].get('weight')}kg. Goal: {session['collected_data'].get('goals')}",
+            category="history",
+            metadata={"source": "silent_wizard_intake", "tags": semantic_tags}
+        )
+        
+        # Store Medical if present
+        if session["agent_config"]["has_injury"]:
+            diagnosis = session["collected_data"].get("injury_diagnosis", "Unknown")
+            pain = session["collected_data"].get("pain_level", "0")
+            desc = session["collected_data"].get("injury_description", "")
+            
+            # Specific medical tags
+            med_tags = self._extract_semantic_tags(f"{diagnosis} {desc}")
+            
+            rag_service.store_context(
+                user_id=user_id,
+                text=f"Active Injury: {diagnosis}. Pain Level: {pain}/10. Description: {desc}",
+                category="medical",
+                metadata={"source": "silent_wizard_injury", "tags": med_tags, "has_injury": True}
+            )
+            
+        # Store Nutrition if present
+        if "favorite_foods" in session["collected_data"]:
+            rag_service.store_context(
+                user_id=user_id,
+                text=f"Food Preferences: Likes {session['collected_data']['favorite_foods']}, Dislikes {session['collected_data']['disliked_foods']}",
+                category="preference",
+                metadata={"source": "silent_wizard_nutrition"}
+            )
+
+        # 4. Save Session
+        self._save_session(session_id, session)
+        
+        logger.info(f"Silent Profile Built for {user_id}", extra={"agent_config": session["agent_config"], "tags": semantic_tags})
+        
+        return {
+            "success": True,
+            "session_id": session_id,
+            "phase": InterviewPhase.COMPLETE,
+            "agent_config": session["agent_config"],
+            "collected_data": session["collected_data"],
+            "completed": True
+        }
+
+    def _extract_semantic_tags(self, text: str) -> List[str]:
+        """
+        Extract semantic tags from text using keyword analysis.
+        Used to enrich RAG context for smarter retrieval.
+        """
+        if not text:
+            return []
+            
+        text = text.lower()
+        tags = set()
+        
+        # Mappings
+        mappings = {
+            # Body Parts / Biomechanics
+            "lumbar_spine": ["schiena", "lombare", "lumbar", "back", "l5", "s1", "ernia", "sciatica"],
+            "cervical_spine": ["collo", "cervicale", "neck", "cervical"],
+            "knees": ["ginocchio", "ginocchia", "knee", "patella", "menisco", "crociato"],
+            "shoulders": ["spalla", "spalle", "shoulder", "cuffia", "rotatori"],
+            "hips": ["anca", "anche", "hip", "inguine"],
+            
+            # Lifestyle / Posture
+            "sedentary": ["seduto", "ufficio", "desk", "computer", "sitting", "sedentary", "scrivania"],
+            "active_job": ["cantiere", "in piedi", "camariere", "manuale", "heavy labor"],
+            "stress": ["stress", "ansia", "nervoso", "dormo male"],
+            "sleep_issues": ["insonnia", "dormo poco", "sveglio", "sleep"],
+            
+            # Training Style
+            "hypertrophy": ["massa", "muscoli", "bodybuilding", "ipertrofia", "muscle"],
+            "strength": ["forza", "powerlifting", "carichi", "strength"],
+            "performance": ["sport", "calcio", "basket", "tennis", "atletica", "performance"],
+            "endurance": ["corsa", "fiato", "resistenza", "maratona", "run"],
+            "high_intensity": ["crossfit", "wod", "circuit", "hiit", "metcon"]
+        }
+        
+        for tag, keywords in mappings.items():
+            if any(kw in text for kw in keywords):
+                tags.add(tag)
+                
+        return list(tags)
 
     async def _extract_and_store_data(
         self,

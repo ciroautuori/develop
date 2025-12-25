@@ -34,6 +34,47 @@ class StartWizardRequest(BaseModel):
     initial_context: Dict[str, Any] = None
 
 
+
+class CompleteSilentRequest(BaseModel):
+    """Request model for silent completion."""
+    initial_context: Dict[str, Any]
+
+@router.post("/complete-silent", response_model=Dict[str, Any])
+async def complete_wizard_silent(
+    request: CompleteSilentRequest,
+    current_user: CurrentUser,
+    db: Session = Depends(get_db)
+):
+    """
+    Complete user profiling SILENTLY (No Chat).
+    Takes collected data and builds profile in background.
+    """
+    try:
+        wizard = get_wizard_from_container(db, str(current_user.id))
+        session_id = str(uuid.uuid4())
+
+        result = await wizard.build_profile_silently(
+            user_id=str(current_user.id),
+            session_id=session_id,
+            initial_context=request.initial_context,
+            user_email=current_user.email
+        )
+        
+        # Trigger initialization of agents immediately
+        if result.get("success"):
+             # We can optionally return initial plans here if needed
+             pass
+
+        return result
+
+    except Exception as e:
+        logger.exception("Error in silent completion")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error completing wizard: {str(e)}"
+        )
+
+
 @router.post("/start", response_model=Dict[str, Any])
 async def start_wizard_interview(
     request: StartWizardRequest = None,

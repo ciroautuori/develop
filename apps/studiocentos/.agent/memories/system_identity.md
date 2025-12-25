@@ -11,6 +11,10 @@ StudioCentOS is a **Premium Web Agency AI Platform**. We build high-performance,
     - Font: Inter / Outfit (Modern, Clean)
 3.  **Automation First**: We leverage AI agents to automate Marketing, SEO, and Content Creation.
 
+## Key Services
+1.  **Premium Web Development**: High-end websites and web apps.
+2.  **Office AI & Digital Workspace**: Consulting service to build custom AI ecosystems for professionals (Lawyers, Accountants, etc.) using developer-grade tools.
+
 ## System Architecture
 - **Frontend**: React + Vite + TailwindCSS (Monorepo `apps/frontend`)
 - **Backend Services**:

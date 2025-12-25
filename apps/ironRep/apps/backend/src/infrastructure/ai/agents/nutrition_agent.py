@@ -4,6 +4,8 @@ Nutrition Agent
 from typing import Dict, Any, List
 try:
     from langchain.agents import AgentExecutor, create_tool_calling_agent
+    from langchain.agents.format_scratchpad.tools import format_to_tool_messages
+    from langchain.agents.output_parsers.tools import ToolsAgentOutputParser
 except ImportError:
     # Fallback for broken langchain installation
     class AgentExecutor:
@@ -79,7 +81,24 @@ IMPORTANTE:
             MessagesPlaceholder(variable_name="agent_scratchpad")
         ])
 
-        self.agent = create_tool_calling_agent(self.llm, self.tools, self.prompt)
+        # Manually create the tool calling agent
+        try:
+            self.llm_with_tools = self.llm.bind_tools(self.tools)
+        except (NotImplementedError, AttributeError):
+            from src.infrastructure.logging import get_logger
+            logger = get_logger(__name__)
+            logger.warning(f"LLM {type(self.llm).__name__} does not support bind_tools. Tools disabled.")
+            self.llm_with_tools = self.llm
+        
+        self.agent = (
+            {
+                "input": lambda x: x["input"],
+                "agent_scratchpad": lambda x: format_to_tool_messages(x["intermediate_steps"]),
+            }
+            | self.prompt
+            | self.llm_with_tools
+            | ToolsAgentOutputParser()
+        )
         self.agent_executor = AgentExecutor(
             agent=self.agent,
             tools=self.tools,
