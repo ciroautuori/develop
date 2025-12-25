@@ -692,15 +692,15 @@ Genera il primo messaggio:
             session["agent_config"]["nutrition_mode"] = NutritionMode.FULL_DIET_PLAN
 
         # 3. Store in RAG (Silently) - WITH SEMANTIC ENRICHMENT
-        from src.infrastructure.ai.rag_service import get_rag_service
-        rag_service = get_rag_service()
+        from src.infrastructure.ai.user_context_rag import get_user_context_rag
+        user_rag = get_user_context_rag()
         
         # Helper to generate tags
         all_text = f"{session['collected_data'].get('primary_goal')} {session['collected_data'].get('injury_diagnosis')} {session['collected_data'].get('injury_description')}"
         semantic_tags = self._extract_semantic_tags(all_text)
         
         # Store Intake Data
-        rag_service.store_context(
+        user_rag.store_context(
             user_id=user_id,
             text=f"User Profile: {session['collected_data'].get('age')}y, {session['collected_data'].get('sex')}, {session['collected_data'].get('weight')}kg. Goal: {session['collected_data'].get('goals')}",
             category="history",
@@ -716,7 +716,7 @@ Genera il primo messaggio:
             # Specific medical tags
             med_tags = self._extract_semantic_tags(f"{diagnosis} {desc}")
             
-            rag_service.store_context(
+            user_rag.store_context(
                 user_id=user_id,
                 text=f"Active Injury: {diagnosis}. Pain Level: {pain}/10. Description: {desc}",
                 category="medical",
@@ -725,7 +725,7 @@ Genera il primo messaggio:
             
         # Store Nutrition if present
         if "favorite_foods" in session["collected_data"]:
-            rag_service.store_context(
+            user_rag.store_context(
                 user_id=user_id,
                 text=f"Food Preferences: Likes {session['collected_data']['favorite_foods']}, Dislikes {session['collected_data']['disliked_foods']}",
                 category="preference",

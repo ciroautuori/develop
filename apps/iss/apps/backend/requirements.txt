@@ -30,10 +30,8 @@ beautifulsoup4==4.12.2
 apscheduler==3.10.4
 lxml==4.9.3
 
-# AI & Semantic Search (Ollama Optimized)
-scikit-learn==1.3.2
-numpy==1.24.4
-huggingface-hub==0.17.3
+# chromadb removed - using HTTPX for lightweight client
+# sentence-transformers removed to save space
 
 # Testing dependencies
 pytest-asyncio==0.21.1

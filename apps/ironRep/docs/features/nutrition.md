@@ -59,16 +59,17 @@
 > **FatSecret Only**: Non facciamo affidamento su database locali per i valori nutrizionali degli alimenti. Usiamo solo dati live e geolocalizzati di FatSecret per garantire precisione assoluta.
 
 ### 3. RAG - ChromaDB Knowledge Base
-**Documenti totali:** ~200 (Solo Ricette e Guidelines)
+**Documenti totali:** ~1000 (Ricette, Guidelines, Medical)
 
 | Sorgente | Contenuto | Uso |
 |----------|-----------|-----|
 | Ricette Fitness | 123 | Piani pasto per sportivi |
-| Medical Info | 141 | Restrizioni alimentari |
-| Training | 727 | Cross-reference |
+| Medical Info | 141 | Restrizioni alimentari & Injury |
+| Training | 727 | Cross-reference Coach/Nutrition |
 
 > [!NOTE]
-> I database generici (USDA/OpenFoodFacts) sono stati rimossi in favore dell'API live.
+> I database generici (USDA/OpenFoodFacts) sono stati **RIMOSSI** dal RAG locale.
+> Per i valori nutrizionali ci affidiamo esclusivamente all'API **FatSecret**.
 
 ### 4. NutritionAgent
 **File:** `apps/backend/src/infrastructure/ai/agents/nutrition_agent.py`
@@ -153,12 +154,15 @@ response = await agent.answer_question(
 
 ## 📊 Metriche
 
-| Metrica | Prima | Dopo |
-|---------|-------|------|
-| Alimenti searchabili | 0 (API live) | **9459** (RAG locale) |
-| Ricette fitness | 115 (base) | **123** (enhanced) |
-| Preferenze utente | ❌ Non usate | ✅ Integrate |
-| Fonti dati unificate | ❌ 3 separate | ✅ 1 workflow |
+| Alimenti searchabili | 0 (Locale) | **2M+** (FatSecret Live API) |
+| Ricette fitness | 115 (base) | **123** (Enhanced + User Custom) |
+| Preferenze utente | ❌ Non usate | ✅ Integrate (RAG Context) |
+| Fonti dati unificate | ❌ 3 separate | ✅ 1 Workflow (API + FailSafe) |
+
+### 5. Fail-Safe Mechanism (New)
+Per garantire che il sistema funzioni sempre (anche se le chiavi API scadono o l'IP non è in whitelist):
+- **Mock Mode**: Se FatSecret API fallisce (503/Timeout), il sistema restituisce automaticamente dati "Mock" plausibili per alimenti comuni (es. Pollo, Riso).
+- **Zero Crash**: L'utente non vede mai errori 500 durante la ricerca cibi.
 
 ---
 

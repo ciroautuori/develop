@@ -77,6 +77,7 @@ services:
       - backend_uploads:/app/static/uploads
       - backend_logs:/app/logs
       - ./config/backend:/app/config:ro
+      - ../../docs/ISS_OPERATIVO:/app/docs/ISS_OPERATIVO:ro
     # ports:
     #   - "${BACKEND_PORT:-8001}:8000" # Exposed via Gateway
     networks:

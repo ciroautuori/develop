@@ -17,7 +17,7 @@ import urllib.request
 import urllib.error
 from datetime import datetime
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = "http://localhost:8000/api/v1"
 
 def make_request(method, endpoint, data=None, token=None):
     url = f"{BASE_URL}{endpoint}"

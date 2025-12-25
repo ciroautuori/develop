@@ -117,6 +117,9 @@ class FatSecretService:
             "region": self.default_region,
         }
 
+        # Log request parameters for debugging
+        # print(f"DEBUG: FatSecret Search - Query: {query}, Region: {self.default_region}")
+
         result = self._make_request("foods.search", params)
 
         if "foods" not in result or "food" not in result["foods"]:

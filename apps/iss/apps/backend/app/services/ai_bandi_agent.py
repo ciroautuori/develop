@@ -879,10 +879,22 @@ Se non trovi bandi validi, rispondi: {{"bandi": []}}
 
         # Usa Ollama se disponibile (gratis e privato), altrimenti Groq (veloce) o Gemini
         try:
+            # 0. Recupera contesto da RAG (Personal Knowledge)
+            from app.services.rag_service import rag_service
+            rag_results = rag_service.query(tender_text[:1000]) # Query with first 1000 chars of tender
+            
+            rag_context = ""
+            if rag_results and rag_results['documents']:
+                rag_context = "\n".join(rag_results['documents'][0])
+                logger.info(f"📚 RAG Context retrieved: {len(rag_results['documents'][0])} chunks")
+
             prompt = f"""Sei un consulente esperto per il Terzo Settore. Analizza la compatibilità tra questo bando e l'associazione.
 
 --- PROFILO ASSOCIAZIONE ---
 {association_profile}
+
+--- CONTESTO OPERATIVO (LINEE GUIDA INTERNE) ---
+{rag_context}
 
 --- BANDO ---
 {tender_text[:3000]}
