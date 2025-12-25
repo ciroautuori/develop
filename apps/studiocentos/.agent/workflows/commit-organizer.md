@@ -18,12 +18,12 @@ Raggruppa i file per tipo di modifica:
 | Categoria | Prefisso | Esempi |
 |-----------|----------|--------|
 | **feat** | Nuove funzionalità | hooks, nuovi componenti, nuovi endpoint |
-| **fix** | Bug fix | correzioni errori, fix React, fix CSS |
-| **docs** | Documentazione | roadmap, README, changelog |
-| **chore** | Manutenzione | config docker, dependencies, cleanup |
+| **fix** | Bug fix | correzioni errori, SEO Soft 404 fix, SSL mismatch fix |
+| **docs** | Documentazione | roadmap, .agent/memories, changelog |
+| **chore** | Manutenzione | central-infra config, central-ollama connection, deps |
 | **refactor** | Refactoring | riorganizzazione codice senza cambi funzionali |
-| **style** | Stile/UI | CSS, design, layout changes |
-| **test** | Test | nuovi test, fix test |
+| **style** | Stile/UI | Premium design, layout changes, gold/black accents |
+| **test** | Test | nuovi test, agent verification scripts |
 
 ## 3. Commit per Categoria
 

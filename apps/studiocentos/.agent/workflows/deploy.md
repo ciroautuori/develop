@@ -2,30 +2,31 @@
 description: How to deploy the full StudioCentOS stack
 ---
 
-# Deploy Workflow
+# Deploy Workflow (Monorepo & Central Gateway)
 
-1.  **Stop existing containers**:
+1.  **Stop specific app (if needed)**:
     ```bash
-    docker compose down
+    docker compose -f apps/studiocentos/config/docker/docker-compose.production.yml down
     ```
 
-2.  **Pull/Build latest images**:
+2.  **Verify Central Services** (Always Up):
     ```bash
-    docker compose build
+    docker compose -f services/docker-compose.gateway.yml ps
+    ```
+    Ensure `central-postgres`, `central-redis`, `central-ollama`, and `nginx-gateway` are running.
+
+3.  **Build & Start App**:
+    ```bash
+    docker compose -f apps/studiocentos/config/docker/docker-compose.production.yml up -d --build
     ```
 
-3.  **Start services**:
+4.  **Verify SSL & Nginx**:
     ```bash
-    docker compose up -d
+    # Test HTTPS and Domain Certificates
+    curl -vI https://studiocentos.it
     ```
 
-4.  **Verify Status**:
+5.  **Check Agent Health**:
     ```bash
-    docker compose ps
-    ```
-    Ensure `backend`, `frontend`, `ai_microservice`, and `nginx` are `Up`.
-
-5.  **Check Logs** (Optional):
-    ```bash
-    docker compose logs -f ai_microservice
+    docker compose -f apps/studiocentos/config/docker/docker-compose.production.yml logs -f studiocentos-ai
     ```
