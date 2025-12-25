@@ -214,8 +214,15 @@ export function BookingTimeline() {
 
   const handleDaySelect = (day: DaySlot) => {
     if (!day.isWeekend) {
-      setSelectedDay(day);
-      setSelectedTime(null);
+      if (selectedDay?.date === day.date) {
+        // Toggle off if already selected
+        setSelectedDay(null);
+        setSelectedTime(null);
+      } else {
+        // Select new day
+        setSelectedDay(day);
+        setSelectedTime(null);
+      }
     }
   };
 
@@ -351,55 +358,55 @@ export function BookingTimeline() {
                 <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin"></div>
               </div>
             ) : (
-            <div className="space-y-6">
-              {/* Mattina */}
-              <div>
-                <div className="text-sm text-gray-400 light:text-gray-600 mb-3">{t.booking.morning}</div>
-                <div className="grid grid-cols-3 gap-3">
-                  {morningSlots.map((slot) => (
-                    <button
-                      key={slot.time}
-                      onClick={() => handleTimeSelect(slot.time)}
-                      disabled={!slot.available}
-                      className={`
+              <div className="space-y-6">
+                {/* Mattina */}
+                <div>
+                  <div className="text-sm text-gray-400 light:text-gray-600 mb-3">{t.booking.morning}</div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {morningSlots.map((slot) => (
+                      <button
+                        key={slot.time}
+                        onClick={() => handleTimeSelect(slot.time)}
+                        disabled={!slot.available}
+                        className={`
                         px-6 py-4 rounded-xl transition
                         ${selectedTime === slot.time
-                          ? 'bg-gold text-black border-2 border-gold'
-                          : 'bg-white/5 light:bg-gray-100 border border-white/10 light:border-gray-200 hover:bg-gold/20 hover:border-gold hover:scale-105 text-white light:text-gray-900'
-                        }
+                            ? 'bg-gold text-black border-2 border-gold'
+                            : 'bg-white/5 light:bg-gray-100 border border-white/10 light:border-gray-200 hover:bg-gold/20 hover:border-gold hover:scale-105 text-white light:text-gray-900'
+                          }
                       `}
-                    >
-                      <div className="text-lg font-medium">{slot.time}</div>
-                      <div className="text-xs text-gray-400 light:text-gray-500">{t.booking.duration}</div>
-                    </button>
-                  ))}
+                      >
+                        <div className="text-lg font-medium">{slot.time}</div>
+                        <div className="text-xs text-gray-400 light:text-gray-500">{t.booking.duration}</div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Pomeriggio */}
-              <div>
-                <div className="text-sm text-gray-400 light:text-gray-600 mb-3">{t.booking.afternoon}</div>
-                <div className="grid grid-cols-3 gap-3">
-                  {afternoonSlots.map((slot) => (
-                    <button
-                      key={slot.time}
-                      onClick={() => handleTimeSelect(slot.time)}
-                      disabled={!slot.available}
-                      className={`
+                {/* Pomeriggio */}
+                <div>
+                  <div className="text-sm text-gray-400 light:text-gray-600 mb-3">{t.booking.afternoon}</div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {afternoonSlots.map((slot) => (
+                      <button
+                        key={slot.time}
+                        onClick={() => handleTimeSelect(slot.time)}
+                        disabled={!slot.available}
+                        className={`
                         px-6 py-4 rounded-xl transition
                         ${selectedTime === slot.time
-                          ? 'bg-gold text-black border-2 border-gold'
-                          : 'bg-white/5 light:bg-gray-100 border border-white/10 light:border-gray-200 hover:bg-gold/20 hover:border-gold hover:scale-105 text-white light:text-gray-900'
-                        }
+                            ? 'bg-gold text-black border-2 border-gold'
+                            : 'bg-white/5 light:bg-gray-100 border border-white/10 light:border-gray-200 hover:bg-gold/20 hover:border-gold hover:scale-105 text-white light:text-gray-900'
+                          }
                       `}
-                    >
-                      <div className="text-lg font-medium">{slot.time}</div>
-                      <div className="text-xs text-gray-400 light:text-gray-500">{t.booking.duration}</div>
-                    </button>
-                  ))}
+                      >
+                        <div className="text-lg font-medium">{slot.time}</div>
+                        <div className="text-xs text-gray-400 light:text-gray-500">{t.booking.duration}</div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
             )}
           </div>
         )}
