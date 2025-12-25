@@ -57,6 +57,7 @@ class Bando(Base):
     # AI Analysis Persistence
     ai_score = Column(Integer, nullable=True, index=True)
     ai_reasoning = Column(Text, nullable=True)
+    deep_analysis = Column(JSON, nullable=True) # Strategic report from Agent Analyst
 
     # Relazioni con sistema utenti
     applications = relationship("BandoApplication", back_populates="bando")

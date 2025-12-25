@@ -9,19 +9,23 @@
 
 ## 🛤️ Roadmap Overview
 
-### Q1 2026 - Intelligence & Automation
-- [x] **Personal RAG**: Centralized vector database for agent context. (Implemented via lightweight HTTP architecture to optimize resources).
-- [ ] **Agent "Analyst"**: Specialized agent for deep tender analysis.
-- [ ] **Automated Grant Writing**: Draft generation based on stored templates.
+### 🏁 Phase 0: Foundation (Complete)
+- [x] **[AI Matching](file:///home/autcir_gmail_com/develop/apps/iss/futures/complete/ai_matching.md)**: Persistent scores and reasoning.
+- [x] **[Personal RAG](file:///home/autcir_gmail_com/develop/apps/iss/futures/complete/rag_service.md)**: Internal knowledge base integration.
 
-### Q2 2026 - Community & Expansion
-- [ ] **Multi-Tenant**: Support for other APS/ETS organizations.
-- [ ] **Public Portal**: Open search for citizens.
+### 🚀 Phase 1: Enhancement (In Progress)
+- [ ] **[Agent Analyst](file:///home/autcir_gmail_com/develop/apps/iss/futures/in_progress/agent_analyst.md)**: Deep SWOT and strategy reports.
+- [ ] **Automated Grant Writing**: Draft generation using RAG templates.
 
-### Q3 2026 - Mobile Experience
-- [ ] **PWA / Mobile App**: Dedicated mobile interface for volunteers.
+### 🏢 Phase 2: Professionalization (Planned)
+- [ ] **[Multi-Tenancy](file:///home/autcir_gmail_com/develop/apps/iss/futures/planned/multitenancy.md)**: Support for multiple organizations.
+- [ ] **[Backoffice](file:///home/autcir_gmail_com/develop/apps/iss/futures/planned/backoffice.md)**: Granular control for Admin and Clients.
 
-## 📝 Backlog (Futures)
-- Gamification for volunteers.
-- Blockchain certification for skills (OpenBadges).
-- Whisper integration for voice notes.
+### 🌐 Phase 3: Scaling (Futures)
+- Mobile PWA application.
+- Public portal for citizens.
+- Blockchain skill certification.
+
+## 📝 Continuous Improvement
+- All code must follow the "Road to 100%" (Zero errors, no mocks, typings).
+- Project state is mirrored in `.agent/rules/` for agent persistence.

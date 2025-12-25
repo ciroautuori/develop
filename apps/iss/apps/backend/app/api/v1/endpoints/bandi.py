@@ -317,6 +317,69 @@ async def save_bando(
     return {"success": True, "message": "Bando salvato", "bando_id": bando_id}
 
 
+@router.post("/{bando_id}/analyze")
+async def analyze_bando_deep(
+    bando_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    🧠 Avvia un'analisi profonda (Agent Analyst) su un bando specifico.
+    Recupera contesto dal RAG e fornisce SWOT, Checklist e Strategia.
+    """
+    from app.services.analyst_service import analyst_service
+    from app.services.ai_bandi_agent import ai_bandi_agent
+    
+    bando = await bando_crud.get_bando(db, bando_id=bando_id)
+    if not bando:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Bando non trovato"
+        )
+        
+    # Esegue l'analisi profonda
+    analysis_result = await analyst_service.analyze_bando(
+        bando_text=f"{bando.titolo}\n{bando.descrizione}\n{bando.requisiti}",
+        association_profile=ai_bandi_agent.association_profile
+    )
+    
+    # Salva il risultato nel database
+    await bando_crud.update_bando(
+        db, 
+        bando_id=bando_id, 
+        bando_update=BandoUpdate(deep_analysis=analysis_result)
+    )
+    
+    return analysis_result
+
+
+@router.post("/{bando_id}/draft")
+async def generate_bando_draft(
+    bando_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    ✍️ Genera una bozza di progetto (Grant Writing) basata sul bando e sul profilo ISS.
+    Usa il RAG per recuperare template e contestualizzare la proposta.
+    """
+    from app.services.draft_service import draft_service
+    from app.services.ai_bandi_agent import ai_bandi_agent
+    
+    bando = await bando_crud.get_bando(db, bando_id=bando_id)
+    if not bando:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Bando non trovato"
+        )
+        
+    # Genera la bozza
+    draft = await draft_service.generate_draft(
+        bando_text=f"{bando.titolo}\n{bando.descrizione}\n{bando.requisiti}",
+        association_profile=ai_bandi_agent.association_profile
+    )
+    
+    return {"draft": draft}
+
+
 @router.delete("/{bando_id}/save")
 async def unsave_bando(
     bando_id: int,
