@@ -176,7 +176,7 @@ status:
 
 MSG ?= "Auto-sync: $(shell date +%Y-%m-%d_%H:%M)"
 
-push-all: _commit push-develop push-iss push-studiocentos push-markettina push-ironrep
+push-all: _commit push-develop push-iss push-studiocentos push-markettina
 	@echo -e "$(GREEN)✅ Tutti i push completati!$(NC)"
 
 _commit:
@@ -202,9 +202,9 @@ push-markettina: _commit
 	@git push markettina-repo $$(git subtree split --prefix=apps/markettina):main --force
 	@echo -e "$(GREEN)✅ apps/markettina → markettina.git$(NC)"
 
-push-ironrep: _commit
-	@echo -e "$(CYAN)📤 Push IronRep...$(NC)"
-	@git push ironrep-repo $$(git subtree split --prefix=apps/ironRep):main --force
-	@echo -e "$(GREEN)✅ apps/ironRep → ironrep.git$(NC)"
+# push-ironrep: _commit
+# 	@echo -e "$(CYAN)📤 Push IronRep...$(NC)"
+# 	@git push ironrep-repo $$(git subtree split --prefix=apps/ironRep):main --force
+# 	@echo -e "$(GREEN)✅ apps/ironRep → ironrep.git$(NC)"
 
 

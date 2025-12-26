@@ -1,1 +1,0 @@
-export { WizardChat } from "./WizardChat";
